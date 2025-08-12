@@ -6,8 +6,12 @@
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--ink)}
 header{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;background:linear-gradient(90deg,var(--blue),#08244a);border-bottom:4px solid var(--lime);color:#fff;position:sticky;top:0;z-index:2}
 h1{margin:0;font-size:18px;font-weight:800} .badge{font-size:11px;border:1px solid #fff3;border-radius:999px;padding:2px 6px}
-.btn{border:1px solid #fff3;background:transparent;color:#fff;border-radius:12px;padding:8px 12px;cursor:pointer}
+/* Buttons: default dark for white cards; header buttons use .hdr */
+.btn{border:1px solid var(--b);background:#f8fafc;color:var(--ink);border-radius:12px;padding:8px 12px;cursor:pointer}
+.btn:active{transform:translateY(1px)}
 .btn.p{background:var(--lime);color:#08244a;border-color:transparent;font-weight:800}
+.btn.hdr{border:1px solid #ffffff44;background:transparent;color:#fff}
+.btn.hdr.p{background:var(--lime);color:#08244a;border-color:transparent}
 .container{max-width:1100px;margin:12px auto;padding:0 10px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000f;padding:10px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -38,7 +42,7 @@ label{font-size:12px;color:#334155;font-weight:600}
   .grid7{gap:4px}
   .cell{min-height:90px; padding:6px}
   .event{font-size:12px}
-  .btn{padding:10px 12px}
+  .btn{padding:12px}
   select,input{padding:12px}
 }
 </style>
@@ -48,8 +52,8 @@ label{font-size:12px;color:#334155;font-weight:600}
     <h1>Golden Moms</h1><span class="badge">Calendario + Asistencia</span>
   </div>
   <div class="row">
-    <button class="btn" id="btnRoster">Plantel</button>
-    <button class="btn p" id="btnNew">Nuevo</button>
+    <button class="btn hdr" id="btnRoster">Plantel</button>
+    <button class="btn hdr p" id="btnNew">Nuevo</button>
   </div>
 </header>
 
@@ -80,7 +84,7 @@ label{font-size:12px;color:#334155;font-weight:600}
         <button class="btn" id="btnICS">.ics</button>
         <button class="btn" id="btnCopy">Copiar WhatsApp</button>
         <button class="btn" id="btnRSVP">Link convocatoria</button>
-        <button class="btn" id="btnDel" style="background:#ef4444;border-color:#ef4444">Eliminar</button>
+        <button class="btn" id="btnDel" style="background:#ef4444;border-color:#ef4444;color:#fff">Eliminar</button>
       </div>
     </div>
     <div class="row stack">
@@ -99,6 +103,17 @@ label{font-size:12px;color:#334155;font-weight:600}
       <div style="font-weight:800">Asistencia</div>
       <div id="countBox" class="counts"></div>
     </div>
+
+    <div class="row" style="justify-content:space-between; gap:8px">
+      <div class="row" style="gap:6px">
+        <button class="btn" id="btnShowAll">Ver todas</button>
+        <button class="btn" id="btnShowOK">Ver solo convocadas (✅)</button>
+      </div>
+      <div class="row" style="gap:6px">
+        <button class="btn" id="btnExportList">Exportar lista</button>
+      </div>
+    </div>
+
     <div id="att" class="row" style="gap:6px"></div>
 
     <div style="font-weight:800;margin-top:8px">Convocatoria</div>
@@ -131,7 +146,7 @@ label{font-size:12px;color:#334155;font-weight:600}
 </div>
 
 <script>
-const K="gm-pages-v2";
+const K="gm-pages-v3";
 let S={team:"Golden Moms FC", roster:["Ale V","Andre","Antonella","Aurora","Carla","Caro G","Caro N","Cata","Celsa","Chica","Consu","Consu S","Cote","Dani C","Dani J","Fabi","Fran","Gaby","Isa","Jandi","Janga","Javiera A","Javi C","Jean","Maca","Male","Marce","Myle","Paz","Pia","Pili","Vale","Vero"], events:[], att:{}};
 try{const tmp=JSON.parse(localStorage.getItem(K)||"{}"); if(tmp && typeof tmp==="object"){ S={...S, ...tmp}; }}catch{}
 function save(){ localStorage.setItem(K, JSON.stringify(S)); }
@@ -204,6 +219,7 @@ const eType=document.getElementById("eType"), eTitle=document.getElementById("eT
       eLoc=document.getElementById("eLoc"), eOpp=document.getElementById("eOpp"), eUni=document.getElementById("eUni"),
       eTeam=document.getElementById("eTeam"), teamBadge=document.getElementById("teamBadge"), att=document.getElementById("att"),
       countBox=document.getElementById("countBox"), rsvpInfo=document.getElementById("rsvpInfo");
+let showOnlyOK=false;
 function renderEditor(){
   const E=S.events.find(x=>x.id==cur); const ed=document.getElementById("editor");
   if(!E){ if(S.events.length){cur=S.events[0].id; return renderEditor();} ed.classList.add("hidden"); return; }
@@ -217,14 +233,16 @@ function renderEditor(){
   S.roster.forEach(p=>{ const v=A[p]; if(v=="Asiste") counts.ok++; else if(v=="Duda") counts.mid++; else if(v=="No asiste") counts.no++; else counts.blank++; });
   countBox.innerHTML=`<span class="chip ok">✅ ${counts.ok}</span><span class="chip mid">❔ ${counts.mid}</span><span class="chip no">❌ ${counts.no}</span><span class="chip">▫️ ${counts.blank}</span>`;
 
-  // Grid asistencia
+  // Grid asistencia (filtrable)
   att.innerHTML="";
   S.roster.forEach(p=>{
+    const v=(S.att[E.id]||{})[p]||"";
+    if(showOnlyOK && v!=="Asiste") return;
     const row=document.createElement("div"); row.className="att";
     const nm=document.createElement("div"); nm.textContent=p; row.appendChild(nm);
     const r=document.createElement("div");
-    function mk(lbl,val){const b=document.createElement("button"); b.className="bsm"; b.textContent=lbl; b.onclick=()=>{A[p]=val; S.att[E.id]=A; save(); renderEditor();}; return b;}
-    const v=A[p]||""; const b1=mk("✅","Asiste"), b2=mk("❔","Duda"), b3=mk("❌","No asiste");
+    function mk(lbl,val){const b=document.createElement("button"); b.className="bsm"; b.textContent=lbl; b.onclick=()=>{const A=S.att[E.id]||{}; A[p]=val; S.att[E.id]=A; save(); renderEditor();}; return b;}
+    const b1=mk("✅","Asiste"), b2=mk("❔","Duda"), b3=mk("❌","No asiste");
     if(v=="Asiste") b1.style.background="#d9f99d"; if(v=="Duda") b2.style.background="#fef9c3"; if(v=="No asiste") b3.style.background="#fee2e2";
     r.appendChild(b1); r.appendChild(b2); r.appendChild(b3); row.appendChild(r); att.appendChild(row);
   });
@@ -241,6 +259,35 @@ function renderEditor(){
 eDT.addEventListener("change",()=>{const E=S.events.find(x=>x.id==cur); if(!E) return; const d=new Date(eDT.value); E.datetime=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString(); save(); renderCal(); renderEditor();});
 
 document.getElementById("btnDel").onclick=()=>{ const i=S.events.findIndex(x=>x.id==cur); if(i>=0){ S.events.splice(i,1); delete S.att[cur]; save(); cur=S.events[0]?.id||null; renderCal(); renderEditor(); } };
+
+// Filtro de asistencia
+document.getElementById("btnShowAll").onclick=()=>{ showOnlyOK=false; renderEditor(); };
+document.getElementById("btnShowOK").onclick=()=>{ showOnlyOK=true; renderEditor(); };
+
+// Exportar lista (PDF / imagen vía print)
+document.getElementById("btnExportList").onclick=()=>{
+  const E=S.events.find(x=>x.id==cur); if(!E) return;
+  const A=S.att[E.id]||{}; const list=S.roster.filter(p=>A[p]==="Asiste");
+  const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'});
+  const w=window.open('','_blank');
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}
+    h1{margin:0 0 6px 0} .sub{color:#334155;margin:0 0 18px 0}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid #cbd5e1;margin:4px 6px}
+    .row{display:flex;flex-wrap:wrap}
+    .meta{margin:8px 0 14px 0}
+    .box{border:1px solid #e2e8f0;border-radius:12px;padding:12px}
+  </style></head><body>
+    <h1>${E.type}: ${E.title} (${E.team||'Golden Moms'})</h1>
+    <div class="sub">${when}${E.location?' — '+E.location:''}${E.opponent?' — Rival: '+E.opponent:''}</div>
+    <div class="meta">Uniforme: ${E.uniform||'—'} · Calcetines: verde lima</div>
+    <div class="box"><strong>Convocadas (${list.length})</strong><div class="row">
+      ${list.map(n=>`<span class="pill">✅ ${n}</span>`).join('') || '<em>No hay confirmadas aún</em>'}
+    </div></div>
+    <script>window.print()</script>
+  </body></html>`;
+  w.document.write(html); w.document.close();
+};
 
 function icsDate(d){return new Date(d).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z")}
 document.getElementById("btnICS").onclick=()=>{
