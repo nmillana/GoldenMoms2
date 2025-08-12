@@ -1,23 +1,28 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Golden Moms — Calendario</title>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Golden Moms — Gestión</title>
 <style>
-:root{--blue:#0f3a78;--lime:#9BE22D;--ink:#0f172a;--b:#e2e8f0;--bg:#f7f8fa}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--ink)}
-header{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;background:linear-gradient(90deg,var(--blue),#08244a);border-bottom:4px solid var(--lime);color:#fff;position:sticky;top:0;z-index:2}
-h1{margin:0;font-size:18px;font-weight:800} .badge{font-size:11px;border:1px solid #fff3;border-radius:999px;padding:2px 6px}
-/* Buttons: default dark for white cards; header buttons use .hdr */
-.btn{border:1px solid var(--b);background:#f8fafc;color:var(--ink);border-radius:12px;padding:8px 12px;cursor:pointer}
-.btn:active{transform:translateY(1px)}
-.btn.p{background:var(--lime);color:#08244a;border-color:transparent;font-weight:800}
-.btn.hdr{border:1px solid #ffffff44;background:transparent;color:#fff}
-.btn.hdr.p{background:var(--lime);color:#08244a;border-color:transparent}
-.container{max-width:1100px;margin:12px auto;padding:0 10px}
-.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000f;padding:10px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-select,input{width:100%;padding:10px;border:1px solid var(--b);border-radius:12px}
-label{font-size:12px;color:#334155;font-weight:600}
-.grid7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+:root{--blue:#0f3a78;--lime:#9BE22D;--ink:#0f172a;--b:#e2e8f0;--bg:#f7f8fa;--mut:#64748b}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--ink)}
+/* Topbar */
+.top{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:#fff;border-bottom:1px solid var(--b)}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#9be22d 0 45%,#0f3a78 46% 100%);display:inline-block;border:2px solid #0f3a78}
+.title{font-weight:800}
+.top .act{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--b);background:#0f3a78;color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
+.btn.s{background:#f8fafc;color:var(--ink)}
+.btn.p{background:var(--lime);color:#08244a;border-color:#a3e635;font-weight:800}
+.container{max-width:1200px;margin:12px auto;padding:0 12px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
+.kpi{display:flex;flex-direction:column;gap:6px}
+.kpi h3{margin:0;font-size:14px;color:var(--mut)} .kpi .n{font-size:24px;font-weight:800}
+/* Calendar */
+.grid7{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .cell{background:#fff;border:1px solid var(--b);min-height:110px;border-radius:12px;padding:8px;position:relative}
 .day{position:absolute;right:8px;top:6px;font-size:11px;color:#94a3b8}
 .tag{font-size:10px;border:1px solid #0001;border-radius:999px;padding:2px 6px;display:inline-block;margin-bottom:4px}
@@ -25,118 +30,142 @@ label{font-size:12px;color:#334155;font-weight:600}
 .train{background:#e9fbd0;border-color:#c6f28a;color:#2d5a00}
 .event{font-size:13px;margin-bottom:6px;cursor:pointer}
 .team{font-size:10px;background:#eaf7d7;border:1px solid #c8ef7a;border-radius:999px;padding:1px 6px;margin-left:6px;font-weight:700}
+/* Editor */
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,input,textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:10px}
+label{font-size:12px;color:#334155;font-weight:600}
 .att{border:1px solid var(--b);border-radius:12px;padding:8px;display:flex;justify-content:space-between;align-items:center}
 .bsm{padding:8px 10px;border:1px solid var(--b);border-radius:10px;background:#f8fafc;cursor:pointer}
 .counts{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
 .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--b);background:#f8fafc;font-weight:700;font-size:12px}
 .chip.ok{background:#d9f99d;border-color:#bef264} .chip.mid{background:#fef9c3;border-color:#fde68a} .chip.no{background:#fee2e2;border-color:#fecaca}
-.overlay{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;padding:12px;z-index:3}
-.modal{max-width:520px;width:100%;background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 10px 30px #0003;padding:10px}
-.chips span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:#eaf7d7;border:1px solid #c8ef7a;border-radius:999px;margin:4px}
-.hidden{display:none}
-
-/* --- Responsive --- */
-@media (max-width: 740px){
-  header{flex-direction:column; align-items:stretch}
-  .row.stack{flex-direction:column; align-items:stretch}
-  .grid7{gap:4px}
-  .cell{min-height:90px; padding:6px}
-  .event{font-size:12px}
-  .btn{padding:12px}
-  select,input{padding:12px}
+/* Upcoming list (mobile-first) */
+.list .item{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--b);border-radius:12px;padding:10px;margin:6px 0;background:#fff}
+.item .l{display:flex;gap:8px;align-items:center}
+.badge{font-size:11px;border:1px solid #cbd5e1;border-radius:999px;padding:2px 6px;background:#f8fafc}
+.time{font-weight:800;color:#0f3a78}
+/* Mobile bottom nav */
+.mnav{position:sticky;bottom:0;z-index:3;background:#fff;border-top:1px solid var(--b);display:none}
+.mnav .in{display:flex;justify-content:space-around;padding:10px 8px}
+.mnav button{background:#f8fafc;border:1px solid var(--b);border-radius:999px;padding:8px 12px}
+/* Responsive layout rules */
+.desktop{display:none} .mobile{display:block}
+@media (min-width: 900px){
+  .desktop{display:block} .mobile{display:none}
 }
 </style>
-</head><body>
-<header>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <h1>Golden Moms</h1><span class="badge">Calendario + Asistencia</span>
+</head>
+<body>
+<div class="top">
+  <div class="brand"><i class="logo"></i><div class="title">Golden <span style="color:var(--lime)">Moms</span></div></div>
+  <div class="act">
+    <button class="btn s" id="btnRoster">Plantel</button>
+    <button class="btn p" id="btnNew">Nuevo Evento</button>
   </div>
-  <div class="row">
-    <button class="btn hdr" id="btnRoster">Plantel</button>
-    <button class="btn hdr p" id="btnNew">Nuevo</button>
-  </div>
-</header>
+</div>
 
 <div class="container">
-
-  <div class="card">
-    <div class="row stack" style="justify-content:space-between">
-      <div class="row">
-        <button class="btn" id="prev">&larr;</button>
-        <div id="mlabel" style="min-width:180px;text-align:center;font-weight:800;color:var(--blue)"></div>
-        <button class="btn" id="next">&rarr;</button>
-        <select id="fType"><option value="Todos">Todos</option><option value="Partido">Partidos</option><option value="Entrenamiento">Entrenamientos</option></select>
-        <select id="fTeam"><option value="Todos">Todos</option><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select>
-      </div>
-      <div class="row">
-        <button class="btn" id="btnPDF">Imprimir</button>
-        <button class="btn" id="btnCopyWeek">Copiar Semana</button>
-      </div>
+  <!-- Desktop: KPIs + Calendar -->
+  <section class="desktop">
+    <div class="grid">
+      <div class="card kpi" style="grid-column:span 3"><h3>Próximos Eventos</h3><div class="n" id="kEvents">0</div><small id="nextTxt" style="color:var(--mut)"></small></div>
+      <div class="card kpi" style="grid-column:span 3"><h3>Jugadoras Activas</h3><div class="n" id="kRoster">0</div></div>
+      <div class="card kpi" style="grid-column:span 3"><h3>Convocadas (próx.)</h3><div class="n" id="kOk">0</div></div>
+      <div class="card kpi" style="grid-column:span 3"><h3>Asistencia Promedio</h3><div class="n" id="kPct">—</div></div>
     </div>
-    <div class="grid7"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
-    <div id="grid" class="grid7"></div>
-  </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="row">
+          <button class="btn s" id="prev">&larr;</button>
+          <div id="mlabel" style="min-width:200px;text-align:center;font-weight:800;color:#0f3a78"></div>
+          <button class="btn s" id="next">&rarr;</button>
+          <select id="fType"><option value="Todos">Todos</option><option value="Partido">Partidos</option><option value="Entrenamiento">Entrenamientos</option></select>
+          <select id="fTeam"><option value="Todos">Todos</option><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select>
+        </div>
+        <div class="row">
+          <button class="btn s" id="btnPDF">Imprimir</button>
+          <button class="btn s" id="btnCopyWeek">Copiar Semana</button>
+        </div>
+      </div>
+      <div class="grid7"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
+      <div id="grid" class="grid7"></div>
+    </div>
+  </section>
 
-  <div id="editor" class="card" style="margin-top:10px">
+  <!-- Mobile: Upcoming list + quick actions -->
+  <section class="mobile">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <strong>Próximos eventos</strong>
+        <button class="btn s" id="mToggleCal">Ver calendario</button>
+      </div>
+      <div id="upcoming" class="list"></div>
+    </div>
+    <div id="mCalWrap" class="card" style="display:none">
+      <div class="row" style="justify-content:space-between">
+        <div class="row">
+          <button class="btn s" id="mPrev">&larr;</button>
+          <div id="mLabel" style="min-width:160px;text-align:center;font-weight:800;color:#0f3a78"></div>
+          <button class="btn s" id="mNext">&rarr;</button>
+        </div>
+      </div>
+      <div class="grid7"><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div></div>
+      <div id="mGrid" class="grid7"></div>
+    </div>
+  </section>
+
+  <!-- Event editor (shared) -->
+  <div id="editor" class="card" style="margin-top:12px; display:none">
     <div class="row" style="justify-content:space-between">
       <div class="row"><strong>Editar evento</strong><span id="teamBadge" class="team">Golden Moms</span></div>
       <div class="row">
-        <button class="btn" id="btnICS">.ics</button>
-        <button class="btn" id="btnCopy">Copiar WhatsApp</button>
-        <button class="btn" id="btnRSVP">Link convocatoria</button>
-        <button class="btn" id="btnDel" style="background:#ef4444;border-color:#ef4444;color:#fff">Eliminar</button>
+        <button class="btn s" id="btnICS">.ics</button>
+        <button class="btn s" id="btnCopy">Copiar WhatsApp</button>
+        <button class="btn s" id="btnRSVP">Link convocatoria</button>
+        <button class="btn" id="btnDel" style="background:#ef4444;border-color:#ef4444">Eliminar</button>
       </div>
     </div>
-    <div class="row stack">
-      <div style="flex:1;min-width:180px"><label>Tipo</label><select id="eType"><option>Partido</option><option>Entrenamiento</option></select></div>
-      <div style="flex:2;min-width:220px"><label>Título</label><input id="eTitle"/></div>
-      <div style="flex:1;min-width:180px"><label>Equipo</label><select id="eTeam"><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select></div>
+    <div class="row">
+      <div style="flex:1;min-width:160px"><label>Tipo</label><select id="eType"><option>Partido</option><option>Entrenamiento</option></select></div>
+      <div style="flex:2;min-width:200px"><label>Título</label><input id="eTitle"/></div>
+      <div style="flex:1;min-width:160px"><label>Equipo</label><select id="eTeam"><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select></div>
     </div>
-    <div class="row stack">
-      <div style="flex:1;min-width:200px"><label>Fecha y hora</label><input id="eDT" type="datetime-local"/></div>
-      <div style="flex:1;min-width:200px"><label>Lugar</label><input id="eLoc"/></div>
-      <div style="flex:1;min-width:200px"><label>Rival</label><input id="eOpp"/></div>
-      <div style="flex:1;min-width:200px"><label>Uniforme</label><select id="eUni"><option value="">—</option><option>Polera azul</option><option>Polera verde lima</option></select></div>
+    <div class="row">
+      <div style="flex:1;min-width:180px"><label>Fecha y hora</label><input id="eDT" type="datetime-local"/></div>
+      <div style="flex:1;min-width:180px"><label>Lugar</label><input id="eLoc"/></div>
+      <div style="flex:1;min-width:180px"><label>Rival</label><input id="eOpp"/></div>
+      <div style="flex:1;min-width:180px"><label>Uniforme</label><select id="eUni"><option value="">—</option><option>Polera azul</option><option>Polera verde lima</option></select></div>
     </div>
-
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:8px">
       <div style="font-weight:800">Asistencia</div>
       <div id="countBox" class="counts"></div>
     </div>
-
     <div class="row" style="justify-content:space-between; gap:8px">
       <div class="row" style="gap:6px">
-        <button class="btn" id="btnShowAll">Ver todas</button>
-        <button class="btn" id="btnShowOK">Ver solo convocadas (✅)</button>
+        <button class="btn s" id="btnShowAll">Ver todas</button>
+        <button class="btn s" id="btnShowOK">Ver solo convocadas (✅)</button>
       </div>
       <div class="row" style="gap:6px">
-        <button class="btn" id="btnExportList">Exportar lista</button>
+        <button class="btn s" id="btnExportList">Exportar lista</button>
       </div>
     </div>
-
     <div id="att" class="row" style="gap:6px"></div>
-
     <div style="font-weight:800;margin-top:8px">Convocatoria</div>
     <div id="rsvpInfo" style="font-size:13px;color:#334155;margin-bottom:6px"></div>
     <div class="row">
-      <button class="btn" id="btnRSVPCopy">Copiar link de convocatoria</button>
-      <button class="btn" id="btnCopyMsg">Copiar mensaje WhatsApp</button>
+      <button class="btn s" id="btnRSVPCopy">Copiar link de convocatoria</button>
+      <button class="btn s" id="btnCopyMsg">Copiar mensaje WhatsApp</button>
     </div>
   </div>
-
-  <div id="rsvp" class="card hidden" style="margin-top:10px">
-    <strong>Convocatoria (vista invitada)</strong>
-    <div id="rinfo" style="margin:6px 0;padding:8px;border:1px solid #c8ef7a;background:#eaf7d7;border-radius:10px"></div>
-    <div class="row"><select id="rSel"></select>
-      <button class="bsm" onclick="setRSVP('Asiste')">✅</button>
-      <button class="bsm" onclick="setRSVP('Duda')">❔</button>
-      <button class="bsm" onclick="setRSVP('No asiste')">❌</button>
-    </div>
-    <div class="row"><input id="rNew" placeholder="Agregar jugadora nueva"/><button class="bsm" id="rAdd">➕ Agregar</button></div>
-  </div>
-
 </div>
 
+<div class="mnav mobile"><div class="in">
+  <button id="mNavDash">Dashboard</button>
+  <button id="mNavCal">Calendario</button>
+  <button id="mNavNew">Nuevo</button>
+</div></div>
+
+<!-- Roster modal -->
 <div id="ov" class="overlay">
   <div class="modal">
     <div class="row" style="justify-content:space-between"><strong>Plantel</strong><button class="bsm" id="closeRoster">Cerrar</button></div>
@@ -145,13 +174,25 @@ label{font-size:12px;color:#334155;font-weight:600}
   </div>
 </div>
 
+<!-- RSVP view -->
+<div id="rsvp" class="card" style="display:none; margin:10px">
+  <strong>Convocatoria (vista invitada)</strong>
+  <div id="rinfo" style="margin:6px 0;padding:8px;border:1px solid #c8ef7a;background:#eaf7d7;border-radius:10px"></div>
+  <div class="row"><select id="rSel"></select>
+    <button class="bsm" onclick="setRSVP('Asiste')">✅</button>
+    <button class="bsm" onclick="setRSVP('Duda')">❔</button>
+    <button class="bsm" onclick="setRSVP('No asiste')">❌</button>
+  </div>
+  <div class="row"><input id="rNew" placeholder="Agregar jugadora nueva"/><button class="bsm" id="rAdd">➕ Agregar</button></div>
+</div>
+
 <script>
-const K="gm-pages-v3";
+const K="gm-adaptive-v1";
 let S={team:"Golden Moms FC", roster:["Ale V","Andre","Antonella","Aurora","Carla","Caro G","Caro N","Cata","Celsa","Chica","Consu","Consu S","Cote","Dani C","Dani J","Fabi","Fran","Gaby","Isa","Jandi","Janga","Javiera A","Javi C","Jean","Maca","Male","Marce","Myle","Paz","Pia","Pili","Vale","Vero"], events:[], att:{}};
 try{const tmp=JSON.parse(localStorage.getItem(K)||"{}"); if(tmp && typeof tmp==="object"){ S={...S, ...tmp}; }}catch{}
 function save(){ localStorage.setItem(K, JSON.stringify(S)); }
 
-// Seed 12 semanas con horarios pedidos
+// Seed schedule
 if(!S.events.length){
   function mk(y,m,d,h,mi){const t=new Date(y,m-1,d,h,mi);return new Date(t.getTime()-t.getTimezoneOffset()*60000).toISOString();}
   function nextDow(dow){const n=new Date(), g=(dow-n.getDay()+7)%7||7;const d=new Date(n);d.setDate(n.getDate()+g);return d;}
@@ -170,20 +211,25 @@ if(!S.events.length){
 }
 
 let cur = S.events[0]?.id || null;
-const grid=document.getElementById("grid"), mlabel=document.getElementById("mlabel");
+const grid=document.getElementById("grid"), mgrid=document.getElementById("mGrid");
+const mlabel=document.getElementById("mlabel"), mLabel=document.getElementById("mLabel");
 const fType=document.getElementById("fType"), fTeam=document.getElementById("fTeam");
 let view=new Date(); view.setDate(1);
+let mview=new Date(); mview.setDate(1);
+let showOnlyOK=false;
 
 function fmtMonth(d){return d.toLocaleDateString("es-CL",{month:"long",year:"numeric"})}
 function toInput(iso){const d=new Date(iso);const p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`}
 
-function renderCal(){
-  mlabel.textContent=fmtMonth(view);
-  const y=view.getFullYear(), m=view.getMonth();
-  const first=new Date(y,m,1), start=(first.getDay()+6)%7, days=new Date(y,m+1,0).getDate();
-  const cells=[]; for(let i=0;i<start;i++) cells.push(null); for(let d=1;d<=days;d++) cells.push(new Date(y,m,d)); while(cells.length%7) cells.push(null);
-  grid.innerHTML="";
-  const FT=fType.value, TM=fTeam.value;
+function buildCells(y,m){ const first=new Date(y,m,1), start=(first.getDay()+6)%7, days=new Date(y,m+1,0).getDate();
+  const cells=[]; for(let i=0;i<start;i++) cells.push(null); for(let d=1;d<=days;d++) cells.push(new Date(y,m,d)); while(cells.length%7) cells.push(null); return cells; }
+
+function renderCal(target,label,viewDate){
+  label.textContent=fmtMonth(viewDate);
+  const y=viewDate.getFullYear(), m=viewDate.getMonth();
+  const cells=buildCells(y,m);
+  target.innerHTML="";
+  const FT=fType?.value||"Todos", TM=fTeam?.value||"Todos";
   const ev=[...S.events].sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
   cells.forEach(dd=>{
     const c=document.createElement("div"); c.className="cell";
@@ -195,83 +241,91 @@ function renderCal(){
           const t=document.createElement("div"); t.className="tag "+(e.type=="Partido"?"match":"train"); t.textContent=e.type; c.appendChild(t);
           const r=document.createElement("div"); r.className="event"; const d=new Date(e.datetime);
           r.innerHTML=`<strong>${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}</strong> ${e.title} <span class="team">${e.team||"Golden Moms"}</span>`;
-          r.onclick=()=>{cur=e.id; document.getElementById("editor").scrollIntoView({behavior:"smooth"}); renderEditor();};
+          r.onclick=()=>{cur=e.id; openEditor();};
           c.appendChild(r);
         });
     }
-    grid.appendChild(c);
+    target.appendChild(c);
   });
 }
-fType.onchange=renderCal; fTeam.onchange=renderCal;
-document.getElementById("prev").onclick=()=>{view.setMonth(view.getMonth()-1);renderCal();};
-document.getElementById("next").onclick=()=>{view.setMonth(view.getMonth()+1);renderCal();};
 
-document.getElementById("btnNew").onclick=()=>{
-  const now=new Date(); now.setMinutes(0,0,0);
-  const id=crypto.randomUUID?.()||(""+Math.random()).slice(2);
-  const e={id,type:"Entrenamiento",title:"Entrenamiento",team:"Golden Moms",datetime:new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString(),location:"",opponent:"",uniform:""};
-  S.events.push(e); save(); cur=id; renderCal(); renderEditor();
-  window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
-};
+function renderKPIs(){
+  const upcoming = [...S.events].filter(e=>new Date(e.datetime)>=new Date()).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
+  document.getElementById("kEvents").textContent=upcoming.length;
+  document.getElementById("kRoster").textContent=S.roster.length;
+  // Convocadas del próximo evento
+  if(upcoming[0]){
+    const A=S.att[upcoming[0].id]||{};
+    document.getElementById("kOk").textContent=S.roster.filter(p=>A[p]==="Asiste").length;
+    document.getElementById("nextTxt").textContent=new Date(upcoming[0].datetime).toLocaleString('es-CL',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) + " · " + (upcoming[0].title||"");
+  }
+  // Pct general simple
+  const ids=[...new Set(Object.keys(S.att))]; let ok=0, total=0;
+  ids.forEach(id=>{const A=S.att[id]||{}; S.roster.forEach(p=>{ if(A[p]) total++; if(A[p]==="Asiste") ok++; });});
+  document.getElementById("kPct").textContent= total? Math.round(100*ok/total)+"%":"—";
+}
 
-// ---- Editor ----
+function renderUpcoming(){
+  const box=document.getElementById("upcoming");
+  const ev=[...S.events].filter(e=>new Date(e.datetime)>=new Date()).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime)).slice(0,10);
+  box.innerHTML="";
+  ev.forEach(E=>{
+    const A=S.att[E.id]||{}; const ok=S.roster.filter(p=>A[p]==="Asiste").length;
+    const it=document.createElement("div"); it.className="item";
+    const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    it.innerHTML=`<div class="l"><span class="badge">${E.type}</span><div><div class="time">${when}</div><div>${E.title} <span class="badge">${E.team||'Golden Moms'}</span></div></div></div><div><span class="badge">✅ ${ok}</span> <button class="btn s">Editar</button></div>`;
+    it.querySelector("button").onclick=()=>{cur=E.id; openEditor();};
+    box.appendChild(it);
+  });
+}
+
+// --- Editor ---
 const eType=document.getElementById("eType"), eTitle=document.getElementById("eTitle"), eDT=document.getElementById("eDT"),
       eLoc=document.getElementById("eLoc"), eOpp=document.getElementById("eOpp"), eUni=document.getElementById("eUni"),
       eTeam=document.getElementById("eTeam"), teamBadge=document.getElementById("teamBadge"), att=document.getElementById("att"),
       countBox=document.getElementById("countBox"), rsvpInfo=document.getElementById("rsvpInfo");
-let showOnlyOK=false;
+function openEditor(){ renderEditor(); document.getElementById("editor").style.display="block"; window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"}); }
 function renderEditor(){
   const E=S.events.find(x=>x.id==cur); const ed=document.getElementById("editor");
-  if(!E){ if(S.events.length){cur=S.events[0].id; return renderEditor();} ed.classList.add("hidden"); return; }
-  ed.classList.remove("hidden");
+  if(!E){ ed.style.display="none"; return; }
   eType.value=E.type||"Entrenamiento"; eTitle.value=E.title||""; eDT.value=toInput(E.datetime);
   eLoc.value=E.location||""; eOpp.value=E.opponent||""; eUni.value=E.uniform||""; eTeam.value=E.team||"Golden Moms"; teamBadge.textContent=E.team||"Golden Moms";
-
-  // Conteo asistencia
-  const A=S.att[E.id]||{};
-  const counts={ok:0, mid:0, no:0, blank:0};
-  S.roster.forEach(p=>{ const v=A[p]; if(v=="Asiste") counts.ok++; else if(v=="Duda") counts.mid++; else if(v=="No asiste") counts.no++; else counts.blank++; });
+  // Counts + grid
+  const A=S.att[E.id]||{}; const counts={ok:0, mid:0, no:0, blank:0};
+  S.roster.forEach(p=>{const v=A[p]; if(v=="Asiste") counts.ok++; else if(v=="Duda") counts.mid++; else if(v=="No asiste") counts.no++; else counts.blank++;});
   countBox.innerHTML=`<span class="chip ok">✅ ${counts.ok}</span><span class="chip mid">❔ ${counts.mid}</span><span class="chip no">❌ ${counts.no}</span><span class="chip">▫️ ${counts.blank}</span>`;
-
-  // Grid asistencia (filtrable)
   att.innerHTML="";
   S.roster.forEach(p=>{
-    const v=(S.att[E.id]||{})[p]||"";
-    if(showOnlyOK && v!=="Asiste") return;
+    const v=A[p]||""; if(showOnlyOK && v!=="Asiste") return;
     const row=document.createElement("div"); row.className="att";
     const nm=document.createElement("div"); nm.textContent=p; row.appendChild(nm);
     const r=document.createElement("div");
-    function mk(lbl,val){const b=document.createElement("button"); b.className="bsm"; b.textContent=lbl; b.onclick=()=>{const A=S.att[E.id]||{}; A[p]=val; S.att[E.id]=A; save(); renderEditor();}; return b;}
+    function mk(lbl,val){const b=document.createElement("button"); b.className="bsm"; b.textContent=lbl; b.onclick=()=>{const AA=S.att[E.id]||{}; AA[p]=val; S.att[E.id]=AA; save(); renderEditor();}; return b;}
     const b1=mk("✅","Asiste"), b2=mk("❔","Duda"), b3=mk("❌","No asiste");
     if(v=="Asiste") b1.style.background="#d9f99d"; if(v=="Duda") b2.style.background="#fef9c3"; if(v=="No asiste") b3.style.background="#fee2e2";
     r.appendChild(b1); r.appendChild(b2); r.appendChild(b3); row.appendChild(r); att.appendChild(row);
   });
-
-  // Convocatoria info
   const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'});
   rsvpInfo.textContent = `${E.type} — ${E.title} • ${when}${E.location?' • '+E.location:''} (${E.team||'Golden Moms'})`;
 }
 [eType,eTitle,eLoc,eOpp,eUni,eTeam].forEach(el=>el.addEventListener("change",()=>{
   const E=S.events.find(x=>x.id==cur); if(!E) return;
   E.type=eType.value; E.title=eTitle.value; E.location=eLoc.value; E.opponent=eOpp.value; E.uniform=eUni.value; E.team=eTeam.value; teamBadge.textContent=E.team;
-  save(); renderCal(); renderEditor();
+  save(); renderCal(grid, mlabel, view); renderCal(mgrid, mLabel, mview); renderUpcoming(); renderEditor();
 }));
-eDT.addEventListener("change",()=>{const E=S.events.find(x=>x.id==cur); if(!E) return; const d=new Date(eDT.value); E.datetime=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString(); save(); renderCal(); renderEditor();});
-
-document.getElementById("btnDel").onclick=()=>{ const i=S.events.findIndex(x=>x.id==cur); if(i>=0){ S.events.splice(i,1); delete S.att[cur]; save(); cur=S.events[0]?.id||null; renderCal(); renderEditor(); } };
-
-// Filtro de asistencia
+eDT.addEventListener("change",()=>{const E=S.events.find(x=>x.id==cur); if(!E) return; const d=new Date(eDT.value); E.datetime=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString(); save(); renderCal(grid, mlabel, view); renderCal(mgrid, mLabel, mview); renderUpcoming(); renderEditor();});
+document.getElementById("btnDel").onclick=()=>{ const i=S.events.findIndex(x=>x.id==cur); if(i>=0){ S.events.splice(i,1); delete S.att[cur]; save(); cur=S.events[0]?.id||null; renderCal(grid, mlabel, view); renderCal(mgrid, mLabel, mview); renderUpcoming(); document.getElementById("editor").style.display='none'; } };
 document.getElementById("btnShowAll").onclick=()=>{ showOnlyOK=false; renderEditor(); };
 document.getElementById("btnShowOK").onclick=()=>{ showOnlyOK=true; renderEditor(); };
 
-// Exportar lista (PDF / imagen vía print)
+// Exportar lista
 document.getElementById("btnExportList").onclick=()=>{
   const E=S.events.find(x=>x.id==cur); if(!E) return;
   const A=S.att[E.id]||{}; const list=S.roster.filter(p=>A[p]==="Asiste");
   const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'});
   const w=window.open('','_blank');
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:24px}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:24px}
     h1{margin:0 0 6px 0} .sub{color:#334155;margin:0 0 18px 0}
     .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid #cbd5e1;margin:4px 6px}
     .row{display:flex;flex-wrap:wrap}
@@ -289,6 +343,7 @@ document.getElementById("btnExportList").onclick=()=>{
   w.document.write(html); w.document.close();
 };
 
+// ICS / WhatsApp / RSVP
 function icsDate(d){return new Date(d).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z")}
 document.getElementById("btnICS").onclick=()=>{
   const E=S.events.find(x=>x.id==cur); if(!E) return;
@@ -318,7 +373,32 @@ document.getElementById("btnCopyMsg").onclick=()=>{
   navigator.clipboard.writeText(decodeURIComponent(text)); alert("Mensaje de WhatsApp copiado.");
 };
 
-// Semana
+// New event & roster
+document.getElementById("btnNew").onclick=()=>{
+  const now=new Date(); now.setMinutes(0,0,0);
+  const id=crypto.randomUUID?.()||(""+Math.random()).slice(2);
+  const e={id,type:"Entrenamiento",title:"Entrenamiento",team:"Golden Moms",datetime:new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString(),location:"",opponent:"",uniform:""};
+  S.events.push(e); save(); cur=id; renderCal(grid, mlabel, view); renderCal(mgrid, mLabel, mview); renderUpcoming(); openEditor();
+};
+document.getElementById("btnRoster").onclick=()=>{document.getElementById("ov").style.display="flex"; renderChips();};
+document.getElementById("closeRoster").onclick=()=>{document.getElementById("ov").style.display="none";};
+document.getElementById("pAdd").onclick=()=>{const n=document.getElementById("pName").value.trim(); if(!n) return; if(!S.roster.includes(n)) S.roster.push(n); document.getElementById("pName").value=""; save(); renderChips(); renderEditor(); renderUpcoming();};
+function renderChips(){ const chips=document.getElementById("chips"); chips.innerHTML=""; S.roster.sort((a,b)=>a.localeCompare(b)).forEach(p=>{ const sp=document.createElement("span"); sp.textContent=p+" "; const x=document.createElement("button"); x.className="bsm"; x.textContent="×"; x.onclick=()=>{S.roster=S.roster.filter(z=>z!==p); save(); renderChips(); renderEditor(); renderUpcoming();}; sp.appendChild(x); chips.appendChild(sp);}); }
+
+// Mobile interactions
+document.getElementById("mToggleCal").onclick=()=>{ const w=document.getElementById("mCalWrap"); w.style.display = w.style.display==='none'?'block':'none'; };
+document.getElementById("mNavDash").onclick=()=>{window.scrollTo({top:0,behavior:'smooth'});};
+document.getElementById("mNavCal").onclick=()=>{document.getElementById("mCalWrap").style.display='block'; document.getElementById("mCalWrap").scrollIntoView({behavior:'smooth'});};
+document.getElementById("mNavNew").onclick=()=>{document.getElementById("btnNew").click();};
+
+// Month nav bindings
+document.getElementById("prev").onclick=()=>{view.setMonth(view.getMonth()-1);renderCal(grid, mlabel, view);};
+document.getElementById("next").onclick=()=>{view.setMonth(view.getMonth()+1);renderCal(grid, mlabel, view);};
+document.getElementById("mPrev").onclick=()=>{mview.setMonth(mview.getMonth()-1);renderCal(mgrid, mLabel, mview);};
+document.getElementById("mNext").onclick=()=>{mview.setMonth(mview.getMonth()+1);renderCal(mgrid, mLabel, mview);};
+fType.onchange=()=>renderCal(grid, mlabel, view); fTeam.onchange=()=>renderCal(grid, mlabel, view);
+
+// Print & copy week
 function nextMon(d){const day=(d.getDay()+6)%7; const diff=(7-day)%7; const nd=new Date(d); nd.setDate(d.getDate()+diff); nd.setHours(0,0,0,0); return nd;}
 document.getElementById("btnPDF").onclick=()=>{
   const st=nextMon(new Date()), en=new Date(st); en.setDate(st.getDate()+7);
@@ -338,25 +418,23 @@ document.getElementById("btnCopyWeek").onclick=()=>{
   }); navigator.clipboard.writeText(L.join('\n')); alert("Semana copiada. Pega en WhatsApp.");
 };
 
-// Roster modal
-const ov=document.getElementById("ov"), chips=document.getElementById("chips");
-function openRoster(){renderChips(); ov.style.display="flex";}
-function closeRoster(){ov.style.display="none";}
-document.getElementById("btnRoster").onclick=openRoster;
-document.getElementById("closeRoster").onclick=closeRoster;
-document.getElementById("pAdd").onclick=()=>{const n=document.getElementById("pName").value.trim(); if(!n) return; if(!S.roster.includes(n)) S.roster.push(n); document.getElementById("pName").value=""; save(); renderChips(); renderEditor();};
-function renderChips(){ chips.innerHTML=""; S.roster.sort((a,b)=>a.localeCompare(b)).forEach(p=>{ const sp=document.createElement("span"); sp.textContent=p+" "; const x=document.createElement("button"); x.className="bsm"; x.textContent="×"; x.onclick=()=>{S.roster=S.roster.filter(z=>z!==p); save(); renderChips(); renderEditor();}; sp.appendChild(x); chips.appendChild(sp);}); }
-
-// RSVP inline (solo mismo navegador)
+// RSVP inline (demo)
 function checkHash(){ const h=location.hash; if(h.startsWith("#rsvp=")){ try{ const p=JSON.parse(decodeURIComponent(h.slice(6))); showRSVP(p.id,p.t);}catch{} } }
 function showRSVP(id,t){ const E=S.events.find(x=>x.id==id); if(!E){ alert("Evento no existe en este navegador (Pages sin servidor)."); return; }
   document.getElementById("rinfo").innerHTML = `<strong>${t}</strong><br>${E.type} — ${E.title} (${E.team||'Golden Moms'})<br>${new Date(E.datetime).toLocaleString('es-CL')}${E.location?' — '+E.location:''}`;
-  document.getElementById("rsvp").classList.remove("hidden"); document.getElementById("editor").classList.add("hidden"); cur=id; renderRSVPSelect(); }
+  document.getElementById("rsvp").style.display='block'; cur=id; renderRSVPSelect(); }
 function renderRSVPSelect(){ const s=document.getElementById("rSel"); s.innerHTML=S.roster.map(p=>`<option>${p}</option>`).join(""); }
 document.getElementById("rAdd").onclick=()=>{ const n=document.getElementById("rNew").value.trim(); if(!n) return; if(!S.roster.includes(n)) S.roster.push(n); save(); renderRSVPSelect(); document.getElementById("rSel").value=n; alert("Agregada: "+n); };
 window.setRSVP=function(v){ const E=S.events.find(x=>x.id==cur); if(!E) return; const name=document.getElementById("rSel").value; const A=S.att[E.id]||{}; A[name]=v; S.att[E.id]=A; save(); alert("Confirmado: "+name+" → "+v); };
 
-function init(){ renderCal(); renderEditor(); checkHash(); }
+function init(){
+  renderCal(grid, mlabel, view);
+  renderCal(mgrid, mLabel, mview);
+  renderKPIs();
+  renderUpcoming();
+  checkHash();
+}
 init();
 </script>
-</body></html>
+</body>
+</html>
