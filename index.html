@@ -1,27 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Golden Moms</title>
-  <link rel="icon" href="logo.png">
-  <style>
-    /* aquí el CSS */
-  </style>
-</head>
-<body>
-  <!-- aquí va todo el HTML -->
-  <script>
-    // aquí va todo el JavaScript
-  </script>
-</body>
-</html>
-
-
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Golden Moms — Gestión</title>
@@ -187,11 +166,11 @@ label{font-size:12px;color:#334155;font-weight:600}
 </div></div>
 
 <!-- Roster modal -->
-<div id="ov" class="overlay">
-  <div class="modal">
+<div id="ov" class="overlay" style="display:none;position:fixed;inset:0;background:#0006;align-items:center;justify-content:center;padding:12px;z-index:5">
+  <div class="modal" style="max-width:520px;width:100%;background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 10px 30px #0003;padding:10px">
     <div class="row" style="justify-content:space-between"><strong>Plantel</strong><button class="bsm" id="closeRoster">Cerrar</button></div>
     <div class="row"><input id="pName" placeholder="Nombre jugadora"/><button class="bsm" id="pAdd">Agregar</button></div>
-    <div id="chips" class="chips"></div>
+    <div id="chips" class="chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
   </div>
 </div>
 
@@ -213,7 +192,7 @@ let S={team:"Golden Moms FC", roster:["Ale V","Andre","Antonella","Aurora","Carl
 try{const tmp=JSON.parse(localStorage.getItem(K)||"{}"); if(tmp && typeof tmp==="object"){ S={...S, ...tmp}; }}catch{}
 function save(){ localStorage.setItem(K, JSON.stringify(S)); }
 
-// Seed schedule
+// Seed: 12 semanas con horarios pedidos
 if(!S.events.length){
   function mk(y,m,d,h,mi){const t=new Date(y,m-1,d,h,mi);return new Date(t.getTime()-t.getTimezoneOffset()*60000).toISOString();}
   function nextDow(dow){const n=new Date(), g=(dow-n.getDay()+7)%7||7;const d=new Date(n);d.setDate(n.getDate()+g);return d;}
@@ -274,13 +253,11 @@ function renderKPIs(){
   const upcoming = [...S.events].filter(e=>new Date(e.datetime)>=new Date()).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
   document.getElementById("kEvents").textContent=upcoming.length;
   document.getElementById("kRoster").textContent=S.roster.length;
-  // Convocadas del próximo evento
   if(upcoming[0]){
     const A=S.att[upcoming[0].id]||{};
     document.getElementById("kOk").textContent=S.roster.filter(p=>A[p]==="Asiste").length;
     document.getElementById("nextTxt").textContent=new Date(upcoming[0].datetime).toLocaleString('es-CL',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) + " · " + (upcoming[0].title||"");
   }
-  // Pct general simple
   const ids=[...new Set(Object.keys(S.att))]; let ok=0, total=0;
   ids.forEach(id=>{const A=S.att[id]||{}; S.roster.forEach(p=>{ if(A[p]) total++; if(A[p]==="Asiste") ok++; });});
   document.getElementById("kPct").textContent= total? Math.round(100*ok/total)+"%":"—";
@@ -311,7 +288,6 @@ function renderEditor(){
   if(!E){ ed.style.display="none"; return; }
   eType.value=E.type||"Entrenamiento"; eTitle.value=E.title||""; eDT.value=toInput(E.datetime);
   eLoc.value=E.location||""; eOpp.value=E.opponent||""; eUni.value=E.uniform||""; eTeam.value=E.team||"Golden Moms"; teamBadge.textContent=E.team||"Golden Moms";
-  // Counts + grid
   const A=S.att[E.id]||{}; const counts={ok:0, mid:0, no:0, blank:0};
   S.roster.forEach(p=>{const v=A[p]; if(v=="Asiste") counts.ok++; else if(v=="Duda") counts.mid++; else if(v=="No asiste") counts.no++; else counts.blank++;});
   countBox.innerHTML=`<span class="chip ok">✅ ${counts.ok}</span><span class="chip mid">❔ ${counts.mid}</span><span class="chip no">❌ ${counts.no}</span><span class="chip">▫️ ${counts.blank}</span>`;
@@ -339,7 +315,7 @@ document.getElementById("btnDel").onclick=()=>{ const i=S.events.findIndex(x=>x.
 document.getElementById("btnShowAll").onclick=()=>{ showOnlyOK=false; renderEditor(); };
 document.getElementById("btnShowOK").onclick=()=>{ showOnlyOK=true; renderEditor(); };
 
-// Exportar lista
+// Exportar lista (con cierre de script escapado)
 document.getElementById("btnExportList").onclick=()=>{
   const E=S.events.find(x=>x.id==cur); if(!E) return;
   const A=S.att[E.id]||{}; const list=S.roster.filter(p=>A[p]==="Asiste");
@@ -359,7 +335,7 @@ document.getElementById("btnExportList").onclick=()=>{
     <div class="box"><strong>Convocadas (${list.length})</strong><div class="row">
       ${list.map(n=>`<span class="pill">✅ ${n}</span>`).join('') || '<em>No hay confirmadas aún</em>'}
     </div></div>
-    <script>window.print()</script>
+    <script>window.print()<\\/script>
   </body></html>`;
   w.document.write(html); w.document.close();
 };
@@ -439,7 +415,7 @@ document.getElementById("btnCopyWeek").onclick=()=>{
   }); navigator.clipboard.writeText(L.join('\n')); alert("Semana copiada. Pega en WhatsApp.");
 };
 
-// RSVP inline (demo)
+// RSVP inline (demo sin servidor)
 function checkHash(){ const h=location.hash; if(h.startsWith("#rsvp=")){ try{ const p=JSON.parse(decodeURIComponent(h.slice(6))); showRSVP(p.id,p.t);}catch{} } }
 function showRSVP(id,t){ const E=S.events.find(x=>x.id==id); if(!E){ alert("Evento no existe en este navegador (Pages sin servidor)."); return; }
   document.getElementById("rinfo").innerHTML = `<strong>${t}</strong><br>${E.type} — ${E.title} (${E.team||'Golden Moms'})<br>${new Date(E.datetime).toLocaleString('es-CL')}${E.location?' — '+E.location:''}`;
@@ -459,3 +435,4 @@ init();
 </script>
 </body>
 </html>
+
