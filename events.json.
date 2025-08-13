@@ -1,0 +1,18 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        // ... (otras configuraciones de tu calendario)
+
+        // Usa 'eventSources' para cargar los eventos desde el JSON
+        eventSources: [
+            {
+                url: './events.json', // Ruta a tu archivo JSON
+                method: 'GET',
+                failure: function() {
+                    alert('Hubo un error cargando los eventos!');
+                }
+            }
+        ]
+    });
+    calendar.render();
+});
