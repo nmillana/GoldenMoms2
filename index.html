@@ -1,843 +1,595 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Golden Moms</title>
-<link rel="icon" href="Logo.webp" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Golden Moms — Panel</title>
+<link rel="icon" href="Logo.webp">
 <style>
 :root{
-  --blue:#0f3a78; --lime:#9BE22D; --ink:#0f172a; --mut:#64748b; --b:#e2e8f0; --bg:#f6f7fb;
-  --ok:#22c55e; --mid:#eab308; --no:#ef4444;
+  --blue:#0f3a78;--lime:#9BE22D;--ink:#0f172a;--mut:#64748b;--bg:#f7f8fa;--b:#e2e8f0;--ok:#16a34a;--mid:#f59e0b;--no:#ef4444
 }
-*{box-sizing:border-box}
-html,body{margin:0;height:100%}
-body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:var(--ink);background:var(--bg)}
-/* Topbar */
-.top{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--b);
-  display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px}
-.brand{display:flex;align-items:center;gap:10px}
-.brand img{width:32px;height:32px;border-radius:6px;border:1px solid #0f3a78;object-fit:cover}
-.brand .t{font-weight:800}
-.user{display:flex;align-items:center;gap:8px;color:#334155}
-.badge{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--b);background:#f8fafc;font-size:12px}
+*{box-sizing:border-box} html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--ink)}
+a{color:inherit}
+.top{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border-bottom:1px solid var(--b)}
+.brand{display:flex;gap:10px;align-items:center}
+.brand img{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--blue)}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.tab{border:1px solid var(--b);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
+.tab.active{background:var(--blue);color:#fff}
+.right{display:flex;gap:8px;align-items:center}
 .btn{border:1px solid var(--b);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
-.btn.p{background:var(--lime);color:#052043;border-color:#a3e635;font-weight:800}
-.btn.d{background:#fff;color:#ef4444;border-color:#fecaca}
-.btn.s{background:#f8fafc}
-.container{max-width:1200px;margin:12px auto;padding:0 12px}
-.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 6px 18px #0000000c;padding:12px;margin-bottom:12px}
+.btn.p{background:var(--lime);color:#08244a;border-color:#a3e635;font-weight:800}
+.btn.d{background:var(--no);color:#fff;border-color:var(--no)}
+.container{max-width:1140px;margin:14px auto;padding:0 12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-.k{display:flex;flex-direction:column;gap:6px}
-.k h3{margin:0;color:#475569;font-size:13px}
-.k .n{font-size:24px;font-weight:800}
-/* Tabs */
-.tabs{display:flex;gap:6px;flex-wrap:wrap}
-.tabs .tab{padding:8px 10px;border:1px solid var(--b);border-radius:999px;background:#f8fafc;cursor:pointer}
-.tabs .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-/* Filters */
-.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.filters label{font-size:12px;color:#334155;font-weight:600;margin-right:4px}
-select,input,textarea{padding:10px;border:1px solid var(--b);border-radius:10px;font:inherit}
-input[type="datetime-local"]{min-width:220px}
-/* Calendar */
+.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
+.kpi h4{margin:0 0 6px 0;color:#334155;font-size:14px}
+.kpi .n{font-weight:800;font-size:24px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,input,textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:10px;background:#fff}
+.badge{font-size:11px;border:1px solid #cbd5e1;border-radius:999px;padding:2px 6px;background:#f8fafc}
+.chip{font-size:12px;border:1px solid var(--b);border-radius:999px;padding:4px 8px;background:#f8fafc;margin:2px 4px;display:inline-flex;align-items:center;gap:6px}
+.chip.ok{background:#d9f99d;border-color:#bef264} .chip.mid{background:#fef9c3;border-color:#fde68a} .chip.no{background:#fee2e2;border-color:#fecaca}
+.chip.team{background:#eaf7d7;border-color:#c8ef7a}
+.chip.bday{background:#fff3e8;border-color:#ffd7a8}
 .grid7{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cell{background:#fff;border:1px solid var(--b);min-height:120px;border-radius:12px;padding:8px;position:relative}
+.cell{background:#fff;border:1px solid var(--b);min-height:110px;border-radius:12px;padding:8px;position:relative}
 .day{position:absolute;right:8px;top:6px;font-size:11px;color:#94a3b8}
-.tag{font-size:10px;border:1px solid #0001;border-radius:999px;padding:2px 6px;display:inline-block;margin:0 0 4px 0}
+.tag{font-size:10px;border:1px solid #0001;border-radius:999px;padding:2px 6px;display:inline-block;margin-bottom:4px}
 .match{background:#e0edff;border-color:#b7d1ff;color:#0f3a78}
 .train{background:#e9fbd0;border-color:#c6f28a;color:#2d5a00}
-.birth{background:#fff4d6;border-color:#fde68a;color:#92400e}
-.event{font-size:13px;margin-bottom:6px;cursor:pointer;line-height:1.2}
-.team{font-size:10px;background:#eaf7d7;border:1px solid #c8ef7a;border-radius:999px;padding:1px 6px;margin-left:6px;font-weight:700}
-/* Lists */
-.list .item{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--b);border-radius:12px;padding:10px;margin:6px 0;background:#fff}
-.item .l{display:flex;gap:8px;align-items:center}
-.time{font-weight:800;color:#0f3a78}
-.pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid #cbd5e1;margin:2px;background:#f8fafc}
-/* Editor & attendance */
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.att{border:1px solid var(--b);border-radius:12px;padding:8px;display:flex;justify-content:space-between;align-items:center}
-.bsm{padding:8px 10px;border:1px solid var(--b);border-radius:10px;background:#f8fafc;cursor:pointer}
-.chip{padding:6px 10px;border-radius:999px;border:1px solid var(--b);background:#f8fafc;font-weight:700;font-size:12px}
-.chip.ok{background:#d9f99d;border-color:#bef264} .chip.mid{background:#fef9c3;border-color:#fde68a} .chip.no{background:#fee2e2;border-color:#fecaca}
-.sep{height:1px;background:var(--b);margin:8px 0}
-/* Roster page */
-.table{width:100%;border-collapse:separate;border-spacing:0 6px}
-.table th{font-size:12px;color:#64748b;text-align:left;padding:4px 6px}
-.table td{background:#fff;border:1px solid var(--b);padding:8px;border-radius:8px}
-.tags{display:flex;gap:6px;flex-wrap:wrap}
-/* Modal */
-.overlay{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;padding:10px}
-.modal{max-width:900px;width:100%;background:#fff;border-radius:12px;border:1px solid var(--b);padding:12px;max-height:90vh;overflow:auto}
-/* Bottom nav (mobile) */
-.mnav{position:sticky;bottom:0;z-index:9;background:#fff;border-top:1px solid var(--b);display:none}
-.mnav .in{display:flex;justify-content:space-around;padding:8px}
-.mnav button{background:#f8fafc;border:1px solid var(--b);border-radius:999px;padding:8px 12px}
-/* Layout: mobile-first */
-.desktop{display:none} .mobile{display:block}
-@media (min-width: 900px){
-  .desktop{display:block} .mobile{display:none}
+.event{font-size:13px;margin-bottom:6px;cursor:pointer}
+.modal-bg{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;padding:10px;z-index:10}
+.modal{max-width:960px;width:100%;background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 20px 32px #0000002a}
+.modal .hd{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--b)}
+.modal .bd{padding:12px;max-height:75vh;overflow:auto}
+.modal .ft{padding:12px;border-top:1px solid var(--b);display:flex;justify-content:flex-end;gap:8px}
+.cols{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+.col-4{grid-column:span 4} .col-6{grid-column:span 6} .col-8{grid-column:span 8} .col-12{grid-column:span 12}
+.att-row{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--b);border-radius:10px;padding:8px;margin:6px 0;background:#fff}
+@media (max-width:900px){
+  .desktop-only{display:none}
+  .cols{grid-template-columns:repeat(6,1fr)}
+  .col-4{grid-column:span 6} .col-6{grid-column:span 6} .col-8{grid-column:span 6} .col-12{grid-column:span 6}
 }
-/* Login */
-.login{max-width:420px;margin:50px auto;padding:20px;background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 6px 18px #00000010;text-align:center}
-.login img{width:64px;height:64px;border-radius:8px;border:1px solid var(--b);object-fit:cover;margin-bottom:8px}
-/* Tiny helpers */
-.help{font-size:12px;color:#64748b}
-.note{font-size:12px;color:#334155}
-.warn{color:#b91c1c;font-weight:700}
-.ok{color:#166534;font-weight:700}
+.small{font-size:12px;color:#64748b}
+.hr{height:1px;background:var(--b);margin:8px 0}
 </style>
 </head>
 <body>
-
-<!-- Topbar -->
-<div class="top" id="topbar" style="display:none">
-  <div class="brand"><img src="Logo.webp" alt="logo"><div class="t">Golden <span style="color:var(--lime)">Moms</span></div></div>
-  <div class="user">
-    <span id="who"></span>
-    <span class="badge" id="role"></span>
-    <button class="btn s" id="btnViewAs" style="display:none">Ver como…</button>
-    <button class="btn" id="btnLogout">Salir</button>
-  </div>
-</div>
-
-<!-- Login -->
-<div id="login" class="login">
-  <img src="Logo.webp" alt="logo">
-  <h2 style="margin:6px 0">Golden Moms</h2>
-  <div class="help" style="margin-bottom:10px">Ingresa tu <b>apodo</b> y <b>código de acceso</b>.</div>
-  <div class="row" style="justify-content:center">
-    <select id="lgNick" style="flex:1;min-width:220px"></select>
-    <input id="lgCode" placeholder="Código" type="password" style="flex:1;min-width:140px">
-  </div>
-  <div class="row" style="justify-content:center;margin-top:8px">
-    <button class="btn p" id="btnEnter">Entrar</button>
-  </div>
-  <div class="help" style="margin-top:10px">Si no tienes acceso, pídeselo a la capitana o al admin.</div>
-</div>
-
-<!-- App -->
-<div id="app" style="display:none">
-  <div class="top" style="position:sticky;top:48px;display:none"></div>
-  <div class="container">
-
-    <!-- Main tabs -->
-    <div class="tabs" id="mainTabs">
-      <div class="tab active" data-v="dash">Dashboard</div>
-      <div class="tab" data-v="events">Eventos</div>
-      <div class="tab" data-v="roster">Plantel</div>
-      <div class="tab" data-v="track">Seguimiento</div>
-      <div class="tab" data-v="settings" id="tabSettings" style="display:none">Configuración</div>
+  <div class="top">
+    <div class="brand">
+      <img src="Logo.webp" alt="GM">
+      <strong>Golden <span style="color:var(--lime)">Moms</span></strong>
     </div>
+    <div class="nav">
+      <button class="tab active" data-tab="dash">Dashboard</button>
+      <button class="tab" data-tab="events">Eventos</button>
+      <button class="tab" data-tab="roster">Plantel</button>
+      <button class="tab" data-tab="track">Seguimiento</button>
+      <button class="tab" data-tab="cfg">Configuración</button>
+    </div>
+    <div class="right">
+      <span id="roleBadge" class="badge">Invitada</span>
+      <button id="btnLogin" class="btn">Entrar</button>
+      <button id="btnLogout" class="btn" style="display:none">Salir</button>
+    </div>
+  </div>
 
-    <!-- DASH -->
-    <section id="view-dash">
-      <div class="grid">
-        <div class="card k" style="grid-column:span 3"><h3>Próximos eventos</h3><div class="n" id="kEvents">0</div><small id="nextTxt" class="help"></small></div>
-        <div class="card k" style="grid-column:span 3"><h3>Convocadas (próx.)</h3><div class="n" id="kOk">0</div></div>
-        <div class="card k" style="grid-column:span 3"><h3>Plantel activo</h3><div class="n" id="kRoster">0</div></div>
-        <div class="card k" style="grid-column:span 3"><h3>Top goleadoras (temporada)</h3><div id="kScorers" class="help">—</div></div>
-      </div>
-
-      <div class="card desktop">
-        <div class="row" style="justify-content:space-between;align-items:end">
-          <div class="filters">
-            <div><label>Tipo de evento</label><br>
-              <select id="fType"><option value="Todos">Todos</option><option>Partido</option><option>Entrenamiento</option><option>Cumpleaños</option></select>
-            </div>
-            <div><label>Equipo</label><br>
-              <select id="fTeam"><option value="Todos">Todos</option><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select>
-            </div>
+  <div class="container" id="dash">
+    <div class="grid">
+      <div class="card kpi" style="grid-column:span 3"><h4>Próximos eventos</h4><div class="n" id="kEvents">0</div></div>
+      <div class="card kpi" style="grid-column:span 3"><h4>Plantel</h4><div class="n" id="kRoster">0</div></div>
+      <div class="card kpi" style="grid-column:span 3"><h4>Convocadas (próx.)</h4><div class="n" id="kOk">0</div></div>
+      <div class="card kpi" style="grid-column:span 3"><h4>Partidos jugados</h4><div class="n" id="kPlayed">0</div></div>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <div class="card" style="grid-column:span 7">
+        <div class="row" style="justify-content:space-between">
+          <div class="row">
+            <button class="btn" id="mPrev">&larr;</button>
+            <div id="mLabel" style="min-width:200px;text-align:center;font-weight:800;color:var(--blue)"></div>
+            <button class="btn" id="mNext">&rarr;</button>
           </div>
           <div class="row">
-            <button class="btn s" id="prev">&larr;</button>
-            <div id="mlabel" style="min-width:200px;text-align:center;font-weight:800;color:#0f3a78"></div>
-            <button class="btn s" id="next">&rarr;</button>
-            <button class="btn s" id="btnCopyWeek">Copiar semana</button>
+            <select id="fType"><option value="Todos">Tipo: Todos</option><option>Entrenamiento</option><option>Partido</option></select>
+            <select id="fTeam"><option value="Todos">Equipo: Todos</option><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select>
+            <button class="btn" id="btnCopyWeek">Copiar Semana</button>
+            <button class="btn p" id="btnNewEvent">Nuevo Evento</button>
           </div>
         </div>
-        <div class="grid7" style="margin-top:6px"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
+        <div class="grid7 desktop-only"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
         <div id="grid" class="grid7"></div>
       </div>
-
-      <div class="card mobile">
+      <div class="card" style="grid-column:span 5">
         <div class="row" style="justify-content:space-between">
-          <strong>Próximos</strong>
-          <div class="filters" style="gap:6px">
-            <label for="mType" class="help">Tipo</label>
-            <select id="mType"><option value="Todos">Todos</option><option>Partido</option><option>Entrenamiento</option><option>Cumpleaños</option></select>
-            <label for="mTeam" class="help">Equipo</label>
-            <select id="mTeam"><option value="Todos">Todos</option><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select>
-            <button class="btn s" id="mToggleCal">Ver calendario</button>
-          </div>
+          <strong>Próximos cumpleaños</strong>
+          <span class="small">🎂 se muestran con etiqueta</span>
         </div>
-        <div id="upcoming" class="list"></div>
-        <div id="mCalWrap" style="display:none;margin-top:8px">
-          <div class="row" style="justify-content:space-between">
-            <div class="row">
-              <button class="btn s" id="mPrev">&larr;</button>
-              <div id="mLabel" style="min-width:160px;text-align:center;font-weight:800;color:#0f3a78"></div>
-              <button class="btn s" id="mNext">&rarr;</button>
-            </div>
-          </div>
-          <div class="grid7" style="margin-top:6px"><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div></div>
-          <div id="mGrid" class="grid7"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- EVENTS -->
-    <section id="view-events" style="display:none">
-      <div class="card">
+        <div id="bdayList" style="margin-top:8px"></div>
+        <div class="hr"></div>
         <div class="row" style="justify-content:space-between">
-          <div class="filters">
-            <div><label>Tipo de evento</label><br>
-              <select id="efType"><option value="Todos">Todos</option><option>Partido</option><option>Entrenamiento</option><option>Cumpleaños</option></select>
-            </div>
-            <div><label>Equipo</label><br>
-              <select id="efTeam"><option value="Todos">Todos</option><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select>
-            </div>
-          </div>
-          <div class="row">
-            <button class="btn p" id="btnNew">Nuevo evento</button>
-            <button class="btn s" id="btnCopyWeek2">Copiar semana</button>
-          </div>
+          <strong>Goleadoras</strong><span class="small">Top 5</span>
         </div>
+        <div id="topScorers" style="margin-top:6px"></div>
       </div>
-      <div id="evList" class="card"></div>
-      <div id="editor" class="card" style="display:none"></div>
-    </section>
-
-    <!-- ROSTER -->
-    <section id="view-roster" style="display:none">
-      <div class="card">
-        <div class="row" style="justify-content:space-between">
-          <strong>Plantel</strong>
-          <div class="row">
-            <button class="btn p" id="btnAddPlayer" style="display:none">Agregar jugadora</button>
-          </div>
-        </div>
-        <div id="rosterTableWrap"></div>
-      </div>
-    </section>
-
-    <!-- TRACKING -->
-    <section id="view-track" style="display:none">
-      <div class="card">
-        <div class="row" style="justify-content:space-between">
-          <strong>Seguimiento de Partidos</strong>
-          <button class="btn p" id="btnNewMatch" style="display:none">Nuevo registro</button>
-        </div>
-        <div id="matchList"></div>
-      </div>
-    </section>
-
-    <!-- SETTINGS (solo admin) -->
-    <section id="view-settings" style="display:none">
-      <div class="card">
-        <strong>Administración</strong>
-        <div class="sep"></div>
-        <div class="row">
-          <button class="btn s" id="btnExport">Exportar backup (JSON)</button>
-          <input type="file" id="backupFile" style="display:none" />
-          <button class="btn s" id="btnImport">Importar backup</button>
-          <button class="btn d" id="btnReset">Reset local</button>
-        </div>
-        <div class="help">Solo Admin. El backup incluye plantel, eventos, asistencias, resultados y ranking.</div>
-      </div>
-    </section>
-
-  </div>
-
-  <!-- Mobile nav -->
-  <div class="mnav">
-    <div class="in">
-      <button data-v="dash">Dashboard</button>
-      <button data-v="events">Eventos</button>
-      <button data-v="roster">Plantel</button>
-      <button data-v="track">Seguimiento</button>
     </div>
   </div>
-</div>
 
-<!-- Modal generic -->
-<div id="ov" class="overlay"><div id="ovc" class="modal"></div></div>
+  <div class="container" id="events" style="display:none"></div>
+  <div class="container" id="roster" style="display:none"></div>
+  <div class="container" id="track" style="display:none"></div>
+  <div class="container" id="cfg" style="display:none"></div>
+
+  <!-- Generic modal -->
+  <div id="modal" class="modal-bg">
+    <div class="modal">
+      <div class="hd"><strong id="modTitle">Modal</strong><button class="btn" id="modClose">Cerrar</button></div>
+      <div class="bd" id="modBody"></div>
+      <div class="ft" id="modFoot"></div>
+    </div>
+  </div>
 
 <script>
-/* -------------------------- STATE & AUTH -------------------------- */
+/* =============== Estado y utilidades =============== */
 const KEY="gm-app-v3";
-const nowISO=()=>new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString();
-const initState={
+let S={
   team:"Golden Moms",
-  users:[ // nombre, apodo (login), role, code, equipos, nro, cumpleaños (MM-DD)
-    {name:"Natalia Millán", nick:"Natalia", role:"admin", code:"1234", teams:["Golden Moms","Golden Dreams","Golden Power"], number:"7", birthday:"01-15"},
-    {name:"Chica", nick:"Chica", role:"capitana", code:"2222", teams:["Golden Moms","Golden Dreams"], number:"10", birthday:"04-20"},
-    {name:"Vero", nick:"Vero", role:"jugadora", code:"3333", teams:["Golden Moms"], number:"5", birthday:"01-29"},
-    {name:"Dani J", nick:"Dani J", role:"jugadora", code:"4444", teams:["Golden Moms","Golden Power"], number:"11", birthday:"01-11"},
-    // agrega aquí las demás; puedes cargarlas desde la UI también
+  users:[ // nombre, apodo, dorsal, rol, equipos[], nacimiento (dd-mmm), id
+    ["Natalia","Chica",30,"admin",["Golden Moms","Golden Dreams","Golden Power"],"20-abr","chica"], // admin
+    ["Caro G","","11","capitana",["Golden Moms"],"24-jul","carog"],
+    ["Fabi","","16","capitana",["Golden Moms"],"28-ago","fabi"],
+    ["Dani J","","15","jugadora",["Golden Moms"],"11-ene","danij"],
+    ["Vero","","8","jugadora",["Golden Dreams"],"29-ene","vero"],
+    ["Ale V","","14","jugadora",["Golden Moms"],"12-nov","alev"],
+    ["Cata","","7","jugadora",["Golden Moms"],"08-dic","cata"],
+    ["Maca","","5","jugadora",["Golden Moms"],"25-oct","maca"],
+    ["Isa","","19","jugadora",["Golden Moms"],"26-oct","isa"],
+    ["Pia","","10","jugadora",["Golden Moms"],"21-oct","pia"],
+    ["Vale","","6","jugadora",["Golden Moms"],"11-oct","vale"],
+    ["Dani C","","4","jugadora",["Golden Moms"],"10-oct","danic"],
+    ["Aurora","","9","jugadora",["Golden Moms"],"12-nov","aurora"],
+    ["Male","","3","jugadora",["Golden Moms"],"10-dic","male"],
+    ["Carla","","13","jugadora",["Golden Moms"],"13-dic","carla"],
+    // agrega las demás si deseas
   ],
-  events:[],        // {id,type,title,team,datetime,location,opponent,uniform}
-  att:{},           // {eventId: {nick: "Asiste|Duda|No asiste"}}
-  matches:[],       // {id,date,comp,opponent,goalsFor,goalsAgainst,notes,scorers:[nick,...]}
-  stats:{goals:{}}  // { nick: totalGoals }
-};
-let S=load();
-function load(){try{const t=localStorage.getItem(KEY);return t?JSON.parse(t):seed(initState);}catch{return seed(initState)}}
-function save(){localStorage.setItem(KEY,JSON.stringify(S))}
-function seed(base){
-  // Semillas de calendario recurrente
-  if(!base.events.length){
-    const mk=(d,h,m)=>{const x=new Date(d);x.setHours(h,m,0,0);return new Date(x.getTime()-x.getTimezoneOffset()*60000).toISOString();}
-    const nextDow=(dow)=>{const n=new Date();const g=(dow-n.getDay()+7)%7||7;const d=new Date(n);d.setDate(n.getDate()+g);d.setHours(0,0,0,0);return d;}
-    const tue=nextDow(2), wed=nextDow(3), thu=nextDow(4), fri=nextDow(5);
-    for(let i=0;i<12;i++){
-      const T=new Date(tue);T.setDate(tue.getDate()+7*i);
-      const Th=new Date(thu);Th.setDate(thu.getDate()+7*i);
-      const W=new Date(wed);W.setDate(wed.getDate()+7*i);
-      const F=new Date(fri);F.setDate(fri.getDate()+7*i);
-      base.events.push(newEvent("Entrenamiento","Entrenamiento","Golden Moms",mk(T,19,30),"Colegio","",""));
-      base.events.push(newEvent("Entrenamiento","Entrenamiento","Golden Moms",mk(Th,19,30),"Colegio","",""));
-      base.events.push(newEvent("Partido","Wonder Mom’s Cup","Golden Moms",mk(W,20,0),"Universidad de los Andes","—",""));
-      base.events.push(newEvent("Partido","Liga LIFA","Golden Moms",mk(F,20,0),"Cancha Oriente, Las Condes","—",""));
-    }
-  }
-  return base;
-}
-function newEvent(type,title,team,datetime,loc,opp,uni){
-  return {id:crypto.randomUUID?.()||(""+Math.random()).slice(2),type,title,team,datetime,location:loc,opponent:opp,uniform:uni};
-}
-let me=null; // {nick, role}
-
-/* -------------------------- LOGIN -------------------------- */
-const elLogin=document.getElementById("login");
-const elApp=document.getElementById("app");
-const topbar=document.getElementById("topbar");
-const who=document.getElementById("who");
-const roleBadge=document.getElementById("role");
-// Login con código universal + mantiene códigos por usuaria como fallback
-document.getElementById("btnEnter").onclick = () => {
-  const nick = document.getElementById("lgNick").value.trim();
-  const code = document.getElementById("lgCode").value.trim().toLowerCase();
-  const u = S.users.find(x => x.nick.toLowerCase() === nick.toLowerCase());
-  if (!u) { alert("Apodo no encontrado."); return; }
-
-  // Acepta universal 'golden2025' o el code propio (si quisieras conservarlos)
-  const ok = (code === "golden2025") || (String(u.code||"").toLowerCase() === code);
-  if (!ok) { alert("Código incorrecto."); return; }
-
-  me = { nick: u.nick, role: u.role };
-  afterLogin();
+  events:[],      // {id,type,title,team,datetime,location,opponent,uniform}
+  att:{},         // {eventId: {userId: "Asiste|Duda|No asiste"}}
+  track:[],       // {id,date,comp,vs,team,score,goles:[{id,qty}],notes}
+  logged:null     // {id,name,role}
 };
 
-function afterLogin(){
-  elLogin.style.display="none"; elApp.style.display="block"; topbar.style.display="flex";
-  who.textContent=me.nick; roleBadge.textContent=me.role.toUpperCase();
-  document.getElementById("tabSettings").style.display=(me.role==="admin")?"inline-flex":"none";
-  document.getElementById("btnAddPlayer").style.display=(me.role!=="jugadora")?"inline-flex":"none";
-  document.getElementById("btnNewMatch").style.display=(me.role!=="jugadora")?"inline-flex":"none";
-  document.getElementById("btnViewAs").style.display=(me.role==="admin" && me.nick==="Natalia")?"inline-flex":"none";
-  initUI();
-}
-document.getElementById("btnLogout").onclick=()=>{me=null;location.reload()};
-document.getElementById("btnViewAs").onclick=()=>{
-  // Switch visual (solo admin Natalia): no cambia roles reales
-  const options=["admin","capitana","jugadora"].map(r=>`<option ${r===me.role?"selected":""}>${r}</option>`).join("");
-  openModal(`<div class="row" style="justify-content:space-between"><strong>Ver como…</strong><button class="bsm" onclick="closeModal()">Cerrar</button></div>
-    <div class="sep"></div>
-    <div class="row"><label>Rol simulado</label><select id="simRole">${options}</select>
-      <button class="btn p" onclick="applySim()">Aplicar</button></div>`);
-  window.applySim=()=>{ me.role=document.getElementById("simRole").value; roleBadge.textContent=me.role.toUpperCase();
-    document.getElementById("tabSettings").style.display=(me.role==="admin")?"inline-flex":"none";
-    document.getElementById("btnAddPlayer").style.display=(me.role!=="jugadora")?"inline-flex":"none";
-    document.getElementById("btnNewMatch").style.display=(me.role!=="jugadora")?"inline-flex":"none";
-    renderAll(); closeModal();
+// Carga estado previo
+try{ const kk=JSON.parse(localStorage.getItem(KEY)||"{}"); if(kk && kk.users){ S={...S,...kk}; } }catch{}
+// Seed calendario recurrente si no existe
+if(!S.events.length){
+  function iso(d){ return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString(); }
+  function nextDow(dow){const n=new Date(); const g=(dow-n.getDay()+7)%7||7;const d=new Date(n); d.setDate(n.getDate()+g);return d;}
+  const tue=nextDow(2), wed=nextDow(3), thu=nextDow(4), fri=nextDow(5);
+  for(let i=0;i<12;i++){
+    const T=new Date(tue);T.setDate(tue.getDate()+7*i);
+    const Th=new Date(thu);Th.setDate(thu.getDate()+7*i);
+    const W=new Date(wed);W.setDate(wed.getDate()+7*i);
+    const F=new Date(fri);F.setDate(fri.getDate()+7*i);
+    S.events.push({id:crypto.randomUUID(),type:"Entrenamiento",title:"Entrenamiento",team:"Golden Moms",datetime:iso(new Date(T.setHours(19,30,0,0))),location:"Colegio",opponent:"",uniform:""});
+    S.events.push({id:crypto.randomUUID(),type:"Entrenamiento",title:"Entrenamiento",team:"Golden Moms",datetime:iso(new Date(Th.setHours(19,30,0,0))),location:"Colegio",opponent:"",uniform:""});
+    S.events.push({id:crypto.randomUUID(),type:"Partido",title:"Wonder Mom’s Cup",team:"Golden Moms",datetime:iso(new Date(W.setHours(20,0,0,0))),location:"Universidad de los Andes",opponent:"—",uniform:""});
+    S.events.push({id:crypto.randomUUID(),type:"Partido",title:"Liga LIFA",team:"Golden Moms",datetime:iso(new Date(F.setHours(20,0,0,0))),location:"Cancha Oriente, Las Condes",opponent:"—",uniform:""});
   }
-};
+}
+save();
 
-/* -------------------------- NAV -------------------------- */
-document.querySelectorAll("#mainTabs .tab").forEach(t=>{
-  t.onclick=()=>{document.querySelectorAll("#mainTabs .tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");
-    showView(t.dataset.v);
-  }
-});
-document.querySelectorAll(".mnav button").forEach(b=>b.onclick=()=>{document.querySelector(`.tab[data-v="${b.dataset.v}"]`).click();});
-function showView(v){
-  ["dash","events","roster","track","settings"].forEach(id=>document.getElementById("view-"+id).style.display="none");
-  document.getElementById("view-"+v).style.display="block";
-  if(v==="events") renderEvents();
-  if(v==="roster") renderRoster();
-  if(v==="track") renderMatches();
-}
-function initUI(){
-  renderAll();
-  document.querySelector('.mnav').style.display='block';
-}
-function renderAll(){
-  renderKPIs(); renderCal(grid, mlabel, view);
-  renderCal(mgrid, mLabel, mview); renderUpcoming();
-  renderEvents(); renderRoster(); renderMatches();
-}
-
-/* -------------------------- CALENDAR + UPCOMING -------------------------- */
-const grid=document.getElementById("grid"), mgrid=document.getElementById("mGrid");
-const mlabel=document.getElementById("mlabel"), mLabel=document.getElementById("mLabel");
-let view=new Date(); view.setDate(1);
-let mview=new Date(); mview.setDate(1);
+// Helpers
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+const $ = sel => document.querySelector(sel);
 function fmtMonth(d){return d.toLocaleDateString("es-CL",{month:"long",year:"numeric"})}
-function buildCells(y,m){ const first=new Date(y,m,1), start=(first.getDay()+6)%7, days=new Date(y,m+1,0).getDate();
-  const cells=[]; for(let i=0;i<start;i++) cells.push(null); for(let d=1;d<=days;d++) cells.push(new Date(y,m,d)); while(cells.length%7) cells.push(null); return cells; }
-function monthBirthdays(y,m){
-  const out=[];
-  for(const u of S.users){
-    if(!u.birthday) continue;
-    const [MM,DD]=u.birthday.split("-");
-    if(parseInt(MM,10)===m+1){
-      const dt=new Date(y,m,parseInt(DD,10)); dt.setHours(0,0,0,0);
-      out.push({id:"bday-"+u.nick+"-"+y, type:"Cumpleaños", title:"Cumple "+u.nick, team:"Todos", datetime:new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString(), location:"", opponent:"", uniform:"", who:u.nick});
-    }
-  }
-  return out;
+function pad(n){return String(n).padStart(2,"0")}
+function toInput(iso){const d=new Date(iso);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function roleOf(id){ return (S.users.find(u=>u[6]==id)||[])[3]||"jugadora"; }
+function nameOf(id){ return (S.users.find(u=>u[6]==id)||[])[0]||id; }
+function apodoOf(id){ return (S.users.find(u=>u[6]==id)||[])[1]||""; }
+function teamsOf(id){ return (S.users.find(u=>u[6]==id)||[])[4]||[]; }
+function bdayOf(id){ return (S.users.find(u=>u[6]==id)||[])[5]||""; }
+
+/* =============== Navegación =============== */
+const tabs=[...document.querySelectorAll(".tab")];
+tabs.forEach(t=>t.onclick=()=>{
+  tabs.forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  ["dash","events","roster","track","cfg"].forEach(id=>$("#"+id).style.display="none");
+  const map={dash:"dash",events:"events",roster:"roster",track:"track",cfg:"cfg"};
+  $("#"+map[t.dataset.tab]).style.display="";
+  if(t.dataset.tab==="events") renderEvents();
+  if(t.dataset.tab==="roster") renderRoster();
+  if(t.dataset.tab==="track") renderTrack();
+  if(t.dataset.tab==="cfg") renderCfg();
+});
+
+/* =============== Login =============== */
+$("#btnLogin").onclick=showLogin;
+$("#btnLogout").onclick=()=>{ S.logged=null; save(); hydrateSession(); };
+
+function showLogin(){
+  const options=S.users.map(u=>`<option value="${u[6]}">${u[0]}</option>`).join("");
+  openModal("Entrar", `
+    <div class="cols">
+      <div class="col-12"><label>Jugador(a)</label><select id="lgUser">${options}</select></div>
+      <div class="col-12"><label>Código de acceso</label><input id="lgCode" placeholder="golden2025"></div>
+    </div>
+  `, [{id:"ok",txt:"Entrar",cls:"btn p"}], ({close})=>{
+    $("#ok").onclick=()=>{
+      const id=$("#lgUser").value, code=$("#lgCode").value.trim();
+      if(code.toLowerCase()!=="golden2025"){ alert("Código incorrecto"); return; }
+      const u=S.users.find(x=>x[6]==id);
+      S.logged={id,u: u[0], role:u[3]};
+      save(); close(); hydrateSession();
+    };
+  });
 }
-function renderCal(target,label,viewDate){
-  label.textContent=fmtMonth(viewDate);
-  const y=viewDate.getFullYear(), m=viewDate.getMonth();
+
+function hydrateSession(){
+  const r = S.logged?.role || "Invitada";
+  $("#roleBadge").textContent = r.charAt(0).toUpperCase()+r.slice(1);
+  $("#btnLogin").style.display = S.logged? "none":"";
+  $("#btnLogout").style.display = S.logged? "":"none";
+  renderAll();
+}
+
+/* =============== Dashboard/calendario =============== */
+let view=new Date(); view.setDate(1);
+$("#mPrev").onclick=()=>{view.setMonth(view.getMonth()-1); renderCal();}
+$("#mNext").onclick=()=>{view.setMonth(view.getMonth()+1); renderCal();}
+$("#fType").onchange=renderCal; $("#fTeam").onchange=renderCal;
+
+function buildCells(y,m){ const first=new Date(y,m,1), start=(first.getDay()+6)%7, days=new Date(y,m+1,0).getDate(); const cells=[]; for(let i=0;i<start;i++) cells.push(null); for(let d=1;d<=days;d++) cells.push(new Date(y,m,d)); while(cells.length%7) cells.push(null); return cells; }
+function renderCal(){
+  $("#mLabel").textContent=fmtMonth(view);
+  const y=view.getFullYear(), m=view.getMonth();
   const cells=buildCells(y,m);
-  target.innerHTML="";
-  const FT=(target===grid?document.getElementById("fType"):document.getElementById("mType")).value;
-  const TM=(target===grid?document.getElementById("fTeam"):document.getElementById("mTeam")).value;
-  const ev=[...S.events, ...monthBirthdays(y,m)].sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
+  const grid=$("#grid"); grid.innerHTML="";
+  const FT=$("#fType").value, TM=$("#fTeam").value;
+  const ev=[...S.events].sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
   cells.forEach(dd=>{
     const c=document.createElement("div"); c.className="cell";
-    if(dd){
-      const n=document.createElement("div"); n.className="day"; n.textContent=dd.getDate(); c.appendChild(n);
+    if(dd){ const n=document.createElement("div"); n.className="day"; n.textContent=dd.getDate(); c.appendChild(n);
       ev.filter(e=>{const d=new Date(e.datetime);return d.getFullYear()==dd.getFullYear()&&d.getMonth()==dd.getMonth()&&d.getDate()==dd.getDate();})
-        .filter(e=>(FT=="Todos"||e.type==FT)&&(TM=="Todos"||(e.team||"Golden Moms")==TM || e.type==="Cumpleaños"))
+        .filter(e=>(FT=="Todos"||e.type==FT)&&(TM=="Todos"||e.team==TM))
         .forEach(e=>{
-          const t=document.createElement("div"); t.className="tag "+(e.type=="Partido"?"match":e.type=="Entrenamiento"?"train":"birth"); t.textContent=e.type; c.appendChild(t);
-          const r=document.createElement("div"); r.className="event";
-          const d=new Date(e.datetime);
-          const hh=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-          r.innerHTML=(e.type==="Cumpleaños")?`🎂 ${e.title}`:`<strong>${hh}</strong> ${e.title} <span class="team">${e.team||"Golden Moms"}</span>`;
-          r.onclick=()=>{ if(e.type==="Cumpleaños") return; openEditor(e.id); };
+          const t=document.createElement("div"); t.className="tag "+(e.type=="Partido"?"match":"train"); t.textContent=e.type; c.appendChild(t);
+          const r=document.createElement("div"); r.className="event"; const d=new Date(e.datetime);
+          r.innerHTML=`<strong>${pad(d.getHours())}:${pad(d.getMinutes())}</strong> ${e.title} <span class="chip team">${e.team}</span>`;
+          r.onclick=()=>openEvent(e.id);
           c.appendChild(r);
         });
     }
-    target.appendChild(c);
+    grid.appendChild(c);
   });
-}
-function renderKPIs(){
-  document.getElementById("kRoster").textContent=S.users.length;
-  // Próximo evento (no cumpleaños)
-  const upcoming=[...S.events].filter(e=>new Date(e.datetime)>=new Date()).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
-  document.getElementById("kEvents").textContent=upcoming.length;
-  if(upcoming[0]){
-    const A=S.att[upcoming[0].id]||{};
-    const ok=S.users.filter(u=>A[u.nick]==="Asiste").length;
-    document.getElementById("kOk").textContent=ok;
-    document.getElementById("nextTxt").textContent=new Date(upcoming[0].datetime).toLocaleString('es-CL',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+" · "+(upcoming[0].title||"");
-  } else { document.getElementById("nextTxt").textContent=""; }
-  // Top goleadoras
-  const entries=Object.entries(S.stats.goals||{}).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.getElementById("kScorers").innerHTML= entries.length? entries.map(([n,g])=>`<span class="pill">⚽ ${n}: ${g}</span>`).join(' ') : "—";
-}
-function renderUpcoming(){
-  const FT=document.getElementById("mType").value, TM=document.getElementById("mTeam").value;
-  const box=document.getElementById("upcoming"); box.innerHTML="";
-  const ev=[...S.events, ...monthBirthdays(new Date().getFullYear(), new Date().getMonth())]
-    .filter(e=>new Date(e.datetime)>=new Date(Date.now()-86400000)) // desde ayer para no perder hoy
-    .filter(e=>(FT=="Todos"||e.type==FT)&&(TM=="Todos"||(e.team||"Golden Moms")==TM || e.type==="Cumpleaños"))
-    .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime)).slice(0,12);
-  ev.forEach(E=>{
-    const it=document.createElement("div"); it.className="item";
-    const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    const left = (E.type==="Cumpleaños")
-      ? `<span class="pill">🎂 Cumple</span>`
-      : `<span class="pill">${E.type}</span>`;
-    const rightButtons = (E.type==="Cumpleaños") ? "" : `<button class="btn s">Abrir</button>`;
-    it.innerHTML=`<div class="l">${left}
-      <div><div class="time">${when}</div>
-      <div>${E.title} ${(E.type!=="Cumpleaños")?`<span class="badge">${E.team||'Golden Moms'}</span>`:''}</div></div></div>
-      <div>${rightButtons}</div>`;
-    if(rightButtons) it.querySelector("button").onclick=()=>openEditor(E.id);
-    box.appendChild(it);
-  });
-}
-/* month nav */
-document.getElementById("prev").onclick=()=>{view.setMonth(view.getMonth()-1);renderCal(grid, mlabel, view);};
-document.getElementById("next").onclick=()=>{view.setMonth(view.getMonth()+1);renderCal(grid, mlabel, view);};
-document.getElementById("mPrev").onclick=()=>{mview.setMonth(mview.getMonth()-1);renderCal(mgrid, mLabel, mview);};
-document.getElementById("mNext").onclick=()=>{mview.setMonth(mview.getMonth()+1);renderCal(mgrid, mLabel, mview);};
-["fType","fTeam","mType","mTeam"].forEach(id=>document.getElementById(id).onchange=()=>{renderCal(grid, mlabel, view);renderCal(mgrid, mLabel, mview);renderUpcoming();});
-document.getElementById("mToggleCal").onclick=()=>{const w=document.getElementById("mCalWrap");w.style.display=(w.style.display==='none')?'block':'none';};
-/* Copy Week */
-function nextMon(d){const day=(d.getDay()+6)%7; const diff=(7-day)%7; const nd=new Date(d); nd.setDate(d.getDate()+diff); nd.setHours(0,0,0,0); return nd;}
-function copyWeek(){
-  const st=nextMon(new Date()), en=new Date(st); en.setDate(st.getDate()+7);
-  const L=['*Semana* '+st.toLocaleDateString('es-CL')+' - '+new Date(en.getTime()-86400000).toLocaleDateString('es-CL'),'Equipo: '+S.team,''];
-  S.events.filter(e=>new Date(e.datetime)>=st && new Date(e.datetime)<en)
-    .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime)).forEach(E=>{
-      const w=new Date(E.datetime).toLocaleString('es-CL',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-      L.push(`• ${w} — ${E.type}: ${E.title}${E.location?' — '+E.location:''} (${E.team||'Golden Moms'}) ${E.opponent?' — Rival: '+E.opponent:''}${E.uniform?' — Uniforme: '+E.uniform:''}`);
-    });
-  navigator.clipboard.writeText(L.join('\n')); alert("Semana copiada. Pega en WhatsApp.");
-}
-document.getElementById("btnCopyWeek").onclick=copyWeek;
-document.getElementById("btnCopyWeek2").onclick=copyWeek;
-
-/* -------------------------- EVENTS & EDITOR -------------------------- */
-function renderEvents(){
-  const wrap=document.getElementById("evList");
-  const FT=document.getElementById("efType").value, TM=document.getElementById("efTeam").value;
-  wrap.innerHTML="";
-  const ev=[...S.events].filter(e=>(FT=="Todos"||e.type==FT)&&(TM=="Todos"||(e.team||"Golden Moms")==TM))
-    .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
-  ev.forEach(E=>{
-    const A=S.att[E.id]||{};
-    const ok=S.users.filter(u=>A[u.nick]==="Asiste").length;
-    const it=document.createElement("div"); it.className="item";
-    const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    it.innerHTML=`<div class="l"><span class="pill">${E.type}</span>
-      <div><div class="time">${when}</div><div>${E.title} <span class="badge">${E.team||'Golden Moms'}</span></div></div></div>
-      <div><span class="badge">✅ ${ok}</span> <button class="btn s">Editar</button></div>`;
-    it.querySelector("button").onclick=()=>openEditor(E.id);
-    wrap.appendChild(it);
-  });
-}
-document.getElementById("efType").onchange=renderEvents;
-document.getElementById("efTeam").onchange=renderEvents;
-document.getElementById("btnNew").onclick=()=>{
-  const now=new Date(); now.setMinutes(0,0,0);
-  const e=newEvent("Entrenamiento","Entrenamiento","Golden Moms", new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString(),"","","");
-  S.events.push(e); save(); renderEvents(); openEditor(e.id);
-};
-function openEditor(id){
-  const E=S.events.find(x=>x.id===id); if(!E) return;
-  const ed=document.getElementById("editor"); ed.style.display="block";
-  const isCapOrAdmin=(me.role!=="jugadora");
-  const A=S.att[E.id]||{};
-  const counts={ok:0,mid:0,no:0,blank:0}; S.users.forEach(u=>{const v=A[u.nick]; if(v==="Asiste")counts.ok++; else if(v==="Duda")counts.mid++; else if(v==="No asiste")counts.no++; else counts.blank++;});
-  // Filtro de roster por equipo
-  const eligible=S.users.filter(u=>!E.team || (u.teams||[]).includes(E.team));
-  // Si jugadora: solo sus botones; si cap/admin: lista completa + control
-  const my=eligible.find(u=>u.nick===me.nick);
-  const attRows = (me.role==="jugadora")
-    ? (my? rowAtt(my.nick,A[my.nick]||"",E.id,true):'<em class="help">No perteneces al equipo de este evento.</em>')
-    : eligible.map(u=>rowAtt(u.nick,A[u.nick]||"",E.id,false)).join("");
-  // Editor bloqueado para jugadora
-  const dis = (me.role==="jugadora")?'disabled':'';
-  const uniOpt = `<option value="">—</option><option ${E.uniform==='Polera azul'?'selected':''}>Polera azul</option><option ${E.uniform==='Polera verde lima'?'selected':''}>Polera verde lima</option>`;
-  ed.innerHTML=`
-  <div class="row" style="justify-content:space-between">
-    <div class="row"><strong>Editar evento</strong><span class="team">${E.team||"Golden Moms"}</span></div>
-    <div class="row">
-      <button class="btn s" id="btnICS">.ics</button>
-      <button class="btn s" id="btnCopy">Copiar WhatsApp</button>
-      <button class="btn s" id="btnRSVP">Link convocatoria</button>
-      ${isCapOrAdmin?`<button class="btn d" id="btnDel">Eliminar</button>`:''}
-    </div>
-  </div>
-  <div class="row">
-    <div><label>Tipo</label><br><select id="eType" ${dis}><option ${E.type==='Partido'?'selected':''}>Partido</option><option ${E.type==='Entrenamiento'?'selected':''}>Entrenamiento</option></select></div>
-    <div style="flex:1;min-width:220px"><label>Título</label><br><input id="eTitle" value="${E.title||''}" ${dis}></div>
-    <div><label>Equipo</label><br><select id="eTeam" ${dis}>
-      <option ${E.team==='Golden Moms'?'selected':''}>Golden Moms</option>
-      <option ${E.team==='Golden Dreams'?'selected':''}>Golden Dreams</option>
-      <option ${E.team==='Golden Power'?'selected':''}>Golden Power</option>
-    </select></div>
-  </div>
-  <div class="row">
-    <div><label>Fecha y hora</label><br><input id="eDT" type="datetime-local" value="${toInput(E.datetime)}" ${dis}></div>
-    <div><label>Lugar</label><br><input id="eLoc" value="${E.location||''}" ${dis}></div>
-    <div><label>Rival</label><br><input id="eOpp" value="${E.opponent||''}" ${dis}></div>
-    <div><label>Uniforme</label><br><select id="eUni" ${dis}>${uniOpt}</select></div>
-  </div>
-  <div class="sep"></div>
-  <div class="row" style="justify-content:space-between;align-items:center">
-    <div style="font-weight:800">Asistencia</div>
-    <div>
-      <span class="chip ok">✅ ${counts.ok}</span>
-      <span class="chip mid">❔ ${counts.mid}</span>
-      <span class="chip no">❌ ${counts.no}</span>
-      <span class="chip">▫️ ${counts.blank}</span>
-    </div>
-  </div>
-  <div id="attBox">${attRows}</div>
-  <div class="sep"></div>
-  <div class="note">Convocatoria: se comparte un link para confirmar. Solo capitana/admin pueden ver el detalle completo.</div>
-  `;
-  // bindings
-  if(isCapOrAdmin){
-    ed.querySelector("#eType").onchange=(ev)=>{E.type=ev.target.value; save(); renderEvents(); renderCal(grid, mlabel, view); renderUpcoming(); openEditor(E.id);};
-    ed.querySelector("#eTitle").oninput=(ev)=>{E.title=ev.target.value; save();};
-    ed.querySelector("#eTeam").onchange=(ev)=>{E.team=ev.target.value; save(); openEditor(E.id);};
-    ed.querySelector("#eDT").onchange=(ev)=>{const d=new Date(ev.target.value);E.datetime=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString(); save(); renderAll();};
-    ed.querySelector("#eLoc").oninput=(ev)=>{E.location=ev.target.value; save();};
-    ed.querySelector("#eOpp").oninput=(ev)=>{E.opponent=ev.target.value; save();};
-    ed.querySelector("#eUni").onchange=(ev)=>{E.uniform=ev.target.value; save();};
-    ed.querySelector("#btnDel").onclick=()=>{ if(confirm("Eliminar evento?")){ S.events=S.events.filter(x=>x.id!==E.id); delete S.att[E.id]; save(); renderEvents(); renderCal(grid, mlabel, view); ed.style.display="none"; } };
-  }
-  ed.querySelector("#btnICS").onclick=()=>downloadICS(E, me?.nick||"");
-  ed.querySelector("#btnCopy").onclick=()=>copyWhats(E);
-  ed.querySelector("#btnRSVP").onclick=()=>copyRSVP(E);
-}
-function rowAtt(nick,val,id,onlySelf){
-  const b=(lbl,val2,cls)=>`<button class="bsm" data-val="${val2}" style="${val===val2?'background:'+(cls||'#d9f99d'):''}">${lbl}</button>`;
-  const hint=(val==="No asiste")?`<span class="help warn">No asiste</span>`:"";
-  const right = `<div>${b("✅","Asiste","#d9f99d")}${b("❔","Duda","#fef9c3")}${b("❌","No asiste","#fee2e2")}</div>`;
-  return `<div class="att" data-id="${id}" data-nick="${nick}">
-    <div>${nick} ${hint}</div>
-    ${right}
-  </div>`;
-}
-document.addEventListener("click",(e)=>{
-  const btn=e.target.closest(".att button"); if(!btn) return;
-  const box=e.target.closest(".att"); const id=box.dataset.id, nick=box.dataset.nick, v=btn.dataset.val;
-  // Si jugadora, solo puede cambiar la suya
-  if(me.role==="jugadora" && nick!==me.nick){alert("Solo puedes gestionar tu asistencia."); return;}
-  const A=S.att[id]||{}; A[nick]=v; S.att[id]=A; save();
-  // Si marcó ❌, ocultar de la lista rápida (solo visual; sigue registrando estado)
-  if(v==="No asiste"){ box.style.display="none"; }
-  // Al marcar Asiste: ofrecer .ics con alarmas
-  if(v==="Asiste" && me && nick===me.nick){
-    if(confirm("¿Agregar al calendario con recordatorios?")) {
-      const E=S.events.find(x=>x.id===id); if(E) downloadICS(E, nick, true);
-    }
-  }
-  // refresca editor (si existe)
-  const ed=document.getElementById("editor"); if(ed.style.display!=="none"){ openEditor(id); }
   renderKPIs();
-});
-
-/* ICS with two alarms */
-function icsDate(d){return new Date(d).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z")}
-function downloadICS(E, who, silent){
-  const st=new Date(E.datetime), mins=(E.type=="Partido"?120:90), en=new Date(st.getTime()+mins*60000);
-  const L=[
-    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GoldenMoms//Calendar//ES','CALSCALE:GREGORIAN',
-    'BEGIN:VEVENT',
-    'UID:'+E.id+'@goldenmoms','DTSTAMP:'+icsDate(new Date()),
-    'DTSTART:'+icsDate(st),'DTEND:'+icsDate(en),
-    'SUMMARY:'+E.type+': '+E.title+' ('+(E.team||'Golden Moms')+')',
-    'LOCATION:'+(E.location||'').replace(/,/g,'\\,'),
-    'DESCRIPTION:Uniforme '+(E.uniform||'—')+' | Calcetines: verde lima' + (who? ' | '+who:''),
-    // Dos recordatorios
-    'BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY','DESCRIPTION:Recordatorio partido/entrenamiento (día anterior)','END:VALARM',
-    'BEGIN:VALARM','TRIGGER:-PT6H','ACTION:DISPLAY','DESCRIPTION:Recordatorio hoy','END:VALARM',
-    'END:VEVENT','END:VCALENDAR'
-  ].join('\r\n');
-  const u=URL.createObjectURL(new Blob([L],{type:"text/calendar"})); const a=document.createElement("a"); a.href=u; a.download=(E.title||"evento")+".ics"; a.click(); URL.revokeObjectURL(u);
-  if(!silent) alert(".ics descargado");
 }
-function copyWhats(E){
-  const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  const url=buildRSVPURL(E); const text=`*${E.type}: ${E.title}* (${E.team||'Golden Moms'})\n${when} — ${E.location||''}\nUniforme: ${E.uniform||'—'} · Calcetines: verde lima\n\nConfirma aquí: ${url}\n✅ Asiste  ❔ Duda  ❌ No asiste`;
-  navigator.clipboard.writeText(text); alert("Convocatoria copiada. Pega en WhatsApp.");
-}
-function buildRSVPURL(E){ return location.origin+location.pathname+'#rsvp='+encodeURIComponent(JSON.stringify({id:E.id})); }
-function copyRSVP(E){ const url=buildRSVPURL(E); navigator.clipboard.writeText(url); alert('Link de convocatoria copiado:\n'+url); }
 
-/* -------------------------- ROSTER -------------------------- */
-function renderRoster(){
-  const canEdit=(me.role!=="jugadora");
-  const my= S.users.find(u=>u.nick===me.nick);
-  const head=`
-    <table class="table">
-      <thead><tr>
-        <th>Nombre</th><th>Apodo</th><th>#</th><th>Cumple</th><th>Equipos</th><th style="width:1%"></th>
-      </tr></thead><tbody id="rBody"></tbody>
-    </table>`;
-  document.getElementById("rosterTableWrap").innerHTML=head;
-  const body=document.getElementById("rBody");
-  S.users.forEach(u=>{
-    const isSelf = (me.role==="jugadora" && u.nick===me.nick);
-    const canRowEdit = (me.role!=="jugadora") || isSelf; // jugadora solo su perfil
-    const tags=(u.teams||[]).map(t=>`<span class="pill">${t}</span>`).join(" ");
-    const bday = u.birthday? `🎂 ${u.birthday}` : "—";
-    const row=document.createElement("tr");
-    row.innerHTML=`<td>${u.name||u.nick}</td><td>${u.nick}</td><td>${u.number||''}</td><td>${bday}</td><td>${tags}</td>
-    <td>${canRowEdit?'<button class="btn s">Editar</button>':''}</td>`;
-    if(canRowEdit) row.querySelector("button").onclick=()=>editPlayer(u);
-    body.appendChild(row);
+function renderKPIs(){
+  const upcoming=[...S.events].filter(e=>new Date(e.datetime)>=new Date()).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
+  $("#kEvents").textContent=upcoming.length;
+  $("#kRoster").textContent=S.users.length;
+  if(upcoming[0]){ const A=S.att[upcoming[0].id]||{}; $("#kOk").textContent=Object.values(A).filter(v=>v==="Asiste").length; }
+  $("#kPlayed").textContent=S.track.length;
+}
+$("#btnCopyWeek").onclick=()=>{
+  const st=new Date(); const day=(st.getDay()+6)%7; const monday=new Date(st); monday.setDate(st.getDate()-(day)); monday.setHours(0,0,0,0);
+  const en=new Date(monday); en.setDate(monday.getDate()+7);
+  const list=S.events.filter(e=>new Date(e.datetime)>=monday && new Date(e.datetime)<en).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime))
+    .map(E=>`${new Date(E.datetime).toLocaleString('es-CL',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})} — ${E.type}: ${E.title} (${E.team}) ${E.location?'— '+E.location:''}`).join("\n");
+  navigator.clipboard.writeText(`*Semana* ${monday.toLocaleDateString('es-CL')} - ${new Date(en.getTime()-86400000).toLocaleDateString('es-CL')}\n${list}`);
+  alert("Semana copiada.");
+};
+
+function renderBirthdays(){
+  const box=$("#bdayList"); box.innerHTML="";
+  // próximos 30 días
+  const now=new Date();
+  const items=S.users.map(u=>{
+    const [d,mon]=u[5].split("-"); const monIdx={"ene":0,"feb":1,"mar":2,"abr":3,"may":4,"jun":5,"jul":6,"ago":7,"sep":8,"oct":9,"nov":10,"dic":11}[mon];
+    if(monIdx==null) return null;
+    const dt=new Date(now.getFullYear(),monIdx,parseInt(d));
+    if(dt<now) dt.setFullYear(now.getFullYear()+1);
+    const diff=(dt-now)/(86400000);
+    return {name:u[0], id:u[6], dt, in:diff};
+  }).filter(Boolean).sort((a,b)=>a.in-b.in).slice(0,8);
+  items.forEach(x=>{
+    const r=document.createElement("div");
+    r.className="att-row";
+    r.innerHTML=`<div><span class="chip bday">🎂</span> <strong>${x.name}</strong></div><div class="small">${x.dt.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'})}</div>`;
+    box.appendChild(r);
   });
 }
-document.getElementById("btnAddPlayer").onclick=()=>editPlayer({name:"",nick:"",role:"jugadora",code:"",teams:[],number:"",birthday:""});
-function editPlayer(u){
-  const isNew=!u.nick;
-  const isSelf=(me.role==="jugadora");
-  // En edición de jugadora: solo puede apodo, número y cumpleaños
-  const lock = (me.role==="jugadora");
-  const teamChecks=["Golden Moms","Golden Dreams","Golden Power"].map(t=>{
-    const checked=(u.teams||[]).includes(t)?'checked':'';
-    const dis=lock?'disabled':'';
-    return `<label class="pill"><input type="checkbox" value="${t}" ${checked} ${dis}> ${t}</label>`;
-  }).join(" ");
-  openModal(`
-    <div class="row" style="justify-content:space-between"><strong>${isNew?'Agregar':'Editar'} jugadora</strong>
-      <button class="bsm" onclick="closeModal()">Cerrar</button></div>
-    <div class="sep"></div>
-    <div class="row">
-      <div style="flex:1;min-width:220px"><label>Nombre</label><br><input id="pName" value="${u.name||''}" ${lock?'disabled':''}></div>
-      <div><label>Apodo (login)</label><br><input id="pNick" value="${u.nick||''}" ${lock && !isNew?'disabled':''}></div>
-      <div><label># Camiseta</label><br><input id="pNum" value="${u.number||''}"></div>
+
+function renderTopScorers(){
+  const map={}; // id -> goals
+  S.track.forEach(t=>t.goles.forEach(g=>map[g.id]=(map[g.id]||0)+g.qty));
+  const top=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const box=$("#topScorers"); box.innerHTML="";
+  top.forEach(([id,qty])=>{
+    const r=document.createElement("div");
+    r.className="att-row";
+    r.innerHTML=`<div><strong>${nameOf(id)}</strong> <span class="chip">${apodoOf(id)||""}</span></div><div class="badge">${qty} gol(es)</div>`;
+    box.appendChild(r);
+  });
+}
+
+/* =============== Eventos (tabla alternativa) =============== */
+$("#btnNewEvent").onclick=()=>editEvent();
+function renderEvents(){
+  // Vista simple de lista + botón nuevo (mantengo calendario principal en Dashboard)
+  const c=$("#events"); c.innerHTML="";
+  const head=document.createElement("div"); head.className="row"; head.style.justifyContent="space-between";
+  head.innerHTML=`<strong>Lista de eventos</strong><button class="btn p" id="eNew">Nuevo Evento</button>`;
+  c.appendChild(head);
+  $("#eNew").onclick=()=>editEvent();
+  const box=document.createElement("div"); box.className="card"; c.appendChild(box);
+  const list=[...S.events].sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
+  list.forEach(E=>{
+    const r=document.createElement("div"); r.className="att-row";
+    r.innerHTML=`<div><span class="badge">${E.type}</span> <strong>${E.title}</strong> <span class="chip team">${E.team}</span><div class="small">${new Date(E.datetime).toLocaleString('es-CL')}</div></div>
+      <div class="row"><button class="btn" data-id="${E.id}">Abrir</button></div>`;
+    r.querySelector("button").onclick=()=>openEvent(E.id);
+    box.appendChild(r);
+  });
+}
+
+/* =============== Modal Evento =============== */
+function openEvent(id){ const E=S.events.find(e=>e.id==id); if(!E){alert("Evento no existe"); return;}
+  const role=S.logged?.role||"invitada"; const uid=S.logged?.id;
+  const A=S.att[id]||{};
+  const counts={ok:0,mid:0,no:0}; Object.values(A).forEach(v=>{if(v==="Asiste")counts.ok++; else if(v==="Duda")counts.mid++; else if(v==="No asiste")counts.no++;});
+  const onlySelf = (role==="jugadora");
+  const title=`${E.type} — ${E.title}`;
+  const body = `
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
+      <div><span id="evTeam" class="chip team">${E.team}</span></div>
+      <div class="row">
+        <button class="btn" id="btnCopy">Copiar WhatsApp</button>
+        <button class="btn" id="btnRSVP">Link convocatoria</button>
+        <button class="btn" id="btnICS">.ics</button>
+        ${role!=="jugadora"?`<button class="btn d" id="btnDel">Eliminar</button>`:""}
+      </div>
     </div>
-    <div class="row">
-      <div><label>Cumpleaños (MM-DD)</label><br><input id="pBday" placeholder="MM-DD" value="${u.birthday||''}"></div>
-      <div ${lock?'style="display:none"':''}><label>Rol</label><br>
-        <select id="pRole">
-          <option ${u.role==='jugadora'?'selected':''}>jugadora</option>
-          <option ${u.role==='capitana'?'selected':''}>capitana</option>
-          <option ${u.role==='admin'?'selected':''}>admin</option>
+    <div class="cols">
+      <div class="col-4"><label>Tipo</label><select id="eType"><option>Entrenamiento</option><option>Partido</option></select></div>
+      <div class="col-8"><label>Título</label><input id="eTitle"></div>
+      <div class="col-6"><label>Fecha y hora</label><input type="datetime-local" id="eDT"></div>
+      <div class="col-6"><label>Equipo</label><select id="eTeam"><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select></div>
+      <div class="col-6"><label>Lugar</label><input id="eLoc"></div>
+      <div class="col-6"><label>Rival</label><input id="eOpp"></div>
+      <div class="col-6"><label>Uniforme</label><select id="eUni"><option value="">—</option><option>Polera azul</option><option>Polera verde lima</option></select></div>
+      <div class="col-6"><label>Conteo</label>
+        <div class="row"><span class="chip ok">✅ ${counts.ok}</span><span class="chip mid">❔ ${counts.mid}</span><span class="chip no">❌ ${counts.no}</span></div>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <div><strong>Asistencia</strong></div>
+    <div id="attBox"></div>
+    <div class="hr"></div>
+    <div><strong>Convocatoria</strong><div class="small" id="rsvpInfo">${new Date(E.datetime).toLocaleString('es-CL')} ${E.location?("— "+E.location):""}</div></div>
+  `;
+  openModal(title, body, [{id:"save",txt:"Guardar",cls:"btn p"}], ({close})=>{
+    // init fields
+    $("#eType").value=E.type; $("#eTitle").value=E.title; $("#eDT").value=toInput(E.datetime);
+    $("#eTeam").value=E.team; $("#eLoc").value=E.location||""; $("#eOpp").value=E.opponent||""; $("#eUni").value=E.uniform||"";
+    if(role==="jugadora"){ ["eType","eTitle","eDT","eTeam","eLoc","eOpp","eUni"].forEach(id=>$("#"+id).disabled=true); }
+    // asistencia
+    const box=$("#attBox"); box.innerHTML="";
+    const list = (onlySelf ? S.users.filter(u=>u[6]==uid) : S.users.filter(u=>E.team==="Todos" || u[4].includes(E.team)));
+    list.forEach(u=>{
+      const st=A[u[6]]||"";
+      const row=document.createElement("div"); row.className="att-row";
+      row.innerHTML=`<div><strong>${u[0]}</strong> ${u[1]?`<span class="badge">${u[1]}</span>`:""} ${u[5]?`<span class="chip bday">🎂 ${u[5]}</span>`:""} ${u[4].map(t=>`<span class="chip team">${t}</span>`).join("")}</div>
+      <div class="row">
+        <button class="btn" data-v="Asiste">✅</button>
+        <button class="btn" data-v="Duda">❔</button>
+        <button class="btn" data-v="No asiste">❌</button>
+      </div>`;
+      [...row.querySelectorAll("button")].forEach(b=>b.onclick=()=>{
+        const AA=S.att[id]||{}; AA[u[6]]=b.dataset.v; S.att[id]=AA; save(); openEvent(id); // re-render
+      });
+      if(st==="Asiste") row.style.background="#f0fbda";
+      if(st==="Duda") row.style.background="#fff7d6";
+      if(st==="No asiste") row.style.background="#ffe8e8";
+      box.appendChild(row);
+    });
+    // acciones
+    $("#save").onclick=()=>{ if(role==="jugadora"){ close(); return; }
+      E.type=$("#eType").value; E.title=$("#eTitle").value; E.datetime=new Date($("#eDT").value).toISOString();
+      E.team=$("#eTeam").value; E.location=$("#eLoc").value; E.opponent=$("#eOpp").value; E.uniform=$("#eUni").value; save(); renderAll(); close();
+    };
+    $("#btnDel")&&($("#btnDel").onclick=()=>{ if(confirm("¿Eliminar evento?")){ S.events=S.events.filter(x=>x.id!=id); delete S.att[id]; save(); renderAll(); close(); }});
+    $("#btnCopy").onclick=()=>{
+      const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'long',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      const url=location.origin+location.pathname+"#rsvp="+encodeURIComponent(JSON.stringify({id:E.id,t:S.team}));
+      const text = `*${E.type}: ${E.title}* (${E.team})%0A${when} — ${E.location||''}%0AUniforme: ${E.uniform||'—'} · Calcetines: verde lima%0A%0AConfirma aquí: ${url}%0A✅ Asiste  ❔ Duda  ❌ No asiste`;
+      navigator.clipboard.writeText(decodeURIComponent(text));
+      alert("Mensaje copiado para WhatsApp.");
+    };
+    $("#btnRSVP").onclick=()=>{ const url=location.origin+location.pathname+"#rsvp="+encodeURIComponent(JSON.stringify({id:E.id,t:S.team})); navigator.clipboard.writeText(url); alert("Link copiado."); };
+    $("#btnICS").onclick=()=>{ // con 2 alarmas
+      function icsDate(d){return new Date(d).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z")}
+      const st=new Date(E.datetime), mins=(E.type=="Partido"?120:90), en=new Date(st.getTime()+mins*60000);
+      const lines=[
+        'BEGIN:VCALENDAR','VERSION:2.0','CALSCALE:GREGORIAN','PRODID:-//Golden Moms//ES',
+        'BEGIN:VEVENT','UID:'+E.id+'@gm','DTSTAMP:'+icsDate(new Date()),
+        'DTSTART:'+icsDate(st),'DTEND:'+icsDate(en),
+        'SUMMARY:'+E.title+' ('+E.team+')',
+        'LOCATION:'+(E.location||'').replace(/,/g,'\\,'),
+        'DESCRIPTION:Uniforme '+(E.uniform||'—')+' | Calcetines: verde lima',
+        'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Recordatorio día del evento','TRIGGER:-PT120M','END:VALARM',
+        'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Recordatorio día anterior','TRIGGER:-P1D','END:VALARM',
+        'END:VEVENT','END:VCALENDAR'
+      ].join('\r\n');
+      const u=URL.createObjectURL(new Blob([lines],{type:"text/calendar"})); const a=document.createElement("a"); a.href=u; a.download=(E.title||"evento")+".ics"; a.click(); URL.revokeObjectURL(u);
+    };
+  });
+}
+
+function editEvent(){
+  if(!S.logged || (S.logged.role==="jugadora")){ alert("Solo capitana o admin."); return; }
+  const id=crypto.randomUUID();
+  const now=new Date(); now.setMinutes(0,0,0);
+  const E={id,type:"Entrenamiento",title:"Entrenamiento",team:"Golden Moms",datetime:new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString(),location:"",opponent:"",uniform:""};
+  S.events.push(E); save(); openEvent(id);
+}
+
+/* =============== Plantel =============== */
+function renderRoster(){
+  const c=$("#roster"); c.innerHTML="";
+  const box=document.createElement("div"); box.className="grid";
+  S.users.sort((a,b)=>a[0].localeCompare(b[0])).forEach(u=>{
+    const card=document.createElement("div"); card.className="card"; card.style.gridColumn="span 4";
+    const me=S.logged?.id===u[6]; const canEdit=(S.logged && (S.logged.role!=="jugadora" || me));
+    card.innerHTML=`
+      <div class="row" style="justify-content:space-between">
+        <div><strong>${u[0]}</strong> ${u[1]?`<span class="badge">${u[1]}</span>`:""} ${u[5]?`<span class="chip bday">🎂 ${u[5]}</span>`:""}</div>
+        <div class="small">${u[3]}</div>
+      </div>
+      <div class="row" style="margin:6px 0">
+        <span class="chip">#${u[2]||"—"}</span>
+        ${u[4].map(t=>`<span class="chip team">${t}</span>`).join("")}
+      </div>
+      ${canEdit?`<button class="btn" data-id="${u[6]}">Editar</button>`:""}
+    `;
+    const b=card.querySelector("button"); if(b) b.onclick=()=>editPlayer(u[6]);
+    box.appendChild(card);
+  });
+  c.appendChild(box);
+}
+function editPlayer(id){
+  const u=S.users.find(x=>x[6]==id); if(!u) return;
+  const me=S.logged?.id===id; const isAdminCap=(S.logged && S.logged.role!=="jugadora");
+  openModal("Editar jugadora",`
+    <div class="cols">
+      <div class="col-6"><label>Nombre</label><input id="pName" value="${u[0]}" ${!isAdminCap?'disabled':''}></div>
+      <div class="col-6"><label>Número</label><input id="pNum" value="${u[2]||''}"></div>
+      <div class="col-6"><label>Apodo</label><input id="pNick" value="${u[1]||''}"></div>
+      <div class="col-6"><label>Nacimiento (dd-mmm)</label><input id="pBday" value="${u[5]||''}" placeholder="10-oct"></div>
+      <div class="col-6"><label>Equipos (Ctrl/Cmd para multi)</label>
+        <select id="pTeams" multiple size="3">
+          ${["Golden Moms","Golden Dreams","Golden Power"].map(t=>`<option ${u[4].includes(t)?'selected':''}>${t}</option>`).join("")}
         </select>
       </div>
-      <div ${lock?'style="display:none"':''}><label>Código acceso</label><br><input id="pCode" value="${u.code||''}"></div>
+      <div class="col-6"><label>Rol</label>
+        <select id="pRole" ${!isAdminCap?'disabled':''}>
+          ${["jugadora","capitana","admin"].map(r=>`<option ${u[3]===r?'selected':''}>${r}</option>`).join("")}
+        </select>
+      </div>
     </div>
-    <div><label>Equipos (puede estar en varios)</label><div class="tags" id="pTeams">${teamChecks}</div></div>
-    <div class="sep"></div>
-    <div class="row">
-      <button class="btn p" onclick="savePlayer('${u.nick||''}', ${isNew})">Guardar</button>
-      ${(!isNew && me.role!=="jugadora")?`<button class="btn d" onclick="delPlayer('${u.nick}')">Eliminar</button>`:''}
-    </div>
-  `);
-  window.savePlayer=(oldNick,isNew)=>{
-    const name=val("pName"), nick=val("pNick"), number=val("pNum"), birthday=val("pBday");
-    if(!nick){alert("Apodo es obligatorio.");return;}
-    let role=u.role, code=u.code;
-    if(me.role!=="jugadora"){ role=val("pRole"); code=val("pCode"); }
-    const teams=[...document.querySelectorAll("#pTeams input:checked")].map(x=>x.value);
-    if(isNew){
-      if(S.users.find(x=>x.nick.toLowerCase()===nick.toLowerCase())){alert("Apodo ya existe.");return;}
-      S.users.push({name, nick, role, code:code||"0000", teams, number, birthday});
-    }else{
-      const idx=S.users.findIndex(x=>x.nick===oldNick); if(idx<0) return;
-      // si cambia apodo, mover asistencias y stats
-      if(oldNick!==nick){
-        for(const evId of Object.keys(S.att)){ const A=S.att[evId]; if(A && A[oldNick]){ A[nick]=A[oldNick]; delete A[oldNick]; } }
-        if(S.stats.goals[oldNick]){ S.stats.goals[nick]=S.stats.goals[oldNick]; delete S.stats.goals[oldNick]; }
-      }
-      S.users[idx]={...S.users[idx],name,nick,role,code,teams,number,birthday};
-    }
-    save(); closeModal(); renderRoster(); renderAll();
-  };
-  window.delPlayer=(nick)=>{
-    if(!confirm("¿Eliminar jugadora?")) return;
-    S.users=S.users.filter(x=>x.nick!==nick);
-    for(const evId of Object.keys(S.att)){ const A=S.att[evId]; if(A){ delete A[nick]; } }
-    delete S.stats.goals[nick];
-    save(); closeModal(); renderRoster(); renderAll();
-  };
-}
-
-/* -------------------------- TRACKING -------------------------- */
-function renderMatches(){
-  const wrap=document.getElementById("matchList"); wrap.innerHTML="";
-  if(!S.matches.length){ wrap.innerHTML=`<div class="help">Aún no hay registros.</div>`; }
-  S.matches.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(M=>{
-    const res = (M.goalsFor>M.goalsAgainst)?'<span class="ok">Victoria</span>':(M.goalsFor===M.goalsAgainst?'<span>Empate</span>':'<span class="warn">Derrota</span>');
-    const scorers = (M.scorers||[]).map(s=>`<span class="pill">⚽ ${s}</span>`).join(' ');
-    const it=document.createElement("div"); it.className="item";
-    it.innerHTML=`<div class="l"><span class="pill">Partido</span>
-      <div><div class="time">${new Date(M.date).toLocaleDateString('es-CL')}</div>
-      <div>${M.comp||'—'} vs ${M.opponent||'—'} · ${M.goalsFor}-${M.goalsAgainst} ${res}</div></div></div>
-      <div>${(me.role!=="jugadora")?'<button class="btn s">Editar</button>':''}</div>`;
-    wrap.appendChild(it);
-    const card=document.createElement("div"); card.className="card"; card.innerHTML=`<div><strong>Goleadoras:</strong> ${scorers||'<em class="help">—</em>'}</div><div class="help">${M.notes||''}</div>`;
-    wrap.appendChild(card);
-    if(me.role!=="jugadora") it.querySelector("button").onclick=()=>editMatch(M);
+  `,[{id:"save",txt:"Guardar",cls:"btn p"}],({close})=>{
+    $("#save").onclick=()=>{
+      // Restricción: jugadora sólo puede editar su apodo, cumpleaños, número
+      if(!isAdminCap && !me){ alert("Sin permisos."); return; }
+      if(isAdminCap){ u[0]=$("#pName").value.trim(); u[3]=$("#pRole").value; }
+      u[2]=$("#pNum").value.trim(); u[1]=$("#pNick").value.trim(); u[5]=$("#pBday").value.trim();
+      if(isAdminCap){ u[4]=[...$("#pTeams").selectedOptions].map(o=>o.value); }
+      save(); renderRoster(); renderAll(); close();
+    };
   });
 }
-document.getElementById("btnNewMatch").onclick=()=>editMatch({id:"",date:nowISO().slice(0,10),comp:"Wonder Mom’s Cup",opponent:"",goalsFor:0,goalsAgainst:0,notes:"",scorers:[]});
-function editMatch(M){
-  const isNew=!M.id;
-  // elegibles: solo del equipo principal (o todas)
-  const opts=S.users.map(u=>`<option>${u.nick}</option>`).join("");
-  const list=(M.scorers||[]).map((s,i)=>`<div class="row"><select class="sc">${opts}</select><input class="g" type="number" min="1" value="1" style="width:70px"><button class="bsm rm">Quitar</button></div>`).join("")||"";
-  openModal(`
-    <div class="row" style="justify-content:space-between"><strong>${isNew?'Nuevo':'Editar'} registro</strong><button class="bsm" onclick="closeModal()">Cerrar</button></div>
-    <div class="sep"></div>
-    <div class="row">
-      <div><label>Fecha</label><br><input id="mDate" type="date" value="${(M.date||nowISO()).slice(0,10)}"></div>
-      <div><label>Competencia</label><br><input id="mComp" value="${M.comp||''}"></div>
-      <div><label>Rival</label><br><input id="mOpp" value="${M.opponent||''}"></div>
-      <div><label>GF</label><br><input id="mGF" type="number" value="${M.goalsFor||0}" style="width:80px"></div>
-      <div><label>GC</label><br><input id="mGA" type="number" value="${M.goalsAgainst||0}" style="width:80px"></div>
+
+/* =============== Seguimiento =============== */
+function renderTrack(){
+  const c=$("#track"); c.innerHTML="";
+  const head=document.createElement("div"); head.className="row"; head.style.justifyContent="space-between";
+  head.innerHTML=`<strong>Seguimiento de Partidos</strong>${(S.logged && S.logged.role!=="jugadora")?`<button class="btn p" id="tNew">Nuevo registro</button>`:""}`;
+  c.appendChild(head);
+  $("#tNew")&&($("#tNew").onclick=()=>editTrack());
+  const box=document.createElement("div"); box.className="card"; c.appendChild(box);
+  if(!S.track.length){ box.innerHTML="<div class='small'>Aún no hay registros.</div>"; return; }
+  S.track.forEach(T=>{
+    const r=document.createElement("div"); r.className="att-row";
+    const goals=T.goles.map(g=>`${nameOf(g.id)} (${g.qty})`).join(", ");
+    r.innerHTML=`<div><strong>${T.comp||"—"}</strong> — <span class="badge">${new Date(T.date).toLocaleDateString('es-CL')}</span> — vs ${T.vs||"—"} <span class="chip team">${T.team}</span> <span class="badge">${T.score||"—"}</span><div class="small">${goals}</div></div>
+      ${(S.logged && S.logged.role!=="jugadora")?`<button class="btn" data-id="${T.id}">Editar</button>`:""}`;
+    const b=r.querySelector("button"); if(b) b.onclick=()=>editTrack(T.id);
+    box.appendChild(r);
+  });
+}
+function editTrack(id){
+  if(!S.logged || S.logged.role==="jugadora"){ alert("Solo capitana/admin."); return; }
+  const T = id? S.track.find(x=>x.id==id) : {id:crypto.randomUUID(),date:new Date().toISOString(),comp:"Amistoso",vs:"",team:"Golden Moms",score:"",goles:[],notes:""};
+  openModal((id?"Editar":"Nuevo")+" registro",`
+    <div class="cols">
+      <div class="col-4"><label>Fecha</label><input type="date" id="tDate" value="${toInput(T.date).slice(0,10)}"></div>
+      <div class="col-4"><label>Competencia</label><input id="tComp" value="${T.comp||''}" placeholder="LIFA / Wonder Mom’s / Amistoso"></div>
+      <div class="col-4"><label>Rival</label><input id="tVs" value="${T.vs||''}"></div>
+      <div class="col-4"><label>Equipo</label><select id="tTeam"><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select></div>
+      <div class="col-4"><label>Marcador (ej 3-1)</label><input id="tScore" value="${T.score||''}"></div>
+      <div class="col-12"><label>Goles</label>
+        <div id="gList"></div>
+        <button class="btn" id="gAdd">Agregar goleadora</button>
+      </div>
+      <div class="col-12"><label>Notas</label><textarea id="tNotes">${T.notes||''}</textarea></div>
     </div>
-    <div><label>Goles</label>
-      <div id="gWrap">${list}</div>
-      <button class="bsm" id="addSc">Agregar goleadora</button>
-    </div>
-    <div class="row"><label>Notas</label><br><textarea id="mNotes" rows="3" style="width:100%">${M.notes||''}</textarea></div>
-    <div class="sep"></div>
-    <div class="row">
-      <button class="btn p" id="mSave">Guardar</button>
-      ${!isNew?`<button class="btn d" id="mDel">Eliminar</button>`:''}
-    </div>
-  `);
-  const gWrap=document.getElementById("gWrap");
-  document.getElementById("addSc").onclick=()=>{
-    const row=document.createElement("div"); row.className="row";
-    row.innerHTML=`<select class="sc">${opts}</select><input class="g" type="number" min="1" value="1" style="width:70px"><button class="bsm rm">Quitar</button>`;
-    row.querySelector(".rm").onclick=()=>row.remove(); gWrap.appendChild(row);
-  };
-  [...gWrap.querySelectorAll(".rm")].forEach(b=>b.onclick=()=>b.parentElement.remove());
-  document.getElementById("mSave").onclick=()=>{
-    const id=M.id||crypto.randomUUID?.()||(""+Math.random()).slice(2);
-    const obj={id,date:val("mDate"),comp:val("mComp"),opponent:val("mOpp"),
-      goalsFor:parseInt(val("mGF")||0,10),goalsAgainst:parseInt(val("mGA")||0,10),notes:val("mNotes"),scorers:[]};
-    const rows=[...gWrap.querySelectorAll(".row")];
-    const tally={};
-    rows.forEach(r=>{
-      const who=r.querySelector(".sc").value; const g=parseInt(r.querySelector(".g").value||1,10);
-      for(let i=0;i<g;i++) obj.scorers.push(who);
-      tally[who]=(tally[who]||0)+g;
-    });
-    if(isNew){ S.matches.push(obj); } else { const i=S.matches.findIndex(x=>x.id===M.id); S.matches[i]=obj; }
-    // recompute season goals
-    S.stats.goals={};
-    S.matches.forEach(m=>m.scorers.forEach(w=>S.stats.goals[w]=(S.stats.goals[w]||0)+1));
-    save(); closeModal(); renderMatches(); renderKPIs();
-  };
-  if(!isNew) document.getElementById("mDel").onclick=()=>{ if(confirm("Eliminar registro?")){ S.matches=S.matches.filter(x=>x.id!==M.id); save(); closeModal(); renderMatches(); renderKPIs(); } };
+  `,[{id:"save",txt:"Guardar",cls:"btn p"}],({close})=>{
+    $("#tTeam").value=T.team;
+    function drawGoals(){
+      const box=$("#gList"); box.innerHTML="";
+      T.goles.forEach((g,i)=>{
+        const row=document.createElement("div"); row.className="row";
+        row.innerHTML=`<select data-i="${i}" class="gSel">${S.users.map(u=>`<option value="${u[6]}" ${u[6]==g.id?'selected':''}>${u[0]}</option>`).join("")}</select>
+          <input class="gQty" data-i="${i}" type="number" min="1" value="${g.qty||1}" style="width:100px">
+          <button class="btn d" data-i="${i}">×</button>`;
+        row.querySelector(".gSel").onchange=(e)=>{T.goles[e.target.dataset.i].id=e.target.value;};
+        row.querySelector(".gQty").oninput=(e)=>{T.goles[e.target.dataset.i].qty=parseInt(e.target.value)||1;};
+        row.querySelector("button").onclick=(e)=>{T.goles.splice(e.target.dataset.i,1); drawGoals();};
+        box.appendChild(row);
+      });
+    }
+    $("#gAdd").onclick=()=>{ T.goles.push({id:S.users[0][6],qty:1}); drawGoals(); };
+    drawGoals();
+    $("#save").onclick=()=>{
+      T.date = new Date($("#tDate").value).toISOString();
+      T.comp=$("#tComp").value.trim(); T.vs=$("#tVs").value.trim(); T.team=$("#tTeam").value; T.score=$("#tScore").value.trim(); T.notes=$("#tNotes").value.trim();
+      if(!id) S.track.push(T); save(); renderTopScorers(); renderTrack(); renderKPIs(); close();
+    };
+  });
 }
 
-/* -------------------------- SETTINGS (admin) -------------------------- */
-document.getElementById("btnExport").onclick=()=>{
-  const u=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:"application/json"}));
-  const a=document.createElement("a"); a.href=u; a.download="golden-moms-backup.json"; a.click(); URL.revokeObjectURL(u);
-};
-document.getElementById("btnImport").onclick=()=>document.getElementById("backupFile").click();
-document.getElementById("backupFile").onchange=(ev)=>{
-  const f=ev.target.files[0]; if(!f) return;
-  const rd=new FileReader(); rd.onload=()=>{ try{ S=JSON.parse(rd.result); save(); alert("Importado."); location.reload(); }catch{ alert("Archivo inválido"); } }; rd.readAsText(f);
-};
-document.getElementById("btnReset").onclick=()=>{ if(confirm("¿Resetear datos locales?")){ localStorage.removeItem(KEY); location.reload(); } };
-
-/* -------------------------- HELPERS -------------------------- */
-function val(id){return document.getElementById(id)?.value?.trim()||"";}
-function toInput(iso){const d=new Date(iso);const p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`}
-const ov=document.getElementById("ov"), ovc=document.getElementById("ovc");
-function openModal(html){ ovc.innerHTML=html; ov.style.display="flex"; }
-function closeModal(){ ov.style.display="none"; }
-
-/* -------------------------- RSVP INLINE (demostración local) -------------------------- */
-window.addEventListener("hashchange",checkHash);
-function checkHash(){ const h=location.hash; if(!h.startsWith("#rsvp=")) return;
-  try{ const p=JSON.parse(decodeURIComponent(h.slice(6))); const E=S.events.find(x=>x.id===p.id); if(!E){ alert("Evento no existe en este navegador."); return; }
-    // muestra editor en modo jugadora (solo su asistencia)
-    showView("events"); openEditor(E.id);
-    alert("Convocatoria abierta. Inicia sesión y confirma.");
-  }catch{}
+/* =============== Configuración (mínima) =============== */
+function renderCfg(){
+  const c=$("#cfg"); c.innerHTML="";
+  const card=document.createElement("div"); card.className="card";
+  card.innerHTML=`
+    <div class="row" style="justify-content:space-between">
+      <strong>Configuración</strong>
+      <span class="small">Solo admin</span>
+    </div>
+    <div class="hr"></div>
+    <div class="row"><div>Logo usado:</div><img src="Logo.webp" alt="logo" style="height:36px;border:1px solid var(--b);border-radius:6px"></div>
+    <div class="small">El resto de parámetros están codificados en este archivo para uso en GitHub Pages (sin servidor).</div>
+  `;
+  c.appendChild(card);
 }
-// Llenar el combo de login con los apodos del plantel
-(function fillLoginNames(){
-  const sel = document.getElementById('lgNick');
-  if (!sel) return;
-  sel.innerHTML = S.users
-    .map(u => u.nick)
-    .sort((a,b)=>a.localeCompare(b))
-    .map(n => `<option>${n}</option>`)
-    .join('');
-})();
 
+/* =============== Modal generador =============== */
+function openModal(title, html, actions, after){
+  const bg=$("#modal"); $("#modTitle").textContent=title; $("#modBody").innerHTML=html;
+  const foot=$("#modFoot"); foot.innerHTML=""; (actions||[]).forEach(a=>{ const b=document.createElement("button"); b.id=a.id; b.className=a.cls||"btn"; b.textContent=a.txt; foot.appendChild(b); });
+  function close(){ bg.style.display="none"; }
+  $("#modClose").onclick=close; bg.style.display="flex";
+  after && after({close});
+}
 
+/* =============== Render global =============== */
+function renderAll(){ renderCal(); renderBirthdays(); renderTopScorers(); if($(".tab.active").dataset.tab==="roster") renderRoster(); if($(".tab.active").dataset.tab==="track") renderTrack(); }
+
+/* =============== RSVP hash (jugadora) =============== */
+function checkHash(){
+  const h=location.hash; if(h.startsWith("#rsvp=")){ try{ const p=JSON.parse(decodeURIComponent(h.slice(6))); const E=S.events.find(x=>x.id==p.id); if(!E) return;
+    openEvent(E.id);
+  }catch{} }
+}
+
+/* =============== Inicio =============== */
+hydrateSession(); renderAll(); checkHash();
+</script>
+</body>
 </html>
