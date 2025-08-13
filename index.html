@@ -134,6 +134,10 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
   <section id="page-config" class="page">
     <div class="card">
       <strong>Configuración</strong>
+      <div id="accessMgr" class="card" style="margin-top:10px">
+        <div class="row" style="justify-content:space-between"><strong>Accesos (Admin)</strong><span class="small">Define código por jugadora para el login</span></div>
+        <div id="accTable" class="small"></div>
+      </div>
       <div class="row" style="margin-top:8px">
         <div style="min-width:220px">
           <label>Rol actual</label>
@@ -199,6 +203,7 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
       <div class="row">
         <button class="btn s" id="btnCopyWA">Copiar WhatsApp</button>
         <button class="btn s" id="btnRSVP">Link convocatoria</button>
+        <button class="btn s" id="btnQuickWA">Recordatorio (1 clic)</button>
         <button class="btn s" id="btnICS">.ics</button>
       </div>
       <div class="small" id="convInfo"></div>
@@ -237,7 +242,7 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
   <div class="login">
     <img src="Logo.webp" alt="Logo"/>
     <h3>Golden Moms — Acceso</h3>
-    <div class="row"><input id="lgNick" placeholder="Tu apodo o nombre"/></div>
+    <div class="row"><select id="lgPlayer"></select></div>
     <div class="row"><input id="lgCode" placeholder="Código de acceso"/></div>
     <div class="row" style="justify-content:center"><button class="btn" id="lgEnter">Entrar</button></div>
     <div class="small" id="lgHint"></div>
@@ -254,10 +259,12 @@ let S={
   events:[],
   att:{},
   matches:[],
+  passes:{},
   auth:{ok:false,playerId:null,role:"Jugadora"}
 };
 try{const t=JSON.parse(localStorage.getItem(KEY)||"{}"); S={...S,...t};}catch{}
 function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+function refreshLoginList(){ const sel=document.getElementById("lgPlayer"); if(!sel) return; sel.innerHTML=S.players.sort((a,b)=>a.name.localeCompare(b.name)).map(p=>`<option value="${p.id}">${p.name}</option>`).join(""); }
 
 // Seed players if empty, include one Admin by default (Natalia como Admin)
 
@@ -446,6 +453,11 @@ function renderEventModal(){
     convocadas.forEach(p=>L.push("▫️ "+p.name+(p.nick? " (“"+p.nick+"”)": "")));
     navigator.clipboard.writeText(L.join("\n")); alert("Resumen copiado");
   };
+  q("#btnQuickWA").onclick=()=>{
+    const url=location.origin+location.pathname+'#rsvp='+encodeURIComponent(JSON.stringify({id:E.id,t:S.team}));
+    const text = `*${E.type}: ${E.title}* (${E.team||'Golden Moms'})%0A${when} — ${E.location||''}%0AUniforme: ${E.uniform||'—'} · Calcetines: verde lima%0AConfirma aquí: ${encodeURI(url)}`;
+    window.open('https://wa.me/?text='+text, '_blank');
+  };
   q("#btnRSVP").onclick=()=>{
     const url=location.origin+location.pathname+'#rsvp='+encodeURIComponent(JSON.stringify({id:E.id,t:S.team}));
     const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'});
@@ -510,7 +522,7 @@ function openPlayer(id){
   curP=id;
   const p=id? S.players.find(x=>x.id==id) : {id:null,name:"",nick:"",number:"",birth:"",teams:["Moms"],role:"Jugadora"};
   q("#pTitle").textContent=id? "Editar jugadora":"Nueva jugadora";
-  q("#pName").value=p.name||""; q("#pNick").value=p.nick||""; q("#pNum").value=p.number||""; q("#pBirth").value=p.birth||""; q("#pRole").value=p.role||"Jugadora";
+  q("#pName").value=p.name||""; q("#pNick").value=p.nick||""; q("#pNum").value=p.number||""; q("#pBirth").value=p.birth||""; q("#pRole").value=p.role||"Jugadora"; q("#pRole").disabled = !(S.auth&&S.auth.role==="Admin");
   q("#tMoms").checked=p.teams.includes("Moms"); q("#tDreams").checked=p.teams.includes("Dreams"); q("#tPower").checked=p.teams.includes("Power");
   q("#pDelete").style.display=id? "inline-block":"none";
   q("#ovP").style.display="flex"; lockBody();
@@ -557,14 +569,36 @@ function editMatch(id){
 }
 
 // Config
+
 function renderConfig(){
-  const me = S.players.find(p=>p.id===S.auth.playerId);
-  q("#currentRole").value = S.auth.role + (me? " — "+me.name : "");
   q("#teamName").value=S.team;
+  q("#currentRole").value=S.auth?.role||"—";
   q("#accessCode").value=S.accessCode;
-  const canChange = S.auth.role==="Admin";
-  q("#teamName").disabled = !(S.auth.role==="Admin"||S.auth.role==="Capitana");
-  q("#accessCode").disabled = !canChange;
+  // Access manager
+  const box=q("#accTable");
+  if(!(S.auth&&S.auth.role==="Admin")){ q("#accessMgr").style.display="none"; }
+  else{
+    q("#accessMgr").style.display="block";
+    const rows=S.players.sort((a,b)=>a.name.localeCompare(b.name)).map(p=>{
+      const pass=(S.passes&&S.passes[p.id])||"";
+      return `<div class="row" style="margin:4px 0;align-items:center"><div style="min-width:220px"><strong>${p.name}</strong> <span class="small">(${p.role})</span></div><input data-p="${p.id}" class="acc-input" placeholder="código de acceso" value="${pass}"/></div>`;
+    }).join("");
+    box.innerHTML=rows;
+    qa(".acc-input").forEach(inp=>inp.onchange=()=>{ const pid=inp.getAttribute("data-p"); S.passes=S.passes||{}; S.passes[pid]=inp.value.trim(); save(); });
+  }
+  // Impersonar (solo Admin) — selector de rol temporal
+  if(S.auth&&S.auth.role==="Admin"){
+    if(!q("#impWrap")){
+      const wrap=document.createElement("div"); wrap.id="impWrap"; wrap.className="row"; wrap.innerHTML=`<label>Ver como:</label>
+        <select id="impSel"><option>Admin</option><option>Capitana</option><option>Jugadora</option></select>
+        <button class="btn s" id="impBtn">Aplicar</button>`;
+      q("#page-config").querySelector(".card").appendChild(wrap);
+      q("#impBtn").onclick=()=>{ const v=q("#impSel").value; S.auth.role=v; save(); renderConfig(); alert("Modo **"+v+"** activo (temporal)"); };
+    }
+  }else{ const w=q("#impWrap"); if(w) w.remove(); }
+  // Guardado de team & access code (solo Admin)
+  const canEdit=S.auth&&S.auth.role==="Admin";
+  ["teamName","accessCode"].forEach(id=>q("#"+id).disabled=!canEdit);
 }
 q("#teamName").onchange=()=>{ S.team=q("#teamName").value; save(); };
 q("#accessCode").onchange=()=>{ if(S.auth.role!=="Admin") return; S.accessCode=q("#accessCode").value.trim()||S.accessCode; save(); };
@@ -577,11 +611,16 @@ function showLogin(){
   q("#lgHint").textContent="El rol se asigna según el plantel. Ingresa el código del equipo.";
 }
 function checkAuth(){ if(S.auth && S.auth.ok) return true; showLogin(); return false; }
+
 q("#lgEnter").onclick=()=>{
-  const id=q("#lgPlayer").value; const code=q("#lgCode").value.trim();
-  if(code!==S.accessCode){ q("#lgHint").textContent="Código incorrecto"; return; }
-  const p=S.players.find(x=>x.id===id);
-  S.auth={ok:true,playerId:id,role:p?.role||"Jugadora"}; save();
+  const code=(q("#lgCode").value||"").trim();
+  const pid=q("#lgPlayer").value;
+  const pl=S.players.find(p=>p.id===pid);
+  if(!pl){ q("#lgHint").textContent="Selecciona tu nombre del plantel"; return; }
+  const pass=(S.passes&&S.passes[pid])||S.accessCode||"";
+  if(code!==pass){ q("#lgHint").textContent="Código incorrecto"; return; }
+  S.auth={ok:true,playerId:pl.id,role:pl.role};
+  save();
   q("#loginOv").style.display="none";
   renderCal(); renderEventList(); renderRoster(); renderMatches(); renderConfig();
 };
