@@ -22,6 +22,44 @@ a{color:inherit} .small{color:var(--mut);font-size:12px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
 
+/* ✦ AUTH PAGE */
+#v-auth{display:none}
+.auth-wrap{max-width:460px;margin:40px auto;padding:16px;border:1px solid var(--b);border-radius:12px;background:#fff}
+.auth-wrap h2{margin:0 0 6px 0}
+// ✦ AUTH control (página inicial)
+function showOnlyAuth(){
+  // oculta la app y muestra página de acceso
+  document.getElementById('v-auth').style.display='block';
+  document.querySelector('.container').style.display='none';
+  document.querySelector('.nav').style.display='none';
+  // llena nombres
+  const sel=document.getElementById('authName');
+  if (sel) sel.innerHTML = S.roster.map(p => `<option>${p.name}</option>`).sort().join('');
+}
+function showApp(){
+  document.getElementById('v-auth').style.display='none';
+  document.querySelector('.container').style.display='block';
+  document.querySelector('.nav').style.display='flex';
+  syncRoleUI(); renderAll();
+}
+function validateCode(c){ return String(c||'').trim().toLowerCase()==='golden2025'; }
+
+// bind del botón de acceso
+document.addEventListener('DOMContentLoaded', ()=>{
+  const g = document.getElementById('authGo');
+  if (g) g.onclick = ()=>{
+    const name = document.getElementById('authName').value;
+    const code = document.getElementById('authCode').value;
+    if (!validateCode(code)) { alert('Código incorrecto'); return; }
+    const me = S.roster.find(p=>p.name===name);
+    if (!me) { alert('No encontrado'); return; }
+    SESSION = {name:me.name, role:me.role};
+    localStorage.setItem(KEY+'-session', JSON.stringify(SESSION));
+    showApp();
+  };
+});
+
+
 /* Calendario */
 .filters-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
 .filters-row label{font-size:12px;color:#334155;margin-left:6px}
@@ -77,11 +115,29 @@ a{color:inherit} .small{color:var(--mut);font-size:12px}
     <button class="tab" data-view="roster">Plantel</button>
     <button class="tab" data-view="track">Seguimiento</button>
     <button class="tab" data-view="conf">Configuración</button>
-    <span id="roleBadge" class="badge">Invitada</span>
-    <button id="btnLogin" class="btn s">Entrar</button>
+    //<span id="roleBadge" class="badge">Invitada</span>
+    /<button id="btnLogin" class="btn s">Entrar</button>
     <button id="btnLogout" class="btn s" style="display:none">Salir</button>
   </div>
 </div>
+<!-- ✦ AUTH PAGE (página de inicio hasta logear) -->
+<section id="v-auth">
+  <div class="auth-wrap">
+    <h2>Acceso Golden Moms</h2>
+    <label>Nombre</label>
+    <select id="authName" style="width:100%;padding:10px;border:1px solid var(--b);border-radius:10px"></select>
+    <label style="margin-top:8px">Código de acceso</label>
+    <!-- SIN placeholder de golden2025 -->
+    <input id="authCode" type="password" autocomplete="current-password"
+           style="width:100%;padding:10px;border:1px solid var(--b);border-radius:10px"/>
+    <div style="margin-top:10px;text-align:right">
+      <button class="btn" id="authGo">Entrar</button>
+    </div>
+    <div class="small" style="margin-top:6px;color:var(--mut)">
+      El rol se obtiene del plantel. Código único del equipo.
+    </div>
+  </div>
+</section>
 
 <div class="container">
   <!-- DASHBOARD -->
@@ -512,11 +568,13 @@ document.getElementById('cfgSaveBtn').onclick=()=>{if(!(SESSION&&SESSION.role===
 document.querySelectorAll('.overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)ov.style.display='none';}));
 
 /*** === Init === ***/
+
 async function renderAll(){renderDash();renderCalendar();renderRoster();renderTrack();}
 (async function init(){
   await loadState(); ensureSeed(); await saveState(); syncRoleUI(); renderAll();
   // resolver RSVP si viene con hash
-  if(location.hash.startsWith('#rsvp=')){ try{const p=JSON.parse(decodeURIComponent(location.hash.slice(6))); const e=S.events.find(x=>x.id==p.id); if(e){ openEvent(p.id); } }catch{} }
+  if (!SESSION) { showOnlyAuth(); return; }  // ✦ si no está logeado, mostrar AUTH
+  showApp();                                   // ✦ si está logeado, mostrar app normal
 })();
 </script>
 </body>
