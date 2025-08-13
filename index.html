@@ -621,6 +621,33 @@ function showRSVP(id,t){ const E=S.events.find(x=>x.id==id); if(!E){ alert("Even
 function renderAll(){ renderKPIs(); renderCal(); renderAgenda(); renderRoster(); const role=S.auth?.role||"Jugadora"; q("#tabCfg").style.display=(role==="Admin")?'inline-block':'none'; renderImpersonationPill(); renderTrack(); }
 function init(){ refreshLoginList(); if(!S.auth||!S.auth.ok){ q("#loginOv").style.display="flex"; } renderAll(); checkHash(); }
 init();
+  
+/* --- FIX: tarjetas "Próximos" y calendario en móvil --- */
+@media (max-width: 480px){
+  .kpi, .card { border-radius: 14px }
+  .list .item{align-items:flex-start}
+  .list .item .time{font-size:15px}
+  .grid7{gap:4px}
+  .cell{min-height:84px;padding:6px}
+  .event{font-size:12px;line-height:1.2}
+  .tag{font-size:9px;padding:1px 6px;margin-bottom:2px}
+  .team{font-size:9px}
+}
+
+/* --- FIX: botón Copiar Semana visualmente claro --- */
+.btn.s.primary { background:#0f3a78; color:#fff; border-color:#0f3a78 }
+
+/* --- Chips multietiqueta en edición de jugadora --- */
+.team-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.team-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--b);
+  padding:6px 10px;border-radius:999px;background:#f8fafc;font-size:12px;cursor:pointer}
+.team-chip input{accent-color:#0f3a78}
+
+/* --- Insignia de cumpleaños junto al nombre --- */
+.badge-bday{display:inline-flex;align-items:center;gap:6px;background:#fff7ed;border:1px dashed #fdba74;
+  color:#b45309;padding:2px 8px;border-radius:999px;font-size:11px}
+
+  
 </script>
 </body>
 </html>
