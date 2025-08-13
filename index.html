@@ -315,14 +315,21 @@ const elApp=document.getElementById("app");
 const topbar=document.getElementById("topbar");
 const who=document.getElementById("who");
 const roleBadge=document.getElementById("role");
-document.getElementById("btnEnter").onclick=()=>{
-  const nick=document.getElementById("lgNick").value.trim();
-  const code=document.getElementById("lgCode").value.trim();
-  const u=S.users.find(x=>x.nick.toLowerCase()===nick.toLowerCase() && x.code===code);
-  if(!u){alert("Apodo o código incorrecto.");return;}
-  me={nick:u.nick, role:u.role};
+// Login con código universal + mantiene códigos por usuaria como fallback
+document.getElementById("btnEnter").onclick = () => {
+  const nick = document.getElementById("lgNick").value.trim();
+  const code = document.getElementById("lgCode").value.trim().toLowerCase();
+  const u = S.users.find(x => x.nick.toLowerCase() === nick.toLowerCase());
+  if (!u) { alert("Apodo no encontrado."); return; }
+
+  // Acepta universal 'golden2025' o el code propio (si quisieras conservarlos)
+  const ok = (code === "golden2025") || (String(u.code||"").toLowerCase() === code);
+  if (!ok) { alert("Código incorrecto."); return; }
+
+  me = { nick: u.nick, role: u.role };
   afterLogin();
 };
+
 function afterLogin(){
   elLogin.style.display="none"; elApp.style.display="block"; topbar.style.display="flex";
   who.textContent=me.nick; roleBadge.textContent=me.role.toUpperCase();
