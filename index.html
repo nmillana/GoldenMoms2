@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     <button class="tab" data-view="roster">Plantel</button>
     <button class="tab" data-view="track">Seguimiento</button>
     <button class="tab" data-view="conf">Configuración</button>
-    //<span id="roleBadge" class="badge">Invitada</span>
+    
    
   </div>
 </div>
@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 <script>
 /*** === Config (Supabase opcional) === ***/
-const SUPA={url:'', key:''}; // <-- si completas esto, se usa Supabase; si no, localStorage
+const SUPA={url:'https://xglojvvbgaivwbpdxvne.supabase.co', key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw'}; // <-- si completas esto, se usa Supabase; si no, localStorage
 let supa=null; if(SUPA.url&&SUPA.key&&window.supabase){ supa=window.supabase.createClient(SUPA.url,SUPA.key); }
 
 const KEY="gm-full-v4";
