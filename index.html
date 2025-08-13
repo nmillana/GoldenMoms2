@@ -4,14 +4,15 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Golden Moms — Panel</title>
+<link rel="icon" type="image/webp" href="Logo.webp"/>
 <style>
 :root{--blue:#0f3a78;--lime:#9BE22D;--ink:#0f172a;--b:#e2e8f0;--bg:#f7f8fa;--mut:#64748b;--red:#ef4444}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--ink)}
 a{color:inherit}
 .top{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--b);z-index:10}
-.topin{display:flex;align-items:center;justify-content:space-between;padding:12px}
+.topin{display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
 .brand{display:flex;gap:10px;align-items:center}
-.logo{width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#9be22d 0 45%,#0f3a78 46% 100%);border:2px solid var(--blue)}
+.logo-img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue);object-fit:cover;object-position:center;background:#fff}
 nav{display:flex;gap:8px;flex-wrap:wrap}
 .tab{padding:8px 12px;border:1px solid var(--b);border-radius:999px;background:#f8fafc;cursor:pointer}
 .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
@@ -27,11 +28,11 @@ input,select,textarea{padding:10px;border:1px solid var(--b);border-radius:10px;
 label{font-size:12px;color:#334155;font-weight:600}
 hr{border:none;border-top:1px solid var(--b);margin:10px 0}
 .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--b);background:#f8fafc;font-weight:700;font-size:12px;margin:3px 4px;display:inline-flex;align-items:center;gap:6px}
-.chip .x{border:1px solid var(--b);background:#fff;border-radius:6px;padding:2px 6px;cursor:pointer}
-/* Layout pages */
+.small{font-size:12px;color:#64748b}
+/* Pages */
 .page{display:none}
 .page.active{display:block}
-/* Calendar (simple) */
+/* Calendar */
 .grid7{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .cell{background:#fff;border:1px solid var(--b);min-height:110px;border-radius:12px;padding:8px;position:relative}
 .day{position:absolute;right:8px;top:6px;font-size:11px;color:#94a3b8}
@@ -41,23 +42,25 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
 .event{font-size:13px;margin-bottom:6px;cursor:pointer}
 .team{font-size:10px;background:#eaf7d7;border:1px solid #c8ef7a;border-radius:999px;padding:1px 6px;margin-left:6px;font-weight:700}
 /* Modal */
-.overlay{display:none;position:fixed;inset:0;background:#0006;align-items:center;justify-content:center;padding:12px;z-index:20}
-.modal{max-width:720px;width:100%;background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 10px 30px #0003;padding:10px}
-.tabs{display:flex;gap:6px;margin-bottom:8px}
+.overlay{display:none;position:fixed;inset:0;background:#0006;align-items:center;justify-content:center;padding:12px;z-index:9999;overflow:auto}
+.modal{max-width:900px;width:100%;background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 10px 30px #0003;padding:10px;max-height:92vh;overflow:auto}
+.tabs{display:flex;gap:6px;margin-bottom:8px;position:sticky;top:0;background:#fff;padding-top:4px}
 .tab2{padding:8px 12px;border:1px solid var(--b);border-radius:10px;background:#f8fafc;cursor:pointer}
 .tab2.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-/* Roster table cards */
+/* Roster */
 .roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
 .player{border:1px solid var(--b);border-radius:12px;padding:10px}
 .player h4{margin:4px 0}
-.small{font-size:12px;color:#64748b}
-@media (max-width:900px){ .grid{grid-template-columns:repeat(6,1fr)} .modal{max-width:95vw} }
+/* Login */
+.login-ov{display:flex;position:fixed;inset:0;background:#0b1220e6;align-items:center;justify-content:center;z-index:10000}
+.login{max-width:420px;width:100%;background:#fff;border-radius:12px;border:1px solid var(--b);padding:16px;box-shadow:0 20px 60px #0006;text-align:center}
+.login img{width:72px;height:72px;border-radius:12px;border:2px solid var(--blue);background:#fff;margin-bottom:8px}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="topin">
-    <div class="brand"><i class="logo"></i><strong>Golden <span style="color:var(--lime)">Moms</span></strong></div>
+    <div class="brand"><img class="logo-img" src="Logo.webp" alt="Golden Moms"/><strong>Golden <span style="color:var(--lime)">Moms</span></strong></div>
     <nav>
       <button class="tab active" data-page="dash">Dashboard</button>
       <button class="tab" data-page="events">Eventos</button>
@@ -96,7 +99,7 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
     </div>
   </section>
 
-  <!-- Eventos (listado simple con acciones) -->
+  <!-- Eventos -->
   <section id="page-events" class="page">
     <div class="card">
       <div class="row" style="justify-content:space-between">
@@ -122,7 +125,7 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
     </div>
   </section>
 
-  <!-- Seguimiento de Partidos -->
+  <!-- Seguimiento -->
   <section id="page-tracker" class="page">
     <div class="card">
       <div class="row" style="justify-content:space-between">
@@ -146,6 +149,11 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
           <label>Nombre de equipo</label>
           <input id="teamName"/>
         </div>
+        <div style="min-width:220px">
+          <label>Código de acceso (solo equipo)</label>
+          <input id="accessCode"/>
+          <span class="small">Compártelo sólo con jugadoras/capitanas.</span>
+        </div>
         <div class="row"><button class="btn s" id="btnReset">Reiniciar todo (local)</button></div>
       </div>
     </div>
@@ -153,7 +161,7 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
 
 </main>
 
-<!-- Modal Evento con pestañas -->
+<!-- Modal Evento -->
 <div id="ov" class="overlay">
   <div class="modal">
     <div class="row" style="justify-content:space-between"><strong id="evTitle">Evento</strong><button class="btn s" id="closeEv">Cerrar</button></div>
@@ -163,7 +171,10 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
       <button class="tab2" data-pane="conv">Convocatoria</button>
     </div>
     <div id="pane-att">
-      <div id="attCounts" class="row"></div>
+      <div class="row" style="justify-content:space-between">
+        <div id="attCounts" class="row"></div>
+        <label class="chip"><input type="checkbox" id="hideNo" checked> Ocultar ❌</label>
+      </div>
       <div id="attGrid"></div>
     </div>
     <div id="pane-det" style="display:none">
@@ -226,16 +237,33 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
   </div>
 </div>
 
+<!-- Login -->
+<div id="loginOv" class="login-ov" style="display:none">
+  <div class="login">
+    <img src="Logo.webp" alt="Logo"/>
+    <h3>Golden Moms — Acceso</h3>
+    <div class="row"><input id="lgName" placeholder="Tu nombre (opcional)"></div>
+    <div class="row">
+      <select id="lgRole"><option>Jugadora</option><option>Capitana</option></select>
+      <input id="lgCode" placeholder="Código de acceso"/>
+    </div>
+    <div class="row" style="justify-content:center"><button class="btn" id="lgEnter">Entrar</button></div>
+    <div class="small" id="lgHint"></div>
+  </div>
+</div>
+
 <script>
 // --- State ---
-const KEY="gm-roster-v2";
+const KEY="gm-roster-v3";
 let S={
   team:"Golden Moms",
   currentRole:"Capitana",
+  accessCode:"GOLDEN2025",
   players:[],
   events:[],
   att:{},
-  matches:[] // {id, date, opponent, our, their, notes, result}
+  matches:[],
+  auth:{ok:false,name:"",role:"Jugadora"}
 };
 try{const t=JSON.parse(localStorage.getItem(KEY)||"{}"); S={...S,...t};}catch{}
 function save(){localStorage.setItem(KEY,JSON.stringify(S));}
@@ -243,12 +271,11 @@ function save(){localStorage.setItem(KEY,JSON.stringify(S));}
 // Seed players if empty
 if(!S.players.length){
   const base=["Ale V","Andre","Antonella","Aurora","Carla","Caro G","Caro N","Cata","Celsa","Chica","Consu","Consu S","Cote","Dani C","Dani J","Fabi","Fran","Gaby","Isa","Jandi","Janga","Javiera A","Javi C","Jean","Maca","Male","Marce","Myle","Paz","Pia","Pili","Vale","Vero"];
-  S.players = base.map((n,i)=>({id:crypto.randomUUID?.()||(""+Math.random()).slice(2),name:n,nick:"",number: (i%30)+1,birth:"",teams:["Moms"],role:"Jugadora"}));
-  // Marca 3 capitanas por defecto
+  S.players = base.map((n,i)=>({id:crypto.randomUUID?.()||(""+Math.random()).slice(2),name:n,nick:"",number:(i%30)+1,birth:"",teams:["Moms"],role:"Jugadora"}));
   ["Dani J","Chica","Caro G"].forEach(n=>{const p=S.players.find(x=>x.name===n); if(p) p.role="Capitana";});
   save();
 }
-// Seed schedule simple (if empty)
+// Seed schedule if empty
 if(!S.events.length){
   function mk(y,m,d,h,mi){const t=new Date(y,m-1,d,h,mi);return new Date(t.getTime()-t.getTimezoneOffset()*60000).toISOString();}
   function nextDow(dow){const n=new Date(), g=(dow-n.getDay()+7)%7||7;const d=new Date(n);d.setDate(n.getDate()+g);return d;}
@@ -266,7 +293,7 @@ if(!S.events.length){
   save();
 }
 
-// --- UI helpers ---
+// --- Helpers ---
 const q=(s)=>document.querySelector(s);
 const qa=(s)=>Array.from(document.querySelectorAll(s));
 function fmtMonth(d){return d.toLocaleDateString("es-CL",{month:"long",year:"numeric"})}
@@ -312,18 +339,24 @@ q("#btnNew").onclick=()=>newEvent(); q("#btnNew2").onclick=()=>newEvent();
 
 // --- Event modal with tabs & roles ---
 let cur=null;
-function openEvent(id){cur=id; renderEventModal(); q("#ov").style.display="flex";}
-q("#closeEv").onclick=()=>q("#ov").style.display="none";
+function lockBody(){document.body.style.overflow='hidden';}
+function unlockBody(){document.body.style.overflow='';}
+function openEvent(id){cur=id; renderEventModal(); q("#ov").style.display="flex"; lockBody();}
+q("#closeEv").onclick=()=>{q("#ov").style.display="none"; unlockBody();}
+q("#ov").addEventListener("click",(e)=>{ if(e.target.id==="ov"){ q("#ov").style.display="none"; unlockBody(); } });
 qa(".tab2").forEach(b=>b.onclick=()=>{qa(".tab2").forEach(x=>x.classList.remove("active")); qa("#pane-att,#pane-det,#pane-conv").forEach(p=>p.style.display="none"); b.classList.add("active"); q("#pane-"+b.dataset.pane).style.display="block";});
+
 function renderEventModal(){
   const E=S.events.find(e=>e.id==cur); if(!E) return;
   q("#evTitle").textContent=`${E.type} — ${E.title}`;
-  // asistencia grid
+  const hideNo=q("#hideNo").checked;
   const A=S.att[E.id]||{};
   const counts={ok:0,mid:0,no:0,blank:0};
-  const list=document.createElement("div"); list.className=""; list.style.display="grid"; list.style.gridTemplateColumns="repeat(auto-fill,minmax(240px,1fr))"; list.style.gap="8px";
+  const list=document.createElement("div"); list.style.display="grid"; list.style.gridTemplateColumns="repeat(auto-fill,minmax(260px,1fr))"; list.style.gap="8px";
   S.players.forEach(p=>{
-    const v=A[p.name]||""; if(v=="Asiste") counts.ok++; else if(v=="Duda") counts.mid++; else if(v=="No asiste") counts.no++; else counts.blank++;
+    const v=A[p.name]||"";
+    if(v=="Asiste") counts.ok++; else if(v=="Duda") counts.mid++; else if(v=="No asiste") counts.no++; else counts.blank++;
+    if(hideNo && v=="No asiste") return; // ocultar de la vista
     const card=document.createElement("div"); card.className="card";
     card.innerHTML=`<div class="row" style="justify-content:space-between"><div><strong>${p.name}</strong> <span class="small">(${p.nick||'—'})</span><br><span class="small">#${p.number} ${chipsTeams(p.teams)}</span></div><div class="small">${p.role}</div></div>
     <div class="row"><button class="btn s">✅</button><button class="btn s">❔</button><button class="btn s">❌</button></div>`;
@@ -335,6 +368,7 @@ function renderEventModal(){
   });
   q("#attGrid").innerHTML=""; q("#attGrid").appendChild(list);
   q("#attCounts").innerHTML=`<span class="chip">✅ ${counts.ok}</span><span class="chip">❔ ${counts.mid}</span><span class="chip">❌ ${counts.no}</span><span class="chip">▫️ ${counts.blank}</span>`;
+  q("#hideNo").onchange=()=>renderEventModal();
 
   // detalles (capitana only)
   ["eType","eTitle","eDT","eLoc","eOpp","eUni","eTeam"].forEach(id=>q("#"+id).disabled=(S.currentRole!=="Capitana"));
@@ -342,7 +376,7 @@ function renderEventModal(){
   q("#btnDel").style.display=(S.currentRole==="Capitana")?"inline-block":"none";
   ["eType","eTitle","eLoc","eOpp","eUni","eTeam"].forEach(id=>q("#"+id).onchange=()=>{ if(S.currentRole!=="Capitana") return; E[id.slice(1).toLowerCase()]=q("#"+id).value; save(); renderCal(); renderEventList();});
   q("#eDT").onchange=()=>{ if(S.currentRole!=="Capitana") return; E.datetime=fromInput(q("#eDT").value); save(); renderCal(); renderEventList();};
-  q("#btnDel").onclick=()=>{ if(!confirm("Eliminar evento?")) return; S.events=S.events.filter(x=>x.id!==E.id); delete S.att[E.id]; save(); q("#ov").style.display="none"; renderCal(); renderEventList();};
+  q("#btnDel").onclick=()=>{ if(!confirm("Eliminar evento?")) return; S.events=S.events.filter(x=>x.id!==E.id); delete S.att[E.id]; save(); q("#ov").style.display="none"; unlockBody(); renderCal(); renderEventList();};
 
   // convocatoria
   const selTeams = [];
@@ -352,7 +386,6 @@ function renderEventModal(){
   const convocadas=S.players.filter(p=>p.teams.some(t=>selTeams.includes(t)));
   const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'});
   q("#convInfo").textContent = `Convocatoria a ${convocadas.length} jugadoras (${selTeams.join(", ")}) — ${when} ${E.location? " · "+E.location:""}`;
-  // botones
   q("#btnCopyWA").onclick=()=>{
     const L=[`*${E.type}: ${E.title}* (${E.team||'Golden Moms'})`,`${when} — ${E.location||''}`,`Uniforme: ${E.uniform||'—'} · Calcetines: verde lima`,"","*Convocadas*"];
     convocadas.forEach(p=>L.push("▫️ "+p.name+(p.nick? " (“"+p.nick+"”)": "")));
@@ -394,6 +427,7 @@ function newEvent(){
 }
 
 // --- Roster page ---
+function chips(arr){return arr.map(t=>`<span class="badge">${t}</span>`).join("")}
 function renderRoster(){
   const box=q("#players"); box.innerHTML="";
   const tf=q("#fltTeam").value, rf=q("#fltRole").value;
@@ -420,15 +454,15 @@ function openPlayer(id){
   q("#pName").value=p.name||""; q("#pNick").value=p.nick||""; q("#pNum").value=p.number||""; q("#pBirth").value=p.birth||""; q("#pRole").value=p.role||"Jugadora";
   q("#tMoms").checked=p.teams.includes("Moms"); q("#tDreams").checked=p.teams.includes("Dreams"); q("#tPower").checked=p.teams.includes("Power");
   q("#pDelete").style.display=id? "inline-block":"none";
-  q("#ovP").style.display="flex";
+  q("#ovP").style.display="flex"; lockBody();
 }
-q("#closeP").onclick=()=>q("#ovP").style.display="none";
-q("#pDelete").onclick=()=>{ if(!confirm("¿Eliminar jugadora?")) return; S.players=S.players.filter(x=>x.id!==curP); save(); q("#ovP").style.display="none"; renderRoster();};
+q("#closeP").onclick=()=>{q("#ovP").style.display="none"; unlockBody();}
+q("#pDelete").onclick=()=>{ if(!confirm("¿Eliminar jugadora?")) return; S.players=S.players.filter(x=>x.id!==curP); save(); q("#ovP").style.display="none"; unlockBody(); renderRoster();};
 q("#pSave").onclick=()=>{
   const getTeams=()=>{const arr=[]; if(q("#tMoms").checked)arr.push("Moms"); if(q("#tDreams").checked)arr.push("Dreams"); if(q("#tPower").checked)arr.push("Power"); return arr;}
   if(curP){ const p=S.players.find(x=>x.id==curP); p.name=q("#pName").value.trim(); p.nick=q("#pNick").value.trim(); p.number=q("#pNum").value; p.birth=q("#pBirth").value; p.role=q("#pRole").value; p.teams=getTeams(); }
   else{ const p={id:crypto.randomUUID?.()||(""+Math.random()).slice(2),name:q("#pName").value.trim(),nick:q("#pNick").value.trim(),number:q("#pNum").value,birth:q("#pBirth").value,role:q("#pRole").value,teams:getTeams()}; S.players.push(p); }
-  save(); q("#ovP").style.display="none"; renderRoster();
+  save(); q("#ovP").style.display="none"; unlockBody(); renderRoster();
 }
 
 // --- Seguimiento de partidos ---
@@ -437,10 +471,9 @@ function renderMatches(){
   if(!S.matches.length){ box.innerHTML='<div class="small">Aún sin resultados cargados.</div>'; }
   [...S.matches].sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(M=>{
     const res = M.our>M.their? "Victoria" : M.our<M.their? "Derrota" : "Empate";
-    const tag = `<span class="badge">${res}</span>`;
     const d=document.createElement("div"); d.className="card";
     d.innerHTML=`<div class="row" style="justify-content:space-between">
-      <div><strong>${new Date(M.date).toLocaleDateString('es-CL')} · ${M.opponent}</strong> ${tag}<br><span class="small">${M.our} - ${M.their}</span><br><span class="small">${M.notes||''}</span></div>
+      <div><strong>${new Date(M.date).toLocaleDateString('es-CL')} · ${M.opponent}</strong> <span class="badge">${res}</span><br><span class="small">${M.our} - ${M.their}</span><br><span class="small">${M.notes||''}</span></div>
       <div class="row"><button class="btn s">Editar</button><button class="btn d">Borrar</button></div>
     </div>`;
     const [eDel,eBor]=d.querySelectorAll("button"); eDel.onclick=()=>editMatch(M.id); eBor.onclick=()=>{if(confirm('¿Eliminar?')){S.matches=S.matches.filter(x=>x.id!==M.id); save(); renderMatches();}};
@@ -457,20 +490,36 @@ function editMatch(id){
     <div style="flex:1"><label>Ellas</label><input id="mTheir" type="number" value="${M.their}"/></div></div>
     <div><label>Notas</label><textarea id="mNotes">${M.notes||''}</textarea></div>
     <div class="row" style="justify-content:space-between;margin-top:8px"><button class="btn s" id="mSave">Guardar</button><button class="btn d" id="mDel" ${id?'':'style="display:none"'}>Eliminar</button></div></div>`;
-  const ov=document.createElement("div"); ov.className="overlay"; ov.style.display="flex"; ov.innerHTML=html; document.body.appendChild(ov);
-  ov.querySelector("#x").onclick=()=>document.body.removeChild(ov);
-  ov.querySelector("#mSave").onclick=()=>{ if(id){ M.date=ov.querySelector('#mDate').value; M.opponent=ov.querySelector('#mOpp').value; M.our=+ov.querySelector('#mOur').value; M.their=+ov.querySelector('#mTheir').value; M.notes=ov.querySelector('#mNotes').value; } else { const N={id:crypto.randomUUID?.()||(""+Math.random()).slice(2),date:ov.querySelector('#mDate').value,opponent:ov.querySelector('#mOpp').value,our:+ov.querySelector('#mOur').value,their:+ov.querySelector('#mTheir').value,notes:ov.querySelector('#mNotes').value}; S.matches.push(N);} save(); document.body.removeChild(ov); renderMatches(); };
-  ov.querySelector("#mDel")?.addEventListener('click',()=>{ if(confirm('¿Eliminar?')){ S.matches=S.matches.filter(x=>x.id!==id); save(); document.body.removeChild(ov); renderMatches(); } });
+  const ov=document.createElement("div"); ov.className="overlay"; ov.style.display="flex"; ov.innerHTML=html; document.body.appendChild(ov); lockBody();
+  ov.querySelector("#x").onclick=()=>{document.body.removeChild(ov); unlockBody();};
+  ov.querySelector("#mSave").onclick=()=>{ if(id){ M.date=ov.querySelector('#mDate').value; M.opponent=ov.querySelector('#mOpp').value; M.our=+ov.querySelector('#mOur').value; M.their=+ov.querySelector('#mTheir').value; M.notes=ov.querySelector('#mNotes').value; } else { const N={id:crypto.randomUUID?.()||(""+Math.random()).slice(2),date:ov.querySelector('#mDate').value,opponent:ov.querySelector('#mOpp').value,our:+ov.querySelector('#mOur').value,their:+ov.querySelector('#mTheir').value,notes:ov.querySelector('#mNotes').value}; S.matches.push(N);} save(); document.body.removeChild(ov); unlockBody(); renderMatches(); };
+  ov.querySelector("#mDel")?.addEventListener('click',()=>{ if(confirm('¿Eliminar?')){ S.matches=S.matches.filter(x=>x.id!==id); save(); document.body.removeChild(ov); unlockBody(); renderMatches(); } });
 }
 
 // --- Config page ---
-function renderConfig(){ q("#currentRole").value=S.currentRole; q("#teamName").value=S.team; }
+function renderConfig(){ q("#currentRole").value=S.currentRole; q("#teamName").value=S.team; q("#accessCode").value=S.accessCode; }
 q("#currentRole").onchange=()=>{ S.currentRole=q("#currentRole").value; save(); };
 q("#teamName").onchange=()=>{ S.team=q("#teamName").value; save(); };
-q("#btnReset").onclick=()=>{ if(confirm("Esto borra todos los datos locales. ¿Continuar?")){ localStorage.removeItem(KEY); location.reload(); } };
+q("#accessCode").onchange=()=>{ S.accessCode=q("#accessCode").value.trim()||S.accessCode; save(); };
+
+// --- Login gate ---
+function checkAuth(){ if(S.auth && S.auth.ok) return true; q("#loginOv").style.display="flex"; q("#lgHint").textContent = "Pide a la capitana el código de acceso."; return false; }
+q("#lgEnter").onclick=()=>{
+  const code=q("#lgCode").value.trim(); const role=q("#lgRole").value; const name=q("#lgName").value.trim();
+  if(code!==S.accessCode){ q("#lgHint").textContent="Código incorrecto"; return; }
+  S.auth={ok:true,name,role}; S.currentRole=role; save(); q("#loginOv").style.display="none"; renderCal(); renderEventList(); renderRoster(); renderMatches(); renderConfig();
+};
+
+// RSVP inline (demo sin servidor)
+function checkHash(){ const h=location.hash; if(h.startsWith("#rsvp=")){ try{ const p=JSON.parse(decodeURIComponent(h.slice(6))); showRSVP(p.id,p.t);}catch{} } }
+function showRSVP(id,t){ const E=S.events.find(x=>x.id==id); if(!E){ alert("Evento no existe en este navegador (Pages sin servidor)."); return; }
+  alert("Convocatoria: "+t+" — "+E.title+" ("+new Date(E.datetime).toLocaleString('es-CL')+")");
+}
 
 // Init
-renderCal(); renderEventList();
+if(!checkAuth()){ /* login visible */ } else { renderCal(); renderEventList(); renderRoster(); renderMatches(); renderConfig(); }
+q("#prev").onclick=()=>{view.setMonth(view.getMonth()-1);renderCal();}
+q("#next").onclick=()=>{view.setMonth(view.getMonth()+1);renderCal();}
 </script>
 </body>
 </html>
