@@ -108,7 +108,7 @@ input[type="datetime-local"]{min-width:220px}
   <h2 style="margin:6px 0">Golden Moms</h2>
   <div class="help" style="margin-bottom:10px">Ingresa tu <b>apodo</b> y <b>código de acceso</b>.</div>
   <div class="row" style="justify-content:center">
-    <input id="lgNick" placeholder="Apodo (ej: Chica, Natalia, Vero…)" style="flex:1;min-width:220px">
+    <select id="lgNick" style="flex:1;min-width:220px"></select>
     <input id="lgCode" placeholder="Código" type="password" style="flex:1;min-width:140px">
   </div>
   <div class="row" style="justify-content:center;margin-top:8px">
@@ -821,6 +821,16 @@ function checkHash(){ const h=location.hash; if(!h.startsWith("#rsvp=")) return;
     alert("Convocatoria abierta. Inicia sesión y confirma.");
   }catch{}
 }
+// Llenar el combo de login con los apodos del plantel
+(function fillLoginNames(){
+  const sel = document.getElementById('lgNick');
+  if (!sel) return;
+  sel.innerHTML = S.users
+    .map(u => u.nick)
+    .sort((a,b)=>a.localeCompare(b))
+    .map(n => `<option>${n}</option>`)
+    .join('');
+})();
 
 /* -------------------------- BOOT -------------------------- */
 if(me){ afterLogin(); } // no persistimos sesión para simplificar
