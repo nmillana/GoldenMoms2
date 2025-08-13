@@ -237,7 +237,7 @@ hr{border:none;border-top:1px solid var(--b);margin:10px 0}
   <div class="login">
     <img src="Logo.webp" alt="Logo"/>
     <h3>Golden Moms — Acceso</h3>
-    <div class="row"><select id="lgPlayer"></select></div>
+    <div class="row"><input id="lgNick" placeholder="Tu apodo o nombre"/></div>
     <div class="row"><input id="lgCode" placeholder="Código de acceso"/></div>
     <div class="row" style="justify-content:center"><button class="btn" id="lgEnter">Entrar</button></div>
     <div class="small" id="lgHint"></div>
@@ -342,6 +342,12 @@ function toInput(iso){const d=new Date(iso);const p=n=>String(n).padStart(2,"0")
 function fromInput(val){const d=new Date(val);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString()}
 function chipsTeams(arr){return arr.map(t=>`<span class="badge">${t}</span>`).join("")}
 
+
+function playersBirthdayOn(dateObj){
+  const m = dateObj.getMonth()+1, d = dateObj.getDate();
+  return S.players.filter(p=>p.birth && (new Date(p.birth).getMonth()+1)==m && (new Date(p.birth).getDate())==d);
+}
+
 // Navigation
 qa(".tab").forEach(b=>b.onclick=()=>{qa(".tab").forEach(x=>x.classList.remove("active")); b.classList.add("active"); qa(".page").forEach(p=>p.classList.remove("active")); q("#page-"+b.dataset.page).classList.add("active"); if(b.dataset.page==='dash') renderCal(); if(b.dataset.page==='events') renderEventList(); if(b.dataset.page==='roster') renderRoster(); if(b.dataset.page==='tracker') renderMatches(); if(b.dataset.page==='config') renderConfig();});
 
@@ -364,6 +370,7 @@ function renderCal(){
           r.innerHTML=`<strong>${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}</strong> ${e.title} <span class="team">${e.team||"Golden Moms"}</span>`;
           r.onclick=()=>openEvent(e.id); c.appendChild(r);
         });
+      const bday=playersBirthdayOn(dd); if(bday.length){ const wrap=document.createElement("div"); wrap.className="small"; wrap.style.marginTop="4px"; wrap.innerHTML=bday.map(p=>`<span class=\"badge bday\">🎂 ${p.name}</span>`).join(" "); c.appendChild(wrap);}
     }
     grid.appendChild(c);
   });
@@ -441,7 +448,11 @@ function renderEventModal(){
   };
   q("#btnRSVP").onclick=()=>{
     const url=location.origin+location.pathname+'#rsvp='+encodeURIComponent(JSON.stringify({id:E.id,t:S.team}));
-    navigator.clipboard.writeText(url); alert("Link copiado (nota: en Pages el estado es local por navegador)");
+    const when=new Date(E.datetime).toLocaleString('es-CL',{weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'});
+    const msg = `*${E.type}: ${E.title}* (${E.team||'Golden Moms'})%0A${when} — ${E.location||''}%0AUniforme: ${E.uniform||'—'} · Calcetines: verde lima%0AConfirma aquí: ${encodeURI(url)}`;
+    // abrir wa.me y además dejarlo en el portapapeles
+    navigator.clipboard.writeText(decodeURIComponent(msg));
+    window.open('https://wa.me/?text='+msg, '_blank');
   };
   q("#btnICS").onclick=()=>{
     const st=new Date(E.datetime), mins=(E.type=="Partido"?120:90), en=new Date(st.getTime()+mins*60000);
