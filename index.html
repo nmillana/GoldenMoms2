@@ -82,6 +82,33 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-r
 /* Impersonate pill */
 #impPill{position:fixed;bottom:12px;right:12px;z-index:9999}
 .hide{display:none !important}
+
+/* --- FIX: tarjetas "Próximos" y calendario en móvil --- */
+@media (max-width: 480px){
+  .kpi, .card { border-radius: 14px }
+  .list .item{align-items:flex-start}
+  .list .item .time{font-size:15px}
+  .grid7{gap:4px}
+  .cell{min-height:84px;padding:6px}
+  .event{font-size:12px;line-height:1.2}
+  .tag{font-size:9px;padding:1px 6px;margin-bottom:2px}
+  .team{font-size:9px}
+}
+
+/* --- FIX: botón Copiar Semana visualmente claro --- */
+.btn.s.primary { background:#0f3a78; color:#fff; border-color:#0f3a78 }
+
+/* --- Chips multietiqueta en edición de jugadora --- */
+.team-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.team-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--b);
+  padding:6px 10px;border-radius:999px;background:#f8fafc;font-size:12px;cursor:pointer}
+.team-chip input{accent-color:#0f3a78}
+
+/* --- Insignia de cumpleaños junto al nombre --- */
+.badge-bday{display:inline-flex;align-items:center;gap:6px;background:#fff7ed;border:1px dashed #fdba74;
+  color:#b45309;padding:2px 8px;border-radius:999px;font-size:11px}
+  
+input:disabled, select:disabled { background:#f1f5f9; color:#64748b; cursor:not-allowed }
 </style>
 </head>
 <body>
@@ -98,7 +125,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-r
 
 <div class="wrap">
 
-  <!-- DASHBOARD -->
   <section id="page-dash">
     <div class="grid">
       <div class="card kpi" style="grid-column:span 3"><div>Próximos</div><div class="n" id="kEvents">0</div></div>
@@ -112,7 +138,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-r
     </div>
   </section>
 
-  <!-- CALENDARIO -->
   <section id="page-cal" style="display:none">
     <div class="card desktop">
       <div class="row" style="justify-content:space-between">
@@ -120,11 +145,11 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-r
           <button class="btn" id="prev">&larr;</button>
           <div id="mlabel" style="min-width:200px;text-align:center;font-weight:800;color:#0f3a78"></div>
           <button class="btn" id="next">&rarr;</button>
-          <select id="fType"><option value="Todos">Todos</option><option>Partido</option><option>Entrenamiento</option></select>
-          <select id="fTeam"><option value="Todos">Todos</option><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select>
+          <label for="fType" style="font-size:12px;color:#334155">Tipo de evento</label><select id="fType"><option value="Todos">Todos</option><option>Partido</option><option>Entrenamiento</option></select>
+          <label for="fTeam" style="font-size:12px;color:#334155">Equipo</label><select id="fTeam"><option value="Todos">Todos</option><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select>
         </div>
         <div class="row">
-          <button class="btn" id="btnCopyWeek">Copiar Semana</button>
+          <button class="btn s primary" id="btnCopyWeek">Copiar Semana</button>
           <button class="btn p" id="btnNew">Nuevo Evento</button>
         </div>
       </div>
@@ -132,7 +157,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-r
       <div id="grid" class="grid7"></div>
     </div>
 
-    <!-- Agenda móvil (Próximos) -->
     <div class="card agenda">
       <div class="hdr">
         <strong>Próximos</strong>
@@ -150,7 +174,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-r
     </div>
   </section>
 
-  <!-- PLANTEL -->
   <section id="page-roster" style="display:none">
     <div class="card">
       <div class="row" style="justify-content:space-between">
@@ -161,7 +184,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-r
     </div>
   </section>
 
-  <!-- SEGUIMIENTO -->
   <section id="page-track" style="display:none">
     <div class="card">
       <div class="row" style="justify-content:space-between;align-items:center">
@@ -172,7 +194,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-r
     </div>
   </section>
 
-  <!-- CONFIG (solo Admin) -->
   <section id="page-cfg" style="display:none">
     <div class="card">
       <div class="row"><div style="flex:1"><label>Nombre equipo</label><input id="teamName"/></div><div style="flex:1"><label>Rol actual</label><input id="currentRole" disabled/></div></div>
@@ -192,7 +213,6 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-r
 
 </div>
 
-<!-- MODAL EVENTO -->
 <div id="ov" class="overlay"><div class="modal">
   <div class="row" style="justify-content:space-between">
     <div class="row"><strong id="edTitle">Editar evento</strong><span id="teamBadge" class="team">Golden Moms</span></div>
@@ -220,23 +240,14 @@ input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-r
     <div id="countBox" class="counts capOnly"></div>
   </div>
 
-  <!-- Contenedor para lista completa (solo Capitana/Admin) -->
-  <div id="att" class="row capOnly" style="gap:6px"></div>
+  <div id="att" class="row" style="gap:6px; flex-direction:column"></div>
 
-  <!-- Contenedor para auto-asistencia (solo Jugadora) -->
-  <div id="selfAtt" class="row hide" style="gap:6px"></div>
-
-  <div style="font-weight:800;margin-top:6px">Convocatoria</div>
-  <div id="rsvpInfo" class="small"></div>
 </div></div>
 
-<!-- MODAL ROSTER EDIT -->
 <div id="ovRoster" class="overlay"><div class="modal" id="ovRosterBody"></div></div>
 
-<!-- MODAL TRACK -->
 <div id="ovTrack" class="overlay"><div class="modal" id="ovTrackBody"></div></div>
 
-<!-- LOGIN -->
 <div id="loginOv" class="overlay" style="display:none"><div class="modal">
   <div class="row" style="justify-content:space-between"><strong>Ingresar</strong><span id="lgHint" class="small"></span></div>
   <div class="row"><select id="lgPlayer"></select></div>
@@ -288,6 +299,10 @@ function toLocalString(d){const p=n=>String(n).padStart(2,'0');return `${d.getFu
 function parseLocal(dt){ if(!dt) return new Date(); if(dt.endsWith?.('Z')){ const d=new Date(dt); return new Date(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes()); } const [ymd,hm]=dt.split('T'); const [y,m,d]=ymd.split('-').map(Number); const [h,mi]=hm.split(':').map(Number); return new Date(y,(m||1)-1,d||1,h||0,mi||0);}
 function nextOccur(iso){ if(!iso) return null; const [y,m,d]=iso.split('-').map(Number); const now=new Date(); const year=(now.getMonth()+1>m || (now.getMonth()+1==m && now.getDate()>d))? now.getFullYear()+1:now.getFullYear(); return new Date(year,m-1,d); }
 function playersBirthdayOn(dateObj){ const m=dateObj.getMonth()+1, d=dateObj.getDate(); return S.players.filter(p=>p.birth && (new Date(p.birth).getMonth()+1)==m && (new Date(p.birth).getDate())==d);}
+function rosterForTeam(team) {
+  if (!team || team === "Todos") return S.players;
+  return S.players.filter(p => Array.isArray(p.teams) && p.teams.includes(team));
+}
 
 /* Seed recurring events */
 if(!S.events.length){
@@ -375,19 +390,19 @@ q("#next").onclick=()=>{view.setMonth(view.getMonth()+1); renderCal();};
 q("#fType").onchange=renderCal; q("#fTeam").onchange=renderCal;
 
 /* Copiar Semana (desktop + móvil) */
-function nextMon(d){const day=(d.getDay()+6)%7; const diff=(7-day)%7; const nd=new Date(d); nd.setDate(d.getDate()+diff); nd.setHours(0,0,0,0); return nd;}
-function textWeek(st){
-  const en=new Date(st); en.setDate(st.getDate()+7);
-  const L=['*Semana* '+st.toLocaleDateString('es-CL')+' - '+new Date(en.getTime()-86400000).toLocaleDateString('es-CL'),'Equipo: '+S.team,''];
-  S.events.filter(e=>{const d=parseLocal(e.datetime); return d>=st && d<en;})
-    .sort((a,b)=>parseLocal(a.datetime)-parseLocal(b.datetime))
+q("#btnCopyWeek").onclick = ()=>{
+  const st = (d=>{const n=new Date(d); n.setDate(n.getDate()-((n.getDay()+6)%7)); n.setHours(0,0,0,0); return n;})(new Date());
+  const en = new Date(st); en.setDate(st.getDate()+7);
+  const L = ['*Semana* '+st.toLocaleDateString('es-CL')+' - '+new Date(en.getTime()-86400000).toLocaleDateString('es-CL'),'Equipo: Golden Moms',''];
+  S.events.filter(e=>new Date(e.datetime)>=st && new Date(e.datetime)<en)
+    .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime))
     .forEach(E=>{
-      const w=parseLocal(E.datetime).toLocaleString('es-CL',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      const w=new Date(E.datetime).toLocaleString('es-CL',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
       L.push(`• ${w} — ${E.type}: ${E.title}${E.location?' — '+E.location:''} (${E.team||'Golden Moms'}) ${E.opponent?' — Rival: '+E.opponent:''}${E.uniform?' — Uniforme: '+E.uniform:''}`);
     });
-  return L.join('\n');
-}
-q("#btnCopyWeek").onclick=()=>{ const st=nextMon(new Date()); navigator.clipboard.writeText(textWeek(st)); alert("Semana copiada. Pega en WhatsApp."); };
+  navigator.clipboard.writeText(L.join('\n'));
+  alert("Semana copiada. Pega en WhatsApp.");
+};
 
 /* ===================== AGENDA (móvil) ===================== */
 let mview=new Date(); mview.setDate(1);
@@ -414,11 +429,129 @@ q("#mPrev").onclick=()=>{mview.setMonth(mview.getMonth()-1); renderAgenda();};
 q("#mNext").onclick=()=>{mview.setMonth(mview.getMonth()+1); renderAgenda();};
 q("#mfType").onchange=renderAgenda; q("#mfTeam").onchange=renderAgenda;
 q("#mNew").onclick=()=>{createEvent();};
-q("#mCopyWeek").onclick=()=>{ const st=nextMon(new Date()); navigator.clipboard.writeText(textWeek(st)); alert("Semana copiada. Pega en WhatsApp."); };
+q("#mCopyWeek").onclick=()=>{
+  const st = (d=>{const n=new Date(d); n.setDate(n.getDate()-((n.getDay()+6)%7)); n.setHours(0,0,0,0); return n;})(new Date());
+  const en = new Date(st); en.setDate(st.getDate()+7);
+  const L = ['*Semana* '+st.toLocaleDateString('es-CL')+' - '+new Date(en.getTime()-86400000).toLocaleDateString('es-CL'),'Equipo: Golden Moms',''];
+  S.events.filter(e=>new Date(e.datetime)>=st && new Date(e.datetime)<en)
+    .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime))
+    .forEach(E=>{
+      const w=new Date(E.datetime).toLocaleString('es-CL',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      L.push(`• ${w} — ${E.type}: ${E.title}${E.location?' — '+E.location:''} (${E.team||'Golden Moms'}) ${E.opponent?' — Rival: '+E.opponent:''}${E.uniform?' — Uniforme: '+E.uniform:''}`);
+    });
+  navigator.clipboard.writeText(L.join('\n'));
+  alert("Semana copiada. Pega en WhatsApp.");
+};
 
 /* ===================== EVENTO / ASISTENCIA ===================== */
 let cur=null;
 function roleEditable(){ return S.auth && (S.auth.role==="Admin"||S.auth.role==="Capitana"); }
+
+function renderAttendance(E) {
+  const team = E.team || "Golden Moms";
+  const R = rosterForTeam(team);
+  const A = S.att[E.id] || {};
+  const me = S.players.find(p => p.id === S.auth.playerId)?.name || null;
+  const isCaptain = (S.auth?.role === "Capitana" || S.auth?.role === "Admin");
+
+  // Conteos para Capitana/Admin
+  const counts = { ok: 0, mid: 0, no: 0, blank: 0 };
+  R.forEach(p => {
+    const v = A[p.name] || "";
+    if (v === "Asiste") counts.ok++;
+    else if (v === "Duda") counts.mid++;
+    else if (v === "No asiste") counts.no++;
+    else counts.blank++;
+  });
+
+  const countBox = q("#countBox");
+  if (countBox) {
+    countBox.innerHTML = isCaptain
+      ? `<span class="chip ok">✅ ${counts.ok}</span>
+         <span class="chip mid">❔ ${counts.mid}</span>
+         <span class="chip no">❌ ${counts.no}</span>
+         <span class="chip">▫️ ${counts.blank}</span>`
+      : "";
+  }
+  countBox.style.display = isCaptain ? 'block' : 'none';
+
+  const att = q("#att");
+  att.innerHTML = "";
+
+  const base = isCaptain ? R : R.filter(p => p.name === me);
+
+  if (base.length === 0 && !isCaptain) {
+    att.innerHTML = `<div class="small">Usuario no identificado</div>`;
+    return;
+  }
+
+  base.forEach(p => {
+    const v = A[p.name] || "";
+    const row = document.createElement("div");
+    row.className = "att";
+
+    const left = document.createElement("div");
+    left.style.display = "flex";
+    left.style.alignItems = "center";
+    left.style.gap = "8px";
+
+    const nm = document.createElement("div");
+    nm.innerHTML = `<strong>${p.name}</strong>`;
+    left.appendChild(nm);
+
+    if (p.birth) {
+      const bd = new Date(p.birth);
+      const b = document.createElement("span");
+      b.className = "badge-bday";
+      b.textContent = `🎂 ${bd.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })}`;
+      left.appendChild(b);
+    }
+
+    if (Array.isArray(p.teams)) {
+      const wrap = document.createElement("div");
+      wrap.style.display = "flex"; wrap.style.gap = "4px"; wrap.style.flexWrap = "wrap";
+      p.teams.forEach(t => {
+        const s = document.createElement("span");
+        s.className = "badge";
+        s.textContent = t.replace("Golden ", "");
+        wrap.appendChild(s);
+      });
+      left.appendChild(wrap);
+    }
+
+    row.appendChild(left);
+
+    const right = document.createElement("div");
+    function mk(lbl, val) {
+      const b = document.createElement("button");
+      b.className = "bsm";
+      b.textContent = lbl;
+      b.onclick = () => {
+        const AA = S.att[E.id] || {};
+        AA[p.name] = val;
+        S.att[E.id] = AA;
+        save();
+        if (!isCaptain && val === "No asiste") {
+          q("#ov").style.display = "none";
+        }
+        renderAttendance(E);
+      };
+      if (v === val) {
+        if (val === "Asiste") b.style.background = "#d9f99d";
+        if (val === "Duda")   b.style.background = "#fef9c3";
+        if (val === "No asiste") b.style.background = "#fee2e2";
+      }
+      return b;
+    }
+    right.appendChild(mk("✅","Asiste"));
+    right.appendChild(mk("❔","Duda"));
+    right.appendChild(mk("❌","No asiste"));
+    row.appendChild(right);
+
+    att.appendChild(row);
+  });
+}
+
 function openEvent(id){
   cur=id; const E=S.events.find(x=>x.id==id); if(!E) return; const editable = roleEditable();
   q("#ov").style.display="flex"; q("#edTitle").textContent=E.type+" — "+(E.title||""); q("#teamBadge").textContent=E.team||"Golden Moms";
@@ -433,60 +566,18 @@ function openEvent(id){
   q("#btnCopyWA").onclick=()=>copyWA(E, when);
   q("#btnRSVP").onclick=()=>sendRSVP(E, when);
 
-  // Visibilidad de contenedores asistencia
-  const isPlayer = S.auth?.role==="Jugadora";
-  q("#countBox").style.display = isPlayer? "none":"block";
-  q("#att").classList.toggle("hide", isPlayer);
-  q("#selfAtt").classList.toggle("hide", !isPlayer);
-
-  if(isPlayer){ renderSelfAttendance(E); } else { renderAttendanceList(E); }
+  renderAttendance(E);
 }
 q("#btnClose").onclick=()=>q("#ov").style.display="none";
-["#eType","#eTitle","#eTeam","#eLoc","#eOpp","#eUni"].forEach(sel=>q(sel).addEventListener("change",()=>{ if(!roleEditable()) return; const E=S.events.find(x=>x.id==cur); if(!E) return; E.type=q("#eType").value; E.title=q("#eTitle").value; E.team=q("#eTeam").value; E.location=q("#eLoc").value; E.opponent=q("#eOpp").value; E.uniform=q("#eUni").value; save(); renderCal(); renderAgenda(); }));
+q("#eType").addEventListener("change",()=>{ if(!roleEditable()) return; const E=S.events.find(x=>x.id==cur); if(!E) return; E.type=q("#eType").value; E.title=q("#eTitle").value; E.team=q("#eTeam").value; E.location=q("#eLoc").value; E.opponent=q("#eOpp").value; E.uniform=q("#eUni").value; save(); renderCal(); renderAgenda(); renderAttendance(E); });
+q("#eTitle").addEventListener("change",()=>{ if(!roleEditable()) return; const E=S.events.find(x=>x.id==cur); if(!E) return; E.type=q("#eType").value; E.title=q("#eTitle").value; E.team=q("#eTeam").value; E.location=q("#eLoc").value; E.opponent=q("#eOpp").value; E.uniform=q("#eUni").value; save(); renderCal(); renderAgenda(); });
+q("#eTeam").addEventListener("change",()=>{ if(!roleEditable()) return; const E=S.events.find(x=>x.id==cur); if(!E) return; E.type=q("#eType").value; E.title=q("#eTitle").value; E.team=q("#eTeam").value; E.location=q("#eLoc").value; E.opponent=q("#eOpp").value; E.uniform=q("#eUni").value; save(); renderCal(); renderAgenda(); renderAttendance(E); });
+q("#eLoc").addEventListener("change",()=>{ if(!roleEditable()) return; const E=S.events.find(x=>x.id==cur); if(!E) return; E.type=q("#eType").value; E.title=q("#eTitle").value; E.team=q("#eTeam").value; E.location=q("#eLoc").value; E.opponent=q("#eOpp").value; E.uniform=q("#eUni").value; save(); renderCal(); renderAgenda(); });
+q("#eOpp").addEventListener("change",()=>{ if(!roleEditable()) return; const E=S.events.find(x=>x.id==cur); if(!E) return; E.type=q("#eType").value; E.title=q("#eTitle").value; E.team=q("#eTeam").value; E.location=q("#eLoc").value; E.opponent=q("#eOpp").value; E.uniform=q("#eUni").value; save(); renderCal(); renderAgenda(); });
+q("#eUni").addEventListener("change",()=>{ if(!roleEditable()) return; const E=S.events.find(x=>x.id==cur); if(!E) return; E.type=q("#eType").value; E.title=q("#eTitle").value; E.team=q("#eTeam").value; E.location=q("#eLoc").value; E.opponent=q("#eOpp").value; E.uniform=q("#eUni").value; save(); renderCal(); renderAgenda(); });
 q("#eDT").addEventListener("change",()=>{ if(!roleEditable()) return; const E=S.events.find(x=>x.id==cur); if(!E) return; E.datetime=q("#eDT").value; save(); renderCal(); renderAgenda();});
 q("#btnDel").onclick=()=>{ if(!roleEditable()) return; const i=S.events.findIndex(x=>x.id==cur); if(i>=0){ S.events.splice(i,1); delete S.att[cur]; save(); q("#ov").style.display="none"; renderCal(); renderAgenda(); } };
 
-function renderAttendanceList(E){
-  const A=S.att[E.id]||{}; const box=q("#att"); box.innerHTML="";
-  const onlyTeam = (E.team||"Golden Moms");
-  const filtered=S.players.filter(p=> (p.teams||["Golden Moms"]).includes(onlyTeam));
-  const counts={ok:0,mid:0,no:0,blank:0};
-  filtered.forEach(p=>{const v=A[p.name]; if(v=="Asiste") counts.ok++; else if(v=="Duda") counts.mid++; else if(v=="No asiste") counts.no++; else counts.blank++;});
-  q("#countBox").innerHTML=`<span class="chip ok">✅ ${counts.ok}</span><span class="chip mid">❔ ${counts.mid}</span><span class="chip no">❌ ${counts.no}</span><span class="chip">▫️ ${counts.blank}</span>`;
-  filtered.forEach(p=>{
-    const v=A[p.name]||"";
-    const row=document.createElement("div"); row.className="att";
-    // badges equipos
-    const tBadges=(p.teams||[]).map(t=>`<span class="badge">${t}</span>`).join(" ");
-    row.innerHTML=`<div>${p.name} ${tBadges} ${p.birth?'<span class="badge bday">🎂 '+new Date(p.birth).toLocaleDateString('es-CL',{day:'2-digit',month:'short'})+'</span>':''}</div>`;
-    const R=document.createElement("div");
-    [["Asiste","✅"],["Duda","❔"],["No asiste","❌"]].forEach(([lbl,em])=>{
-      const b=document.createElement("button"); b.className="bsm"; b.textContent=em;
-      if(v==lbl) b.style.background= lbl=="Asiste"?"#d9f99d":lbl=="Duda"?"#fef9c3":"#fee2e2";
-      b.onclick=()=>{ if(!roleEditable()) return; const AA=S.att[E.id]||{}; AA[p.name]=lbl; S.att[E.id]=AA; save(); renderAttendanceList(E); };
-      R.appendChild(b);
-    });
-    row.appendChild(R); box.appendChild(row);
-  });
-}
-
-function renderSelfAttendance(E){
-  const box=q("#selfAtt"); box.innerHTML="";
-  const me=S.players.find(p=>p.id===S.auth.playerId); if(!me){ box.innerHTML="<div class='small'>Usuario no identificado</div>"; return; }
-  const A=S.att[E.id]||{}; const v=A[me.name]||"";
-  const row=document.createElement("div"); row.className="att";
-  row.innerHTML=`<div><strong>${me.name}</strong> ${(me.teams||[]).map(t=>`<span class="badge">${t}</span>`).join(" ")}</div>`;
-  const R=document.createElement("div");
-  [["Asiste","✅"],["Duda","❔"],["No asiste","❌"]].forEach(([lbl,em])=>{
-    const b=document.createElement("button"); b.className="bsm"; b.textContent=em;
-    if(v==lbl) b.style.background= lbl=="Asiste"?"#d9f99d":lbl=="Duda"?"#fef9c3":"#fee2e2";
-    b.onclick=()=>{ const AA=S.att[E.id]||{}; AA[me.name]=lbl; S.att[E.id]=AA; save(); renderSelfAttendance(E); };
-    R.appendChild(b);
-  });
-  row.appendChild(R); box.appendChild(row);
-}
-
-/* WhatsApp / RSVP */
 function buildRSVPURL(E){ return location.origin+location.pathname+'#rsvp='+encodeURIComponent(JSON.stringify({id:E.id,t:S.team})); }
 function copyWA(E, when){
   const L=[`*${E.type}: ${E.title}* (${E.team||'Golden Moms'})`,`${when} — ${E.location||''}`,`Uniforme: ${E.uniform||'—'} · Calcetines: verde lima`];
@@ -525,19 +616,55 @@ function renderRoster(){
 q("#btnRosterAdd").onclick=()=>{ const id=crypto.randomUUID?.()||(""+Math.random()).slice(2); S.players.push({id,name:"Nueva",nick:"",number:0,birth:"",teams:["Golden Moms"],role:"Jugadora"}); save(); renderRoster(); };
 
 window.editPlayer=function(id){
-  if(!(roleEditable()||S.auth.role==="Admin")) return;
   const p=S.players.find(x=>x.id==id); if(!p) return;
   const canRole = S.auth && S.auth.role==="Admin";
   const html=`<div class="row" style="justify-content:space-between"><strong>Editar jugadora</strong><button class="bsm" onclick="q('#ovRoster').style.display='none'">Cerrar</button></div>
-  <div class="row"><div style="flex:2"><label>Nombre</label><input id="pName" value="${p.name}"/></div><div style="flex:1"><label>Número</label><input id="pNum" value="${p.number}"/></div></div>
+  <div class="row"><div style="flex:2"><label>Nombre</label><input id="pName" value="${p.name}" disabled/></div><div style="flex:1"><label>Número</label><input id="pNum" value="${p.number}"/></div></div>
   <div class="row"><div style="flex:2"><label>Apodo</label><input id="pNick" value="${p.nick||''}"/></div><div style="flex:2"><label>Nacimiento</label><input id="pBirth" type="date" value="${p.birth||''}"/></div></div>
   <div class="row"><div style="flex:2"><label>Equipos (Ctrl/Cmd para multi)</label><select id="pTeams" multiple><option>Golden Moms</option><option>Golden Dreams</option><option>Golden Power</option></select></div><div style="flex:1"><label>Rol</label><select id="pRole" ${canRole?'':'disabled'}><option>Jugadora</option><option>Capitana</option><option>Admin</option></select></div></div>
   <div class="row"><button class="btn p" id="pSave">Guardar</button></div>`;
   q("#ovRosterBody").innerHTML=html; q("#ovRoster").style.display="flex";
-  const sel=q("#pTeams"); ["Golden Moms","Golden Dreams","Golden Power"].forEach((t,i)=>{ const opt=sel.options[i]; opt.selected=(p.teams||[]).includes(t); });
+
+  const selTeams=q("#pTeams");
+  ["Golden Moms","Golden Dreams","Golden Power"].forEach((t,i)=>{
+    const opt=selTeams.options[i];
+    opt.selected=(p.teams||[]).includes(t);
+  });
   q("#pRole").value=p.role||"Jugadora";
-  q("#pSave").onclick=()=>{ p.name=q("#pName").value.trim()||p.name; p.number=parseInt(q("#pNum").value||0); p.nick=q("#pNick").value.trim(); p.birth=q("#pBirth").value; p.teams=[...q("#pTeams").selectedOptions].map(o=>o.value); if(canRole) p.role=q("#pRole").value; save(); q("#ovRoster").style.display="none"; renderRoster(); };
+
+  const isSelf    = (S.auth?.playerId === p.id);
+  const isCaptain = (S.auth?.role === "Capitana" || S.auth?.role === "Admin");
+
+  const inNick = q("#pNick");
+  const inNum = q("#pNum");
+  const inBirth = q("#pBirth");
+  const inRole = q("#pRole");
+
+  inNick.disabled = !(isCaptain || isSelf);
+  inNum.disabled = !(isCaptain || isSelf);
+  inBirth.disabled = !(isCaptain || isSelf);
+
+  selTeams.disabled = !isCaptain;
+  inRole.disabled = !isCaptain;
+
+  q("#pSave").onclick=()=>{
+    if (isCaptain) {
+      p.nick=inNick.value.trim();
+      p.number=parseInt(inNum.value||0);
+      p.birth=inBirth.value;
+      p.teams=[...selTeams.selectedOptions].map(o=>o.value);
+      if(canRole) p.role=inRole.value;
+    } else if (isSelf) {
+      p.nick = inNick.value.trim();
+      p.number = parseInt(inNum.value || 0);
+      p.birth = inBirth.value || "";
+    }
+    save();
+    q("#ovRoster").style.display="none";
+    renderRoster();
+  };
 }
+
 
 /* ===================== SEGUIMIENTO ===================== */
 function renderTrack(){
@@ -621,33 +748,6 @@ function showRSVP(id,t){ const E=S.events.find(x=>x.id==id); if(!E){ alert("Even
 function renderAll(){ renderKPIs(); renderCal(); renderAgenda(); renderRoster(); const role=S.auth?.role||"Jugadora"; q("#tabCfg").style.display=(role==="Admin")?'inline-block':'none'; renderImpersonationPill(); renderTrack(); }
 function init(){ refreshLoginList(); if(!S.auth||!S.auth.ok){ q("#loginOv").style.display="flex"; } renderAll(); checkHash(); }
 init();
-  
-/* --- FIX: tarjetas "Próximos" y calendario en móvil --- */
-@media (max-width: 480px){
-  .kpi, .card { border-radius: 14px }
-  .list .item{align-items:flex-start}
-  .list .item .time{font-size:15px}
-  .grid7{gap:4px}
-  .cell{min-height:84px;padding:6px}
-  .event{font-size:12px;line-height:1.2}
-  .tag{font-size:9px;padding:1px 6px;margin-bottom:2px}
-  .team{font-size:9px}
-}
-
-/* --- FIX: botón Copiar Semana visualmente claro --- */
-.btn.s.primary { background:#0f3a78; color:#fff; border-color:#0f3a78 }
-
-/* --- Chips multietiqueta en edición de jugadora --- */
-.team-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.team-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--b);
-  padding:6px 10px;border-radius:999px;background:#f8fafc;font-size:12px;cursor:pointer}
-.team-chip input{accent-color:#0f3a78}
-
-/* --- Insignia de cumpleaños junto al nombre --- */
-.badge-bday{display:inline-flex;align-items:center;gap:6px;background:#fff7ed;border:1px dashed #fdba74;
-  color:#b45309;padding:2px 8px;border-radius:999px;font-size:11px}
-
-  
 </script>
 </body>
 </html>
