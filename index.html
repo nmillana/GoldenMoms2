@@ -304,7 +304,7 @@ if(!S.players.length){
 // Añade Trini si no existe pero viene con cumpleaños
 if(!S.players.find(p=>p.name==="Trini") && BIRTH["Trini"]){ S.players.push({id:crypto.randomUUID?.()||(""+Math.random()).slice(2),name:"Trini",nick:"",number:99,birth:BIRTH["Trini"],teams:["Moms"],role:"Jugadora"}); }
   ["Dani J","Chica","Caro G"].forEach(n=>{const p=S.players.find(x=>x.name===n); if(p) p.role="Capitana";});
-  const adm=S.players.find(p=>p.name==="Natalia"); if(adm) adm.role="Admin";
+  const adm=S.players.find(p=>p.name==="Chica"); if(adm) adm.role="Admin";
   save();
 }
 
