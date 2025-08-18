@@ -15,6 +15,7 @@
 .container{max-width:1000px;margin:20px auto;padding:12px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:12px}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
+.error{color:red;font-weight:bold;margin:10px 0;padding:6px;background:#fee;border:1px solid red}
 table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border:1px solid var(--b);padding:6px;text-align:left}
 th{background:#f1f5f9}
@@ -23,7 +24,6 @@ th{background:#f1f5f9}
 </head>
 <body>
 
-<!-- Barra superior -->
 <div class="top">
   <div class="brand"><img src="Logo.webp" alt="GM"/> <strong>Golden Moms</strong></div>
   <div class="nav">
@@ -39,84 +39,116 @@ th{background:#f1f5f9}
 <div class="container"></div>
 
 <script>
-/*** === Configuración Supabase === ***/
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
-  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
+  key: "TU_ANON_KEY_AQUI"   // ⚠️ revisa que sea la correcta
 };
 const supa = window.supabase.createClient(SUPA.url, SUPA.key);
 
-/*** === Renderizadores === ***/
-
-// Dashboard: KPIs y métricas
-async function renderDashboard() {
-  const c = document.querySelector(".container");
-  const { data: players } = await supa.from("players").select("id");
-  const { data: events } = await supa.from("events").select("id");
-  const { data: top } = await supa.from("vw_top_scorers").select("*").limit(3);
-
-  c.innerHTML = `
-    <div class="card kpi"><h3>Jugadoras</h3><div class="n">${players?.length||0}</div></div>
-    <div class="card kpi"><h3>Eventos</h3><div class="n">${events?.length||0}</div></div>
-    <div class="card"><h3>Top Goleadoras</h3>
-      <ul>${(top||[]).map(p=>`<li>${p.nombre} (${p.goles})</li>`).join("")}</ul>
-    </div>
-  `;
+function showError(err) {
+  document.querySelector(".container").innerHTML = `<div class="error">❌ ${err.message||err}</div>`;
+  console.error(err);
 }
 
-// Plantel
+// Dashboard
+async function renderDashboard() {
+  try {
+    const { data: players, error: e1 } = await supa.from("players").select("id");
+    if (e1) throw e1;
+    const { data: events, error: e2 } = await supa.from("events").select("id");
+    if (e2) throw e2;
+    const { data: top, error: e3 } = await supa.from("vw_top_scorers").select("*").limit(3);
+    if (e3) throw e3;
+
+    document.querySelector(".container").innerHTML = `
+      <div class="card kpi"><h3>Jugadoras</h3><div class="n">${players.length}</div></div>
+      <div class="card kpi"><h3>Eventos</h3><div class="n">${events.length}</div></div>
+      <div class="card"><h3>Top Goleadoras</h3>
+        <ul>${top.map(p=>`<li>${p.nombre} (${p.goles})</li>`).join("")}</ul>
+      </div>
+    `;
+  } catch(err) { showError(err); }
+}
+
+// Roster
 async function renderRoster() {
-  const c = document.querySelector(".container");
-  const { data } = await supa.from("players").select("*").order("nombre",{ascending:true});
-  if (!data?.length) { c.innerHTML="<p>No hay jugadoras.</p>"; return; }
-  c.innerHTML = `<div class="card"><h3>Plantel</h3>
-    <table><tr><th>Nombre</th><th>Apodo</th><th>N°</th><th>Rol</th></tr>
-    ${data.map(p=>`<tr><td>${p.nombre}</td><td>${p.apodo||""}</td><td>${p.numero_camiseta||""}</td><td>${p.rol}</td></tr>`).join("")}
-    </table></div>`;
+  try {
+    const { data, error } = await supa.from("players").select("*").order("nombre");
+    if (error) throw error;
+    if (!data.length) { document.querySelector(".container").innerHTML="<p>No hay jugadoras.</p>"; return; }
+    document.querySelector(".container").innerHTML = `
+      <div class="card"><h3>Plantel</h3>
+      <table><tr><th>Nombre</th><th>Apodo</th><th>N°</th><th>Rol</th></tr>
+      ${data.map(p=>`<tr><td>${p.nombre}</td><td>${p.apodo||""}</td><td>${p.numero_camiseta||""}</td><td>${p.rol}</td></tr>`).join("")}
+      </table></div>`;
+  } catch(err) { showError(err); }
 }
 
 // Eventos
 async function renderEvents() {
-  const c = document.querySelector(".container");
-  const { data } = await supa.from("events").select("*").order("datetime",{ascending:true});
-  if (!data?.length) { c.innerHTML="<p>No hay eventos.</p>"; return; }
-  c.innerHTML = `<div class="card"><h3>Eventos</h3>
-    <table><tr><th>Tipo</th><th>Título</th><th>Fecha</th><th>Lugar</th><th>Uniforme</th></tr>
-    ${data.map(ev=>`<tr><td>${ev.type}</td><td>${ev.title}</td><td>${new Date(ev.datetime).toLocaleString()}</td><td>${ev.location||""}</td><td>${ev.uniform||""}</td></tr>`).join("")}
-    </table></div>`;
+  try {
+    const { data, error } = await supa.from("events").select("*").order("datetime",{ascending:true});
+    if (error) throw error;
+    if (!data.length) { document.querySelector(".container").innerHTML="<p>No hay eventos.</p>"; return; }
+    document.querySelector(".container").innerHTML = `
+      <div class="card"><h3>Eventos</h3>
+      <table><tr><th>Tipo</th><th>Título</th><th>Fecha</th><th>Lugar</th><th>Uniforme</th></tr>
+      ${data.map(ev=>`<tr><td>${ev.type}</td><td>${ev.title}</td><td>${new Date(ev.datetime).toLocaleString()}</td><td>${ev.location||""}</td><td>${ev.uniform||""}</td></tr>`).join("")}
+      </table></div>`;
+  } catch(err) { showError(err); }
 }
 
-// Asistencia
+// Asistencia (con join manual)
 async function renderAttendance() {
-  const c = document.querySelector(".container");
-  const { data } = await supa.from("attendance").select("*, players(nombre), events(title)").limit(50);
-  if (!data?.length) { c.innerHTML="<p>No hay registros de asistencia.</p>"; return; }
-  c.innerHTML = `<div class="card"><h3>Asistencia</h3>
-    <table><tr><th>Evento</th><th>Jugadora</th><th>Estado</th></tr>
-    ${data.map(a=>`<tr><td>${a.events?.title||""}</td><td>${a.players?.nombre||""}</td><td>${a.status}</td></tr>`).join("")}
-    </table></div>`;
+  try {
+    const { data: att, error } = await supa.from("attendance").select("*").limit(20);
+    if (error) throw error;
+    if (!att.length) { document.querySelector(".container").innerHTML="<p>No hay registros de asistencia.</p>"; return; }
+
+    // Traer jugadoras y eventos para resolver nombres
+    const { data: players } = await supa.from("players").select("id,nombre");
+    const { data: events } = await supa.from("events").select("id,title");
+    const playerMap = Object.fromEntries(players.map(p=>[p.id,p.nombre]));
+    const eventMap = Object.fromEntries(events.map(e=>[e.id,e.title]));
+
+    document.querySelector(".container").innerHTML = `
+      <div class="card"><h3>Asistencia</h3>
+      <table><tr><th>Evento</th><th>Jugadora</th><th>Estado</th></tr>
+      ${att.map(a=>`<tr><td>${eventMap[a.event_id]||""}</td><td>${playerMap[a.player_id]||""}</td><td>${a.status}</td></tr>`).join("")}
+      </table></div>`;
+  } catch(err) { showError(err); }
 }
 
 // Resultados
 async function renderResults() {
-  const c = document.querySelector(".container");
-  const { data } = await supa.from("results").select("*, events(title)").order("created_at",{ascending:false});
-  if (!data?.length) { c.innerHTML="<p>No hay resultados registrados.</p>"; return; }
-  c.innerHTML = `<div class="card"><h3>Resultados</h3>
-    <table><tr><th>Evento</th><th>Goles GM</th><th>Goles Rival</th><th>Notas</th></tr>
-    ${data.map(r=>`<tr><td>${r.events?.title||""}</td><td>${r.goals_home}</td><td>${r.goals_away}</td><td>${r.notes||""}</td></tr>`).join("")}
-    </table></div>`;
+  try {
+    const { data, error } = await supa.from("results").select("*, event_id").order("created_at",{ascending:false});
+    if (error) throw error;
+    if (!data.length) { document.querySelector(".container").innerHTML="<p>No hay resultados.</p>"; return; }
+
+    const { data: events } = await supa.from("events").select("id,title");
+    const eventMap = Object.fromEntries(events.map(e=>[e.id,e.title]));
+
+    document.querySelector(".container").innerHTML = `
+      <div class="card"><h3>Resultados</h3>
+      <table><tr><th>Evento</th><th>Goles GM</th><th>Goles Rival</th><th>Notas</th></tr>
+      ${data.map(r=>`<tr><td>${eventMap[r.event_id]||""}</td><td>${r.goals_home}</td><td>${r.goals_away}</td><td>${r.notes||""}</td></tr>`).join("")}
+      </table></div>`;
+  } catch(err) { showError(err); }
 }
 
-// Ranking de goleadoras
+// Goles
 async function renderGoals() {
-  const c = document.querySelector(".container");
-  const { data } = await supa.from("vw_top_scorers").select("*");
-  if (!data?.length) { c.innerHTML="<p>No hay goles registrados.</p>"; return; }
-  c.innerHTML = `<div class="card"><h3>Ranking Goleadoras</h3>
-    <table><tr><th>Nombre</th><th>Goles</th></tr>
-    ${data.map(p=>`<tr><td>${p.nombre}</td><td>${p.goles}</td></tr>`).join("")}
-    </table></div>`;
+  try {
+    const { data, error } = await supa.from("vw_top_scorers").select("*");
+    if (error) throw error;
+    if (!data.length) { document.querySelector(".container").innerHTML="<p>No hay goles.</p>"; return; }
+    document.querySelector(".container").innerHTML = `
+      <div class="card"><h3>Ranking Goleadoras</h3>
+      <table><tr><th>Nombre</th><th>Goles</th></tr>
+      ${data.map(p=>`<tr><td>${p.nombre}</td><td>${p.goles}</td></tr>`).join("")}
+      </table></div>`;
+  } catch(err) { showError(err); }
 }
 
 // Router
@@ -130,7 +162,6 @@ function renderAll() {
   if (view==="goals") renderGoals();
 }
 
-// Init
 document.addEventListener("DOMContentLoaded", () => {
   renderAll();
   document.querySelectorAll(".nav .tab").forEach(btn=>{
