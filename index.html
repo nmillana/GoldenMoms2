@@ -43,7 +43,7 @@ const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "TU_ANON_KEY_AQUI"   // ⚠️ revisa que sea la correcta
 };
-const supa = window.supabase.createClient(SUPA.url, SUPA.key);
+const supa = supabase.createClient(SUPA.url, SUPA.key);
 
 function showError(err) {
   document.querySelector(".container").innerHTML = `<div class="error">❌ ${err.message||err}</div>`;
