@@ -148,3 +148,109 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Golden Moms — Panel</title>
+<link rel="icon" href="Logo.webp"/>
+<style>
+:root{--blue:#0f3a78;--lime:#9be22d;--ink:#0f172a;--mut:#64748b;--b:#e2e8f0;--bg:#f7f8fa}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff;border-bottom:1px solid var(--b)}
+.brand{display:flex;gap:8px;align-items:center}.brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
+.nav{display:flex;gap:8px}.nav .tab{padding:8px 12px;border:1px solid var(--b);border-radius:999px;background:#fff;cursor:pointer}
+.nav .tab.active{background:var(--blue);color:#fff}
+.container{max-width:900px;margin:20px auto;padding:12px}
+.card{background:#fff;border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:12px}
+.kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
+</style>
+<script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- Top -->
+<div class="top">
+  <div class="brand"><img src="Logo.webp" alt="GM"/> <strong>Golden Moms</strong></div>
+  <div class="nav">
+    <button class="tab active" data-view="dash">Dashboard</button>
+    <button class="tab" data-view="events">Eventos</button>
+    <button class="tab" data-view="roster">Plantel</button>
+  </div>
+</div>
+
+<div class="container"></div>
+
+<script>
+/*** === Configuración Supabase === ***/
+const SUPA = {
+  url: "https://xglojvvbgaivwbpdxvne.supabase.co",
+  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
+};
+const supa = window.supabase.createClient(SUPA.url, SUPA.key);
+
+/*** === Estado Global === ***/
+let state = { team:"Golden Moms", roster:[], events:[] };
+
+/*** === Cargar estado === ***/
+async function loadState() {
+  const { data, error } = await supa.from("gm_state").select("data").eq("id",1).single();
+  if (error) {
+    console.error(error);
+  } else {
+    state = data.data;
+  }
+  renderAll();
+}
+
+/*** === Renderizadores === ***/
+function renderDashboard() {
+  document.querySelector(".container").innerHTML = `
+    <div class="card kpi"><h3>Equipo</h3><div class="n">${state.team}</div></div>
+    <div class="card kpi"><h3>Jugadoras</h3><div class="n">${state.roster.length}</div></div>
+    <div class="card kpi"><h3>Eventos</h3><div class="n">${state.events.length}</div></div>
+  `;
+}
+
+function renderRoster() {
+  if (!state.roster.length) {
+    document.querySelector(".container").innerHTML = "<p>No hay jugadoras registradas.</p>";
+    return;
+  }
+  document.querySelector(".container").innerHTML = state.roster.map(p =>
+    `<div class="card"><strong>${p.nombre}</strong></div>`
+  ).join("");
+}
+
+function renderEvents() {
+  if (!state.events.length) {
+    document.querySelector(".container").innerHTML = "<p>No hay eventos programados.</p>";
+    return;
+  }
+  document.querySelector(".container").innerHTML = state.events.map(ev =>
+    `<div class="card"><strong>${ev.title}</strong><br><small>${ev.datetime}</small></div>`
+  ).join("");
+}
+
+function renderAll() {
+  const view = document.querySelector(".nav .tab.active").dataset.view;
+  if (view === "dash") renderDashboard();
+  if (view === "roster") renderRoster();
+  if (view === "events") renderEvents();
+}
+
+/*** === Init === ***/
+document.addEventListener("DOMContentLoaded", () => {
+  loadState();
+  document.querySelectorAll(".nav .tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".nav .tab").forEach(t => t.classList.remove("active"));
+      btn.classList.add("active");
+      renderAll();
+    });
+  });
+});
+</script>
+</body>
+</html>
