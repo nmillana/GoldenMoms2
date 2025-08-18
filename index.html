@@ -1,256 +1,149 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel</title>
-<link rel="icon" href="Logo.webp"/>
-<style>
-:root{--blue:#0f3a78;--lime:#9be22d;--ink:#0f172a;--mut:#64748b;--b:#e2e8f0;--bg:#f7f8fa;--ok:#d9f99d;--mid:#fef9c3;--no:#fee2e2}
-*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
-a{color:inherit} .small{color:var(--mut);font-size:12px}
-.btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer}
-.btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
-.btn.s{background:#f8fafc}
-.badge{font-size:11px;border:1px solid var(--b);border-radius:999px;padding:2px 8px;background:#f8fafc}
-.top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
-.brand{display:flex;gap:10px;align-items:center}.brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
-.nav{display:flex;gap:8px;flex-wrap:wrap}.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
-.nav .tab.active{background:var(--blue);color:#fff}
-.container{max-width:1200px;margin:14px auto;padding:0 12px}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
-.kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
-/* ✦ AUTH PAGE */
-#v-auth{display:none}
-.auth-wrap{max-width:460px;margin:40px auto;padding:16px;border:1px solid var(--b);border-radius:12px;background:#fff}
-.auth-wrap h2{margin:0 0 6px 0}
-.filters-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-.filters-row label{font-size:12px;color:#334155;margin-left:6px}
-.filters-row select,input,textarea{padding:8px;border:1px solid var(--b);border-radius:10px}
-.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;position:sticky;top:114px;z-index:10;background:#fff;padding:6px 0;border-bottom:1px solid var(--b)}
-.cal-head>div{text-align:center;font-weight:700;color:#0f3a78}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.cal-cell{min-height:140px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;overflow:hidden}
-.cal-time{font-size:12px;font-weight:700;color:#0f3a78}
-.tag{font-size:10px;border:1px solid #0001;border-radius:999px;padding:2px 6px;display:inline-block;margin-bottom:4px}
-.match{background:#e0edff;border-color:#b7d1ff;color:#0f3a78}
-.train{background:#e9fbd0;border-color:#c6f28a;color:#2d5a00}
-.team{font-size:10px;background:#eaf7d7;border:1px solid #c8ef7a;border-radius:999px;padding:1px 6px;margin-left:6px;font-weight:700}
-.overlay{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:40}
-.modal{width:min(920px,96vw);max-height:90vh;overflow:auto;background:#fff;border-radius:14px;border:1px solid var(--b);padding:14px}
-.att{border:1px solid var(--b);border-radius:12px;padding:8px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.chip{padding:6px 10px;border-radius:999px;border:1px solid var(--b);background:#f8fafc;font-weight:700;font-size:12px}
-.chip.ok{background:var(--ok);border-color:#bef264}.chip.mid{background:var(--mid);border-color:#fde68a}.chip.no{background:var(--no);border-color:#fecaca}
-.roster{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.pcard{border:1px solid var(--b);border-radius:12px;padding:10px;background:#fff}
-.phead{display:flex;gap:10px;align-items:center}.pimg{width:56px;height:56px;border-radius:50%;background:#eee;border:2px solid var(--blue)}
-.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-@media (max-width: 900px){
-  .grid{grid-template-columns:1fr}
-  .cal-head{top:154px}
-  .roster{grid-template-columns:repeat(2,1fr)}
-}
-</style>
-<script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
-</head>
-<body>
-<!-- Top -->
-<div class="top">
-  <div class="brand">
-    <img src="Logo.webp" alt="GM"/><div><strong>Golden</strong> <span style="color:var(--lime);font-weight:800">Moms</span></div>
-  </div>
-  <div class="nav">
-    <button class="tab active" data-view="dash">Dashboard</button>
-    <button class="tab" data-view="events">Eventos</button>
-    <button class="tab" data-view="roster">Plantel</button>
-    <button class="tab" data-view="track">Seguimiento</button>
-    <button class="tab" data-view="conf">Configuración</button>
-  </div>
-</div>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Golden Moms — Panel</title>
+  <link rel="icon" href="Logo.webp"/>
 
-<!-- (todas tus secciones AUTH, DASH, EVENTOS, ROSTER, TRACK, CONF, modales, siguen igual que en tu código original) -->
+  <!-- 🎨 Estilos -->
+  <style>
+    :root{--blue:#0f3a78;--lime:#9be22d;--ink:#0f172a;--mut:#64748b;--b:#e2e8f0;--bg:#f7f8fa;--ok:#d9f99d;--mid:#fef9c3;--no:#fee2e2}
+    *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+    a{color:inherit} .small{color:var(--mut);font-size:12px}
+    .btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer}
+    .btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
+    .btn.s{background:#f8fafc}
+    .badge{font-size:11px;border:1px solid var(--b);border-radius:999px;padding:2px 8px;background:#f8fafc}
+    .top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+    .brand{display:flex;gap:10px;align-items:center}.brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
+    .nav{display:flex;gap:8px;flex-wrap:wrap}.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
+    .nav .tab.active{background:var(--blue);color:#fff}
+    .container{max-width:1200px;margin:14px auto;padding:0 12px}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
+    .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
+    .roster{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .pcard{border:1px solid var(--b);border-radius:12px;padding:10px;background:#fff}
+    .phead{display:flex;gap:10px;align-items:center}
+    .pimg{width:56px;height:56px;border-radius:50%;background:#eee;border:2px solid var(--blue)}
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr}
+      .roster{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
 
-<script>
-/*** === Config Supabase === ***/
-const SUPA = {
-  url: 'https://xglojvvbgaivwbpdxvne.supabase.co',
-  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw'
-};
-const supa = window.supabase.createClient(SUPA.url, SUPA.key);
-
-/*** === Estado Global === ***/
-let state = { team: "Golden Moms", roster: [], events: [] };
-
-/*** === Cargar estado desde gm_state === ***/
-async function loadState() {
-  const { data, error } = await supa
-    .from("gm_state")
-    .select("data")
-    .eq("id", 1)
-    .single();
-
-  if (error) {
-    console.error("Error al cargar estado:", error);
-  } else if (data && data.data) {
-    state = data.data;
-  }
-  renderAll();
-}
-
-/*** === Guardar estado === ***/
-async function saveState() {
-  const { error } = await supa
-    .from("gm_state")
-    .upsert({ id: 1, data: state, updated_at: new Date().toISOString() });
-
-  if (error) console.error("Error al guardar estado:", error);
-}
-
-/*** === Renderizadores (ejemplo simple) === ***/
-function renderDashboard() {
-  const c = document.querySelector(".container");
-  c.innerHTML = `
-    <div class="card kpi">
-      <h3>Equipo</h3>
-      <div class="n">${state.team}</div>
-    </div>
-    <div class="card kpi">
-      <h3>Jugadoras</h3>
-      <div class="n">${state.roster.length}</div>
-    </div>
-    <div class="card kpi">
-      <h3>Eventos</h3>
-      <div class="n">${state.events.length}</div>
-    </div>
-  `;
-}
-
-function renderAll() {
-  const view = document.querySelector(".nav .tab.active")?.dataset.view;
-  if (view === "dash") renderDashboard();
-  else document.querySelector(".container").innerHTML = "<p>Vista en construcción</p>";
-}
-
-/*** === Init === ***/
-document.addEventListener("DOMContentLoaded", () => {
-  loadState();
-
-  // navegación
-  document.querySelectorAll(".nav .tab").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".nav .tab").forEach(t => t.classList.remove("active"));
-      btn.classList.add("active");
-      renderAll();
-    });
-  });
-});
-</script>
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel</title>
-<link rel="icon" href="Logo.webp"/>
-<style>
-:root{--blue:#0f3a78;--lime:#9be22d;--ink:#0f172a;--mut:#64748b;--b:#e2e8f0;--bg:#f7f8fa}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink)}
-.top{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff;border-bottom:1px solid var(--b)}
-.brand{display:flex;gap:8px;align-items:center}.brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
-.nav{display:flex;gap:8px}.nav .tab{padding:8px 12px;border:1px solid var(--b);border-radius:999px;background:#fff;cursor:pointer}
-.nav .tab.active{background:var(--blue);color:#fff}
-.container{max-width:900px;margin:20px auto;padding:12px}
-.card{background:#fff;border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:12px}
-.kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
-</style>
-<script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <!-- 🚀 SDK Supabase -->
+  <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<!-- Top -->
-<div class="top">
-  <div class="brand"><img src="Logo.webp" alt="GM"/> <strong>Golden Moms</strong></div>
-  <div class="nav">
-    <button class="tab active" data-view="dash">Dashboard</button>
-    <button class="tab" data-view="events">Eventos</button>
-    <button class="tab" data-view="roster">Plantel</button>
+  <!-- 🟦 Barra Superior -->
+  <div class="top">
+    <div class="brand">
+      <img src="Logo.webp" alt="GM"/>
+      <div><strong>Golden</strong> <span style="color:var(--lime);font-weight:800">Moms</span></div>
+    </div>
+    <div class="nav">
+      <button class="tab active" data-view="dash">Dashboard</button>
+      <button class="tab" data-view="events">Eventos</button>
+      <button class="tab" data-view="roster">Plantel</button>
+      <button class="tab" data-view="track">Seguimiento</button>
+      <button class="tab" data-view="conf">Configuración</button>
+    </div>
   </div>
-</div>
 
-<div class="container"></div>
+  <!-- 🟩 Contenedor dinámico -->
+  <div class="container"></div>
 
-<script>
-/*** === Configuración Supabase === ***/
-const SUPA = {
-  url: "https://xglojvvbgaivwbpdxvne.supabase.co",
-  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
-};
-const supa = window.supabase.createClient(SUPA.url, SUPA.key);
+  <!-- ⚡ Script ÚNICO (antes tenías dos bloques completos) -->
+  <script>
+    /*** === Configuración Supabase === ***/
+    const SUPA = {
+      url: "https://xglojvvbgaivwbpdxvne.supabase.co",
+      key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
+    };
+    const supa = window.supabase.createClient(SUPA.url, SUPA.key);
 
-/*** === Estado Global === ***/
-let state = { team:"Golden Moms", roster:[], events:[] };
+    /*** === Estado Global === ***/
+    let state = { team:"Golden Moms", roster:[], events:[] };
 
-/*** === Cargar estado === ***/
-async function loadState() {
-  const { data, error } = await supa.from("gm_state").select("data").eq("id",1).single();
-  if (error) {
-    console.error(error);
-  } else {
-    state = data.data;
-  }
-  renderAll();
-}
-
-/*** === Renderizadores === ***/
-function renderDashboard() {
-  document.querySelector(".container").innerHTML = `
-    <div class="card kpi"><h3>Equipo</h3><div class="n">${state.team}</div></div>
-    <div class="card kpi"><h3>Jugadoras</h3><div class="n">${state.roster.length}</div></div>
-    <div class="card kpi"><h3>Eventos</h3><div class="n">${state.events.length}</div></div>
-  `;
-}
-
-function renderRoster() {
-  if (!state.roster.length) {
-    document.querySelector(".container").innerHTML = "<p>No hay jugadoras registradas.</p>";
-    return;
-  }
-  document.querySelector(".container").innerHTML = state.roster.map(p =>
-    `<div class="card"><strong>${p.nombre}</strong></div>`
-  ).join("");
-}
-
-function renderEvents() {
-  if (!state.events.length) {
-    document.querySelector(".container").innerHTML = "<p>No hay eventos programados.</p>";
-    return;
-  }
-  document.querySelector(".container").innerHTML = state.events.map(ev =>
-    `<div class="card"><strong>${ev.title}</strong><br><small>${ev.datetime}</small></div>`
-  ).join("");
-}
-
-function renderAll() {
-  const view = document.querySelector(".nav .tab.active").dataset.view;
-  if (view === "dash") renderDashboard();
-  if (view === "roster") renderRoster();
-  if (view === "events") renderEvents();
-}
-
-/*** === Init === ***/
-document.addEventListener("DOMContentLoaded", () => {
-  loadState();
-  document.querySelectorAll(".nav .tab").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".nav .tab").forEach(t => t.classList.remove("active"));
-      btn.classList.add("active");
+    /*** === Cargar estado desde tabla === ***/
+    async function loadState() {
+      const { data, error } = await supa.from("gm_state").select("data").eq("id",1).single();
+      if (error) {
+        console.error("❌ Error al cargar:", error);
+      } else if (data && data.data) {
+        state = data.data;
+      }
       renderAll();
+    }
+
+    /*** === Guardar estado === ***/
+    async function saveState() {
+      const { error } = await supa.from("gm_state").upsert({
+        id: 1,
+        data: state,
+        updated_at: new Date().toISOString()
+      });
+      if (error) console.error("❌ Error al guardar:", error);
+    }
+
+    /*** === Renderizadores === ***/
+    function renderDashboard() {
+      document.querySelector(".container").innerHTML = `
+        <div class="card kpi"><h3>Equipo</h3><div class="n">${state.team}</div></div>
+        <div class="card kpi"><h3>Jugadoras</h3><div class="n">${state.roster.length}</div></div>
+        <div class="card kpi"><h3>Eventos</h3><div class="n">${state.events.length}</div></div>
+      `;
+    }
+
+    function renderRoster() {
+      if (!state.roster.length) {
+        document.querySelector(".container").innerHTML = "<p>No hay jugadoras registradas.</p>";
+        return;
+      }
+      document.querySelector(".container").innerHTML = `
+        <div class="roster">
+          ${state.roster.map(p => `
+            <div class="pcard">
+              <div class="phead"><div class="pimg"></div><strong>${p.nombre}</strong></div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderEvents() {
+      if (!state.events.length) {
+        document.querySelector(".container").innerHTML = "<p>No hay eventos programados.</p>";
+        return;
+      }
+      document.querySelector(".container").innerHTML = state.events.map(ev =>
+        `<div class="card"><strong>${ev.title}</strong><br><small>${ev.datetime}</small></div>`
+      ).join("");
+    }
+
+    function renderAll() {
+      const view = document.querySelector(".nav .tab.active").dataset.view;
+      if (view === "dash") renderDashboard();
+      if (view === "roster") renderRoster();
+      if (view === "events") renderEvents();
+      if (view === "track") document.querySelector(".container").innerHTML = "<p>Seguimiento en construcción</p>";
+      if (view === "conf") document.querySelector(".container").innerHTML = "<p>Configuración en construcción</p>";
+    }
+
+    /*** === Init === ***/
+    document.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      document.querySelectorAll(".nav .tab").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".nav .tab").forEach(t => t.classList.remove("active"));
+          btn.classList.add("active");
+          renderAll();
+        });
+      });
     });
-  });
-});
-</script>
+  </script>
 </body>
 </html>
