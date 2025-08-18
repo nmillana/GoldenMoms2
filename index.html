@@ -570,7 +570,7 @@ document.querySelectorAll('.overlay').forEach(ov=>ov.addEventListener('click',e=
 
 async function renderAll(){renderDash();renderCalendar();renderRoster();renderTrack();}
 (async function init(){
-  await loadState(); ensureSeed(); await saveState(); syncRoleUI(); renderAll();
+ await loadState(); if(S.roster.length === 0){ensureSeed();}
   // resolver RSVP si viene con hash
   if (!SESSION) { showOnlyAuth(); return; }  // ✦ si no está logeado, mostrar AUTH
   showApp();                                   // ✦ si está logeado, mostrar app normal
