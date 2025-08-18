@@ -73,18 +73,78 @@ a{color:inherit} .small{color:var(--mut);font-size:12px}
 <!-- (todas tus secciones AUTH, DASH, EVENTOS, ROSTER, TRACK, CONF, modales, siguen igual que en tu código original) -->
 
 <script>
-/*** === Config (Supabase opcional) === ***/
+/*** === Config Supabase === ***/
 const SUPA = {
   url: 'https://xglojvvbgaivwbpdxvne.supabase.co',
-  // 🔹 solo anon public key, nunca service_role
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw'
 };
-let supa = null;
-if (SUPA.url && SUPA.key && window.supabase) {
-  supa = window.supabase.createClient(SUPA.url, SUPA.key);
+const supa = window.supabase.createClient(SUPA.url, SUPA.key);
+
+/*** === Estado Global === ***/
+let state = { team: "Golden Moms", roster: [], events: [] };
+
+/*** === Cargar estado desde gm_state === ***/
+async function loadState() {
+  const { data, error } = await supa
+    .from("gm_state")
+    .select("data")
+    .eq("id", 1)
+    .single();
+
+  if (error) {
+    console.error("Error al cargar estado:", error);
+  } else if (data && data.data) {
+    state = data.data;
+  }
+  renderAll();
 }
 
-/*** === El resto de tu JavaScript se mantiene idéntico (loadState, saveState, ensureSeed, init, renderAll, etc.) === ***/
+/*** === Guardar estado === ***/
+async function saveState() {
+  const { error } = await supa
+    .from("gm_state")
+    .upsert({ id: 1, data: state, updated_at: new Date().toISOString() });
+
+  if (error) console.error("Error al guardar estado:", error);
+}
+
+/*** === Renderizadores (ejemplo simple) === ***/
+function renderDashboard() {
+  const c = document.querySelector(".container");
+  c.innerHTML = `
+    <div class="card kpi">
+      <h3>Equipo</h3>
+      <div class="n">${state.team}</div>
+    </div>
+    <div class="card kpi">
+      <h3>Jugadoras</h3>
+      <div class="n">${state.roster.length}</div>
+    </div>
+    <div class="card kpi">
+      <h3>Eventos</h3>
+      <div class="n">${state.events.length}</div>
+    </div>
+  `;
+}
+
+function renderAll() {
+  const view = document.querySelector(".nav .tab.active")?.dataset.view;
+  if (view === "dash") renderDashboard();
+  else document.querySelector(".container").innerHTML = "<p>Vista en construcción</p>";
+}
+
+/*** === Init === ***/
+document.addEventListener("DOMContentLoaded", () => {
+  loadState();
+
+  // navegación
+  document.querySelectorAll(".nav .tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".nav .tab").forEach(t => t.classList.remove("active"));
+      btn.classList.add("active");
+      renderAll();
+    });
+  });
+});
 </script>
-</body>
-</html>
+
