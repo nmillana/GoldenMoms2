@@ -5,178 +5,186 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Golden Moms — Panel</title>
 <link rel="icon" href="Logo.webp"/>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
-:root{--blue:#0f3a78;--lime:#9be22d;--ink:#0f172a;--mut:#64748b;--b:#e2e8f0;--bg:#f7f8fa}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--ink)}
-.top{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff;border-bottom:1px solid var(--b)}
-.brand{display:flex;gap:8px;align-items:center}.brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
-.nav{display:flex;gap:8px}.nav .tab{padding:8px 12px;border:1px solid var(--b);border-radius:999px;background:#fff;cursor:pointer}
+:root{
+  --blue:#0f3a78;--lime:#9be22d;--ink:#0f172a;--mut:#64748b;
+  --b:#e2e8f0;--bg:#f7f8fa;--ok:#d9f99d;--mid:#fef9c3;--no:#fee2e2;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+a{color:inherit}
+.btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer}
+.btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
+.btn.s{background:#f8fafc}
+.badge{font-size:11px;border:1px solid var(--b);border-radius:999px;padding:2px 8px;background:#f8fafc}
+.top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+.brand{display:flex;gap:10px;align-items:center}
+.brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
 .nav .tab.active{background:var(--blue);color:#fff}
-.container{max-width:1000px;margin:20px auto;padding:12px}
-.card{background:#fff;border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:12px}
+.container{max-width:1200px;margin:14px auto;padding:0 12px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
-.error{color:red;font-weight:bold;margin:10px 0;padding:6px;background:#fee;border:1px solid red}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid var(--b);padding:6px;text-align:left}
-th{background:#f1f5f9}
+/* Calendario */
+.filters-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.filters-row label{font-size:12px;color:#334155;margin-left:6px}
+.filters-row select{padding:8px;border:1px solid var(--b);border-radius:10px}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;position:sticky;top:114px;z-index:5;background:#fff;padding:6px 0;border-bottom:1px solid var(--b)}
+.cal-head>div{text-align:center;font-weight:700;color:#0f3a78}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.cal-cell{min-height:140px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;overflow:hidden}
+.cal-time{font-size:12px;font-weight:700;color:#0f3a78}
+.tag{font-size:10px;border:1px solid #0001;border-radius:999px;padding:2px 6px;display:inline-block;margin-bottom:4px}
+.match{background:#e0edff;border-color:#b7d1ff;color:#0f3a78}
+.train{background:#e9fbd0;border-color:#c6f28a;color:#2d5a00}
+.team{font-size:10px;background:#eaf7d7;border:1px solid #c8ef7a;border-radius:999px;padding:1px 6px;margin-left:6px;font-weight:700}
+/* Responsive */
+@media (max-width: 900px){
+  .grid{grid-template-columns:1fr}
+  .cal-head{top:154px}
+}
 </style>
-<script src="https://unpkg.com/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
 </head>
 <body>
 
+<!-- Top -->
 <div class="top">
-  <div class="brand"><img src="Logo.webp" alt="GM"/> <strong>Golden Moms</strong></div>
+  <div class="brand">
+    <img src="Logo.webp" alt="GM"/>
+    <div><strong>Golden</strong> <span style="color:var(--lime);font-weight:800">Moms</span></div>
+  </div>
   <div class="nav">
     <button class="tab active" data-view="dash">Dashboard</button>
-    <button class="tab" data-view="roster">Plantel</button>
     <button class="tab" data-view="events">Eventos</button>
-    <button class="tab" data-view="att">Asistencia</button>
-    <button class="tab" data-view="results">Resultados</button>
-    <button class="tab" data-view="goals">Goles</button>
+    <button class="tab" data-view="roster">Plantel</button>
+    <button class="tab" data-view="track">Seguimiento</button>
   </div>
 </div>
 
-<div class="container"></div>
-  
-<!-- Cargar SDK de Supabase -->
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<div class="container">
+  <!-- DASHBOARD -->
+  <section id="v-dash">
+    <div class="grid">
+      <div class="card kpi" style="grid-column:span 3"><h3>Próximos eventos</h3><div class="n" id="kEvents">0</div></div>
+      <div class="card kpi" style="grid-column:span 3"><h3>Plantel</h3><div class="n" id="kRoster">0</div></div>
+      <div class="card kpi" style="grid-column:span 3"><h3>Convocadas (próx.)</h3><div class="n" id="kOk">0</div></div>
+      <div class="card kpi" style="grid-column:span 3"><h3>Partidos jugados</h3><div class="n" id="kGames">0</div></div>
+    </div>
+  </section>
+
+  <!-- EVENTOS -->
+  <section id="v-events" style="display:none">
+    <div class="card">
+      <div class="filters-row">
+        <button class="btn p" id="btnNewEvent">Nuevo Evento</button>
+      </div>
+      <div class="cal-head"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
+      <div id="calGrid" class="cal-grid"></div>
+    </div>
+  </section>
+
+  <!-- PLANTEL -->
+  <section id="v-roster" style="display:none">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>Plantel</strong>
+        <button id="btnAddPlayer" class="btn s">Agregar jugadora</button>
+      </div>
+      <div id="rosterGrid" class="grid"></div>
+    </div>
+  </section>
+
+  <!-- SEGUIMIENTO -->
+  <section id="v-track" style="display:none">
+    <div class="card">
+      <strong>Seguimiento de partidos</strong>
+      <div id="trackList"></div>
+    </div>
+  </section>
+</div>
 
 <script>
+/* ========= SUPABASE ========= */
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
-  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"   // ⚠️ revisa que sea la correcta
+  key: "TU_API_KEY_PUBLICA"
 };
 const supa = supabase.createClient(SUPA.url, SUPA.key);
 
-function showError(err) {
-  document.querySelector(".container").innerHTML = `<div class="error">❌ ${err.message||err}</div>`;
-  console.error(err);
-}
-
-// Dashboard
-async function renderDashboard() {
-  try {
-    const { data: players, error: e1 } = await supa.from("players").select("id");
-    if (e1) throw e1;
-    const { data: events, error: e2 } = await supa.from("events").select("id");
-    if (e2) throw e2;
-    const { data: top, error: e3 } = await supa.from("vw_top_scorers").select("*").limit(3);
-    if (e3) throw e3;
-
-    document.querySelector(".container").innerHTML = `
-      <div class="card kpi"><h3>Jugadoras</h3><div class="n">${players.length}</div></div>
-      <div class="card kpi"><h3>Eventos</h3><div class="n">${events.length}</div></div>
-      <div class="card"><h3>Top Goleadoras</h3>
-        <ul>${top.map(p=>`<li>${p.nombre} (${p.goles})</li>`).join("")}</ul>
-      </div>
-    `;
-  } catch(err) { showError(err); }
-}
-
-// Roster
-async function renderRoster() {
-  try {
-    const { data, error } = await supa.from("players").select("*").order("nombre");
-    if (error) throw error;
-    if (!data.length) { document.querySelector(".container").innerHTML="<p>No hay jugadoras.</p>"; return; }
-    document.querySelector(".container").innerHTML = `
-      <div class="card"><h3>Plantel</h3>
-      <table><tr><th>Nombre</th><th>Apodo</th><th>N°</th><th>Rol</th></tr>
-      ${data.map(p=>`<tr><td>${p.nombre}</td><td>${p.apodo||""}</td><td>${p.numero_camiseta||""}</td><td>${p.rol}</td></tr>`).join("")}
-      </table></div>`;
-  } catch(err) { showError(err); }
-}
-
-// Eventos
-async function renderEvents() {
-  try {
-    const { data, error } = await supa.from("events").select("*").order("datetime",{ascending:true});
-    if (error) throw error;
-    if (!data.length) { document.querySelector(".container").innerHTML="<p>No hay eventos.</p>"; return; }
-    document.querySelector(".container").innerHTML = `
-      <div class="card"><h3>Eventos</h3>
-      <table><tr><th>Tipo</th><th>Título</th><th>Fecha</th><th>Lugar</th><th>Uniforme</th></tr>
-      ${data.map(ev=>`<tr><td>${ev.type}</td><td>${ev.title}</td><td>${new Date(ev.datetime).toLocaleString()}</td><td>${ev.location||""}</td><td>${ev.uniform||""}</td></tr>`).join("")}
-      </table></div>`;
-  } catch(err) { showError(err); }
-}
-
-// Asistencia (con join manual)
-async function renderAttendance() {
-  try {
-    const { data: att, error } = await supa.from("attendance").select("*").limit(20);
-    if (error) throw error;
-    if (!att.length) { document.querySelector(".container").innerHTML="<p>No hay registros de asistencia.</p>"; return; }
-
-    // Traer jugadoras y eventos para resolver nombres
-    const { data: players } = await supa.from("players").select("id,nombre");
-    const { data: events } = await supa.from("events").select("id,title");
-    const playerMap = Object.fromEntries(players.map(p=>[p.id,p.nombre]));
-    const eventMap = Object.fromEntries(events.map(e=>[e.id,e.title]));
-
-    document.querySelector(".container").innerHTML = `
-      <div class="card"><h3>Asistencia</h3>
-      <table><tr><th>Evento</th><th>Jugadora</th><th>Estado</th></tr>
-      ${att.map(a=>`<tr><td>${eventMap[a.event_id]||""}</td><td>${playerMap[a.player_id]||""}</td><td>${a.status}</td></tr>`).join("")}
-      </table></div>`;
-  } catch(err) { showError(err); }
-}
-
-// Resultados
-async function renderResults() {
-  try {
-    const { data, error } = await supa.from("results").select("*, event_id").order("created_at",{ascending:false});
-    if (error) throw error;
-    if (!data.length) { document.querySelector(".container").innerHTML="<p>No hay resultados.</p>"; return; }
-
-    const { data: events } = await supa.from("events").select("id,title");
-    const eventMap = Object.fromEntries(events.map(e=>[e.id,e.title]));
-
-    document.querySelector(".container").innerHTML = `
-      <div class="card"><h3>Resultados</h3>
-      <table><tr><th>Evento</th><th>Goles GM</th><th>Goles Rival</th><th>Notas</th></tr>
-      ${data.map(r=>`<tr><td>${eventMap[r.event_id]||""}</td><td>${r.goals_home}</td><td>${r.goals_away}</td><td>${r.notes||""}</td></tr>`).join("")}
-      </table></div>`;
-  } catch(err) { showError(err); }
-}
-
-// Goles
-async function renderGoals() {
-  try {
-    const { data, error } = await supa.from("vw_top_scorers").select("*");
-    if (error) throw error;
-    if (!data.length) { document.querySelector(".container").innerHTML="<p>No hay goles.</p>"; return; }
-    document.querySelector(".container").innerHTML = `
-      <div class="card"><h3>Ranking Goleadoras</h3>
-      <table><tr><th>Nombre</th><th>Goles</th></tr>
-      ${data.map(p=>`<tr><td>${p.nombre}</td><td>${p.goles}</td></tr>`).join("")}
-      </table></div>`;
-  } catch(err) { showError(err); }
-}
-
-// Router
-function renderAll() {
-  const view = document.querySelector(".nav .tab.active").dataset.view;
-  if (view==="dash") renderDashboard();
-  if (view==="roster") renderRoster();
-  if (view==="events") renderEvents();
-  if (view==="att") renderAttendance();
-  if (view==="results") renderResults();
-  if (view==="goals") renderGoals();
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  renderAll();
-  document.querySelectorAll(".nav .tab").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      document.querySelectorAll(".nav .tab").forEach(t=>t.classList.remove("active"));
-      btn.classList.add("active");
-      renderAll();
-    });
-  });
+/* ========= Navegación ========= */
+document.querySelectorAll('.nav .tab').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    showView(btn.dataset.view);
+  };
 });
+function showView(v){
+  ['dash','events','roster','track'].forEach(id=>document.getElementById('v-'+id).style.display='none');
+  document.getElementById('v-'+v).style.display='block';
+  if(v==='dash') renderDash();
+  if(v==='events') renderEvents();
+  if(v==='roster') renderRoster();
+  if(v==='track') renderTrack();
+}
+
+/* ========= Dashboard ========= */
+async function renderDash(){
+  const {data:events}=await supa.from("events").select("*").gte("datetime", new Date().toISOString());
+  const {data:players}=await supa.from("players").select("*");
+  const {data:matches}=await supa.from("matches").select("*");
+  document.getElementById('kEvents').textContent=events?.length||0;
+  document.getElementById('kRoster').textContent=players?.length||0;
+  document.getElementById('kOk').textContent=0; // deberías cruzar con tabla attendance
+  document.getElementById('kGames').textContent=matches?.length||0;
+}
+
+/* ========= Eventos ========= */
+async function renderEvents(){
+  const {data}=await supa.from("events").select("*").order("datetime",{ascending:true});
+  const grid=document.getElementById('calGrid'); grid.innerHTML="";
+  (data||[]).forEach(e=>{
+    const c=document.createElement("div"); c.className="cal-cell";
+    const d=new Date(e.datetime);
+    c.innerHTML=`<div class="tag ${e.type=='Partido'?'match':'train'}">${e.type}</div>
+      <div class="cal-time">${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}</div>
+      <div><strong>${e.title}</strong> <span class="team">${e.team}</span></div>`;
+    grid.appendChild(c);
+  });
+}
+
+/* ========= Plantel ========= */
+async function renderRoster(){
+  const {data}=await supa.from("players").select("*");
+  const grid=document.getElementById('rosterGrid'); grid.innerHTML="";
+  (data||[]).forEach(p=>{
+    const c=document.createElement("div"); c.className="card";
+    c.innerHTML=`<strong>${p.name}</strong><br/><span>${p.nick||""}</span>`;
+    grid.appendChild(c);
+  });
+}
+
+/* ========= Seguimiento ========= */
+async function renderTrack(){
+  const {data}=await supa.from("matches").select("*,goals(*,players(name))").order("date",{ascending:false});
+  const wrap=document.getElementById("trackList"); wrap.innerHTML="";
+  (data||[]).forEach(m=>{
+    const div=document.createElement("div"); div.className="card";
+    div.innerHTML=`<strong>${m.competition||"Amistoso"}</strong> vs ${m.opponent} — ${m.gf}:${m.ga}`;
+    wrap.appendChild(div);
+  });
+}
+
+/* ========= Inicial ========= */
+renderDash();
 </script>
 </body>
-//<footer>Golden Moms · hecho con 💚 lima & azul</footer>
+
+
+
+<footer>Golden Moms · hecho con 💚 lima & azul</footer>
 </html>
 
