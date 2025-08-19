@@ -199,7 +199,9 @@ document.getElementById("btnNewEvent").onclick = async () => {
 /* ========= Dashboard ========= */
 async function renderDash(){
   const {data:events}=await supa.from("events").select("*").gte("datetime", new Date().toISOString());
-  const {data:players}=await supa.from("players").select("*");
+ const {data:players}=await supa.from("players").select("*");
+document.getElementById('kRoster').textContent=players?.length||0;
+
 
   // KPIs
   document.getElementById('kEvents').textContent=events?.length||0;
@@ -209,35 +211,58 @@ async function renderDash(){
 
   // 🎂 Cumpleaños del mes (desde vista)
 
-const { data: birthdays } = await supa
-  .from("vw_birthdays_this_month")
-  .select("*")
-  .order("cumple_este_anio", { ascending: true });
+// 🎂 Cumpleaños (usar la vista upcoming para que siempre tenga data)
+try {
+  const { data: birthdays, error: bErr } = await supa
+    .from("vw_upcoming_birthdays")
+    .select("*")
+    .order("proximo_cumple", { ascending: true })
+    .limit(5); // muestra los próximos 5
 
-const list = document.getElementById("upBirth");
-list.innerHTML = "";
+  const list = document.getElementById("upBirth");
+  list.innerHTML = "";
 
-(birthdays || []).forEach(p => {
-  const bd = new Date(p.cumple_este_anio);
-  list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
-});
+  if (bErr) {
+    console.error("Error cumpleaños:", bErr.message);
+    list.innerHTML = "<li>Error al cargar cumpleaños</li>";
+  } else {
+    (birthdays || []).forEach(p => {
+      if (p.proximo_cumple) {
+        const bd = new Date(p.proximo_cumple);
+        list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+      }
+    });
+  }
+} catch(e) {
+  console.error("Fallo cumpleaños:", e);
+}
+
 
 
   // 📅 Eventos de la semana (desde vista)
-  const { data: weekEvents } = await supa
+  // 📅 Eventos de la semana
+try {
+  const { data: weekEvents, error: eErr } = await supa
     .from("vw_events_this_week")
     .select("*")
     .order("datetime", { ascending: true });
 
-  const week=document.getElementById('weekEvents'); 
+  const week = document.getElementById('weekEvents'); 
   week.innerHTML="";
-  (weekEvents||[]).forEach(e=>{
-    const d = new Date(e.datetime);
-    week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
-  });
+
+  if (eErr) {
+    console.error("Error eventos:", eErr.message);
+    week.innerHTML = "<li>Error al cargar eventos</li>";
+  } else {
+    (weekEvents||[]).forEach(e=>{
+      const d = new Date(e.datetime);
+      week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
+    });
+  }
+} catch(e) {
+  console.error("Fallo eventos:", e);
 }
 
-}
 
 /* ========= Inicial ========= */
 renderDash();
