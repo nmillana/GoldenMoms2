@@ -76,6 +76,16 @@ footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size
       <div class="card kpi" style="grid-column:span 3"><h3>Partidos jugados</h3><div class="n" id="kGames">0</div></div>
     </div>
     <div class="card" style="margin-top:12px">
+  <strong>🎂 Próximos cumpleaños</strong>
+  <ul id="upBirth" style="margin:8px 0 0 16px"></ul>
+</div>
+
+<div class="card" style="margin-top:12px">
+  <strong>📅 Eventos de la semana</strong>
+  <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
+</div>
+
+    <div class="card" style="margin-top:12px">
       <strong>Próximos cumpleaños</strong>
       <ul id="birthList"></ul>
     </div>
@@ -211,5 +221,35 @@ async function renderTrack(){
 /* ========= Inicial ========= */
 renderDash();
 </script>
+async function renderDash(){
+  const {data:events}=await supa.from("events").select("*").gte("datetime", new Date().toISOString());
+  const {data:players}=await supa.from("players").select("*");
+
+  // KPIs
+  document.getElementById('kEvents').textContent=events?.length||0;
+  document.getElementById('kRoster').textContent=players?.length||0;
+  document.getElementById('kOk').textContent=0;
+  document.getElementById('kGames').textContent=0;
+
+  // Cumpleaños del mes (apodo + fecha)
+  const now=new Date();
+  const list=document.getElementById('upBirth'); list.innerHTML="";
+  (players||[]).filter(p=>p.birthdate).forEach(p=>{
+    const bd=new Date(p.birthdate);
+    if(bd.getMonth()===now.getMonth() && bd.getDate()>=now.getDate()){
+      list.innerHTML += `<li>${p.apodo} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+    }
+  });
+
+  // Eventos de la semana
+  const week=document.getElementById('weekEvents'); week.innerHTML="";
+  (events||[]).forEach(e=>{
+    const d=new Date(e.datetime);
+    if(d >= now && d <= new Date(now.getTime()+7*86400000)){
+      week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
+    }
+  });
+}
+
 </body>
 </html>
