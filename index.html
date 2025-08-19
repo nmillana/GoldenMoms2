@@ -149,33 +149,7 @@ function showView(v){
   if(v==='track') renderTrack();
 }
 
-/* ========= Dashboard ========= */
-async function renderDash(){
-  const {data:events}=await supa.from("events").select("*").gte("datetime", new Date().toISOString());
-  const {data:players}=await supa.from("players").select("*");
-  const {data:matches}=await supa.from("matches").select("*");
 
-  document.getElementById('kEvents').textContent=events?.length||0;
-  document.getElementById('kRoster').textContent=players?.length||0;
-  document.getElementById('kOk').textContent=0; // asistencia luego
-  document.getElementById('kGames').textContent=matches?.length||0;
-
-  // Cumpleaños próximos (30 días)
-  const now=new Date();
-  const upcoming=(players||[]).filter(p=>p.birthdate).map(p=>{
-    const d=new Date(p.birthdate);
-    d.setFullYear(now.getFullYear());
-    if(d<now) d.setFullYear(now.getFullYear()+1);
-    return {...p, proximo:d};
-  }).filter(x=>(x.proximo-now)<=30*86400000).sort((a,b)=>a.proximo-b.proximo);
-
-  const list=document.getElementById("birthList"); list.innerHTML="";
-  upcoming.forEach(p=>{
-    const li=document.createElement("li");
-    li.textContent=`🎂 ${p.nombre} — ${p.proximo.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}`;
-    list.appendChild(li);
-  });
-}
 
 /* ========= Eventos ========= */
 async function renderEvents(){
