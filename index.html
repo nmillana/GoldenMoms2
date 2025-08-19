@@ -210,11 +210,18 @@ async function renderDash(){
   const now=new Date();
   const list=document.getElementById('upBirth'); list.innerHTML="";
   (players||[]).filter(p=>p.birthdate).forEach(p=>{
-    const bd=new Date(p.birthdate);
-    if(bd.getMonth()===now.getMonth() && bd.getDate()>=now.getDate()){
-      list.innerHTML += `<li>${p.apodo} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
-    }
-  });
+    // Cumpleaños del mes (desde vista)
+const { data: birthdays } = await supa
+  .from("vw_birthdays_this_month")
+  .select("*")
+  .order("proximo_cumple", { ascending: true });
+
+const list=document.getElementById('upBirth'); list.innerHTML="";
+(birthdays||[]).forEach(p=>{
+  const bd = new Date(p.proximo_cumple);
+  list.innerHTML += `<li>${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+});
+
 
   // Eventos de la semana
   // Eventos de la semana (desde vista)
