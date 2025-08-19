@@ -206,24 +206,22 @@ async function renderDash(){
   document.getElementById('kOk').textContent=0;
   document.getElementById('kGames').textContent=0;
 
-  // Cumpleaños del mes
-  const now=new Date();
-  const list=document.getElementById('upBirth'); list.innerHTML="";
-  (players||[]).filter(p=>p.birthdate).forEach(p=>{
-    // Cumpleaños del mes (desde vista)
+
+  // 🎂 Cumpleaños del mes (desde vista)
 const { data: birthdays } = await supa
   .from("vw_birthdays_this_month")
   .select("*")
   .order("proximo_cumple", { ascending: true });
 
-const list=document.getElementById('upBirth'); list.innerHTML="";
-(birthdays||[]).forEach(p=>{
+const list = document.getElementById("upBirth");
+list.innerHTML = "";
+
+(birthdays || []).forEach(p => {
   const bd = new Date(p.proximo_cumple);
-  list.innerHTML += `<li>${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+  list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
 });
 
 
-  // Eventos de la semana
   // Eventos de la semana (desde vista)
 const { data: weekEvents } = await supa
   .from("vw_events_this_week")
