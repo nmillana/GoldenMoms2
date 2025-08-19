@@ -217,13 +217,18 @@ async function renderDash(){
   });
 
   // Eventos de la semana
-  const week=document.getElementById('weekEvents'); week.innerHTML="";
-  (events||[]).forEach(e=>{
-    const d=new Date(e.datetime);
-    if(d >= now && d <= new Date(now.getTime()+7*86400000)){
-      week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
-    }
-  });
+  // Eventos de la semana (desde vista)
+const { data: weekEvents } = await supa
+  .from("vw_events_this_week")
+  .select("*")
+  .order("datetime", { ascending: true });
+
+const week=document.getElementById('weekEvents'); week.innerHTML="";
+(weekEvents||[]).forEach(e=>{
+  const d = new Date(e.datetime);
+  week.innerHTML += `<li><strong>${e.title}</strong> — ${formatDate(d)}</li>`;
+});
+
 }
 
 /* ========= Inicial ========= */
