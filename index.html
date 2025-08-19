@@ -123,6 +123,29 @@ footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size
 </div>
 
 <footer>Golden Moms · hecho con 💚 lima & azul</footer>
+  
+/* ========= Crear Evento ========= */
+document.getElementById("btnNewEvent").onclick = async () => {
+  const title = prompt("Título del evento:");
+  const datetime = prompt("Fecha y hora (YYYY-MM-DD HH:MM):");
+  const type = prompt("Tipo (Entrenamiento o Partido):");
+  const team = prompt("Equipo:");
+  const cancha = prompt("Cancha:");
+
+  if(!title || !datetime) return alert("Faltan datos");
+
+  const { error } = await supa.from("events").insert([
+    { title, datetime, type, team, cancha }
+  ]);
+
+  if(error){
+    alert("❌ Error al guardar: " + error.message);
+  } else {
+    alert("✅ Evento guardado");
+    renderEvents(); // refresca la vista
+    renderDash();   // refresca el dashboard
+  }
+};
 
 <script>
 /* ========= SUPABASE ========= */
