@@ -208,18 +208,20 @@ async function renderDash(){
   document.getElementById('kGames').textContent=0;
 
   // 🎂 Cumpleaños del mes (desde vista)
-  const { data: birthdays } = await supa
-    .from("vw_birthdays_this_month")
-    .select("*")
-    .order("proximo_cumple", { ascending: true });
 
-  const list = document.getElementById("upBirth");
-  list.innerHTML = "";
+const { data: birthdays } = await supa
+  .from("vw_birthdays_this_month")
+  .select("*")
+  .order("cumple_este_anio", { ascending: true });
 
-  (birthdays || []).forEach(p => {
-    const bd = new Date(p.proximo_cumple);
-    list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
-  });
+const list = document.getElementById("upBirth");
+list.innerHTML = "";
+
+(birthdays || []).forEach(p => {
+  const bd = new Date(p.cumple_este_anio);
+  list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+});
+
 
   // 📅 Eventos de la semana (desde vista)
   const { data: weekEvents } = await supa
