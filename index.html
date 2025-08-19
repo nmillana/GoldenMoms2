@@ -195,6 +195,7 @@ document.getElementById("btnNewEvent").onclick = async () => {
   else { alert("✅ Evento guardado"); renderEvents(); renderDash(); }
 };
 
+
 /* ========= Dashboard ========= */
 async function renderDash(){
   const {data:events}=await supa.from("events").select("*").gte("datetime", new Date().toISOString());
@@ -206,33 +207,33 @@ async function renderDash(){
   document.getElementById('kOk').textContent=0;
   document.getElementById('kGames').textContent=0;
 
-
   // 🎂 Cumpleaños del mes (desde vista)
-const { data: birthdays } = await supa
-  .from("vw_birthdays_this_month")
-  .select("*")
-  .order("proximo_cumple", { ascending: true });
+  const { data: birthdays } = await supa
+    .from("vw_birthdays_this_month")
+    .select("*")
+    .order("proximo_cumple", { ascending: true });
 
-const list = document.getElementById("upBirth");
-list.innerHTML = "";
+  const list = document.getElementById("upBirth");
+  list.innerHTML = "";
 
-(birthdays || []).forEach(p => {
-  const bd = new Date(p.proximo_cumple);
-  list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
-});
+  (birthdays || []).forEach(p => {
+    const bd = new Date(p.proximo_cumple);
+    list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+  });
 
+  // 📅 Eventos de la semana (desde vista)
+  const { data: weekEvents } = await supa
+    .from("vw_events_this_week")
+    .select("*")
+    .order("datetime", { ascending: true });
 
-  // Eventos de la semana (desde vista)
-const { data: weekEvents } = await supa
-  .from("vw_events_this_week")
-  .select("*")
-  .order("datetime", { ascending: true });
-
-const week=document.getElementById('weekEvents'); week.innerHTML="";
-(weekEvents||[]).forEach(e=>{
-  const d = new Date(e.datetime);
-  week.innerHTML += `<li><strong>${e.title}</strong> — ${formatDate(d)}</li>`;
-});
+  const week=document.getElementById('weekEvents'); 
+  week.innerHTML="";
+  (weekEvents||[]).forEach(e=>{
+    const d = new Date(e.datetime);
+    week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
+  });
+}
 
 }
 
