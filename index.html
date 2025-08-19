@@ -232,29 +232,29 @@ async function renderDash(){
     console.error("Fallo cumpleaños:", e);
   }
 
-  // 📅 Eventos de la semana
-  try {
-    const { data: weekEvents, error: eErr } = await supa
-      .from("vw_events_this_week")
-      .select("*")
-      .order("datetime", { ascending: true });
+ // 📅 Eventos de la semana (desde vista)
+try {
+  const { data: weekEvents, error: eErr } = await supa
+    .from("vw_events_this_week")
+    .select("*")
+    .order("datetime", { ascending: true });
 
-    const week = document.getElementById('weekEvents'); 
-    week.innerHTML="";
+  const week = document.getElementById('weekEvents'); 
+  week.innerHTML="";
 
-    if (eErr) {
-      console.error("Error eventos:", eErr.message);
-      week.innerHTML = "<li>Error al cargar eventos</li>";
-    } else {
-      (weekEvents||[]).forEach(e=>{
-        const d = new Date(e.datetime);
-        week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
-      });
-    }
-  } catch(e) {
-    console.error("Fallo eventos:", e);
+  if (eErr) {
+    console.error("Error eventos:", eErr.message);
+    week.innerHTML = "<li>Error al cargar eventos</li>";
+  } else {
+    (weekEvents||[]).forEach(e=>{
+      const d = new Date(e.datetime);
+      week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
+    });
   }
+} catch(e) {
+  console.error("Fallo eventos:", e);
 }
+
 
 /* ========= Inicial ========= */
 renderDash();
