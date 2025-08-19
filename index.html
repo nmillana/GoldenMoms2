@@ -195,13 +195,10 @@ document.getElementById("btnNewEvent").onclick = async () => {
   else { alert("✅ Evento guardado"); renderEvents(); renderDash(); }
 };
 
-
 /* ========= Dashboard ========= */
 async function renderDash(){
   const {data:events}=await supa.from("events").select("*").gte("datetime", new Date().toISOString());
- const {data:players}=await supa.from("players").select("*");
-document.getElementById('kRoster').textContent=players?.length||0;
-
+  const {data:players}=await supa.from("players").select("*");
 
   // KPIs
   document.getElementById('kEvents').textContent=events?.length||0;
@@ -209,60 +206,55 @@ document.getElementById('kRoster').textContent=players?.length||0;
   document.getElementById('kOk').textContent=0;
   document.getElementById('kGames').textContent=0;
 
-  // 🎂 Cumpleaños del mes (desde vista)
+  // 🎂 Próximos cumpleaños
+  try {
+    const { data: birthdays, error: bErr } = await supa
+      .from("vw_upcoming_birthdays")
+      .select("*")
+      .order("proximo_cumple", { ascending: true })
+      .limit(5);
 
-// 🎂 Cumpleaños (usar la vista upcoming para que siempre tenga data)
-try {
-  const { data: birthdays, error: bErr } = await supa
-    .from("vw_upcoming_birthdays")
-    .select("*")
-    .order("proximo_cumple", { ascending: true })
-    .limit(5); // muestra los próximos 5
+    const list = document.getElementById("upBirth");
+    list.innerHTML = "";
 
-  const list = document.getElementById("upBirth");
-  list.innerHTML = "";
-
-  if (bErr) {
-    console.error("Error cumpleaños:", bErr.message);
-    list.innerHTML = "<li>Error al cargar cumpleaños</li>";
-  } else {
-    (birthdays || []).forEach(p => {
-      if (p.proximo_cumple) {
-        const bd = new Date(p.proximo_cumple);
-        list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
-      }
-    });
+    if (bErr) {
+      console.error("Error cumpleaños:", bErr.message);
+      list.innerHTML = "<li>Error al cargar cumpleaños</li>";
+    } else {
+      (birthdays || []).forEach(p => {
+        if (p.proximo_cumple) {
+          const bd = new Date(p.proximo_cumple);
+          list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+        }
+      });
+    }
+  } catch(e) {
+    console.error("Fallo cumpleaños:", e);
   }
-} catch(e) {
-  console.error("Fallo cumpleaños:", e);
-}
 
-
-
-  // 📅 Eventos de la semana (desde vista)
   // 📅 Eventos de la semana
-try {
-  const { data: weekEvents, error: eErr } = await supa
-    .from("vw_events_this_week")
-    .select("*")
-    .order("datetime", { ascending: true });
+  try {
+    const { data: weekEvents, error: eErr } = await supa
+      .from("vw_events_this_week")
+      .select("*")
+      .order("datetime", { ascending: true });
 
-  const week = document.getElementById('weekEvents'); 
-  week.innerHTML="";
+    const week = document.getElementById('weekEvents'); 
+    week.innerHTML="";
 
-  if (eErr) {
-    console.error("Error eventos:", eErr.message);
-    week.innerHTML = "<li>Error al cargar eventos</li>";
-  } else {
-    (weekEvents||[]).forEach(e=>{
-      const d = new Date(e.datetime);
-      week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
-    });
+    if (eErr) {
+      console.error("Error eventos:", eErr.message);
+      week.innerHTML = "<li>Error al cargar eventos</li>";
+    } else {
+      (weekEvents||[]).forEach(e=>{
+        const d = new Date(e.datetime);
+        week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
+      });
+    }
+  } catch(e) {
+    console.error("Fallo eventos:", e);
   }
-} catch(e) {
-  console.error("Fallo eventos:", e);
 }
-
 
 /* ========= Inicial ========= */
 renderDash();
