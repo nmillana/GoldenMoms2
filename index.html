@@ -41,6 +41,8 @@ a{color:inherit}
 .match{background:#e0edff;border-color:#b7d1ff;color:#0f3a78}
 .train{background:#e9fbd0;border-color:#c6f28a;color:#2d5a00}
 .team{font-size:10px;background:#eaf7d7;border:1px solid #c8ef7a;border-radius:999px;padding:1px 6px;margin-left:6px;font-weight:700}
+/* Footer */
+footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size:14px}
 /* Responsive */
 @media (max-width: 900px){
   .grid{grid-template-columns:1fr}
@@ -72,6 +74,10 @@ a{color:inherit}
       <div class="card kpi" style="grid-column:span 3"><h3>Plantel</h3><div class="n" id="kRoster">0</div></div>
       <div class="card kpi" style="grid-column:span 3"><h3>Convocadas (próx.)</h3><div class="n" id="kOk">0</div></div>
       <div class="card kpi" style="grid-column:span 3"><h3>Partidos jugados</h3><div class="n" id="kGames">0</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <strong>Próximos cumpleaños</strong>
+      <ul id="birthList"></ul>
     </div>
   </section>
 
@@ -106,6 +112,8 @@ a{color:inherit}
   </section>
 </div>
 
+<footer>Golden Moms · hecho con 💚 lima & azul</footer>
+
 <script>
 /* ========= SUPABASE ========= */
 const SUPA = {
@@ -136,10 +144,27 @@ async function renderDash(){
   const {data:events}=await supa.from("events").select("*").gte("datetime", new Date().toISOString());
   const {data:players}=await supa.from("players").select("*");
   const {data:matches}=await supa.from("matches").select("*");
+
   document.getElementById('kEvents').textContent=events?.length||0;
   document.getElementById('kRoster').textContent=players?.length||0;
-  document.getElementById('kOk').textContent=0; // deberías cruzar con tabla attendance
+  document.getElementById('kOk').textContent=0; // asistencia luego
   document.getElementById('kGames').textContent=matches?.length||0;
+
+  // Cumpleaños próximos (30 días)
+  const now=new Date();
+  const upcoming=(players||[]).filter(p=>p.birthdate).map(p=>{
+    const d=new Date(p.birthdate);
+    d.setFullYear(now.getFullYear());
+    if(d<now) d.setFullYear(now.getFullYear()+1);
+    return {...p, proximo:d};
+  }).filter(x=>(x.proximo-now)<=30*86400000).sort((a,b)=>a.proximo-b.proximo);
+
+  const list=document.getElementById("birthList"); list.innerHTML="";
+  upcoming.forEach(p=>{
+    const li=document.createElement("li");
+    li.textContent=`🎂 ${p.nombre} — ${p.proximo.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}`;
+    list.appendChild(li);
+  });
 }
 
 /* ========= Eventos ========= */
@@ -147,11 +172,13 @@ async function renderEvents(){
   const {data}=await supa.from("events").select("*").order("datetime",{ascending:true});
   const grid=document.getElementById('calGrid'); grid.innerHTML="";
   (data||[]).forEach(e=>{
-    const c=document.createElement("div"); c.className="cal-cell";
     const d=new Date(e.datetime);
-    c.innerHTML=`<div class="tag ${e.type=='Partido'?'match':'train'}">${e.type}</div>
+    const c=document.createElement("div"); c.className="cal-cell";
+    c.innerHTML=`
+      <div class="tag ${e.type=='Partido'?'match':'train'}">${e.type}</div>
       <div class="cal-time">${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}</div>
-      <div><strong>${e.title}</strong> <span class="team">${e.team}</span></div>`;
+      <div><strong>${e.title}</strong> <span class="team">${e.team}</span></div>
+      <div>📍 ${e.cancha||""}</div>`;
     grid.appendChild(c);
   });
 }
@@ -162,18 +189,21 @@ async function renderRoster(){
   const grid=document.getElementById('rosterGrid'); grid.innerHTML="";
   (data||[]).forEach(p=>{
     const c=document.createElement("div"); c.className="card";
-    c.innerHTML=`<strong>${p.name}</strong><br/><span>${p.nick||""}</span>`;
+    c.innerHTML=`<strong>${p.nombre}</strong><br/>${p.apodo||""}<br/><span>${p.posicion||""}</span>`;
     grid.appendChild(c);
   });
 }
 
 /* ========= Seguimiento ========= */
 async function renderTrack(){
-  const {data}=await supa.from("matches").select("*,goals(*,players(name))").order("date",{ascending:false});
+  const {data}=await supa.from("matches").select("*").order("datetime",{ascending:false});
   const wrap=document.getElementById("trackList"); wrap.innerHTML="";
   (data||[]).forEach(m=>{
+    const d=new Date(m.datetime);
     const div=document.createElement("div"); div.className="card";
-    div.innerHTML=`<strong>${m.competition||"Amistoso"}</strong> vs ${m.opponent} — ${m.gf}:${m.ga}`;
+    div.innerHTML=`<strong>${m.title}</strong><br/>
+      ${d.toLocaleDateString("es-CL",{weekday:'short',day:'2-digit',month:'short'})}<br/>
+      Goleadora: ${m.Goleadora||"-"}`;
     wrap.appendChild(div);
   });
 }
@@ -181,11 +211,5 @@ async function renderTrack(){
 /* ========= Inicial ========= */
 renderDash();
 </script>
-  <footer>Golden Moms · hecho con 💚 lima & azul</footer>
 </body>
-
-
-
-
 </html>
-
