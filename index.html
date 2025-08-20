@@ -195,7 +195,6 @@ document.getElementById("btnNewEvent").onclick = async () => {
   else { alert("✅ Evento guardado"); renderEvents(); renderDash(); }
 };
   
-}
 
 /* ========= Dashboard ========= */
 async function renderDash(){
@@ -256,7 +255,7 @@ try {
 } catch(e) {
   console.error("Fallo eventos:", e);
 }
-}
+
 
 /* ========= Inicial ========= */
 renderDash();
