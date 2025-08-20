@@ -252,9 +252,12 @@ try {
       week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
     });
   }
-} catch(e) {
-  console.error("Fallo eventos:", e);
-}
+  }
+  catch(e) {
+    console.error("Fallo eventos:", e);
+  }
+} // 👈 cierre de renderDash
+
 
 
 /* ========= Inicial ========= */
