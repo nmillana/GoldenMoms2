@@ -194,6 +194,8 @@ document.getElementById("btnNewEvent").onclick = async () => {
   if(error){ alert("❌ Error al guardar: " + error.message); }
   else { alert("✅ Evento guardado"); renderEvents(); renderDash(); }
 };
+  
+}
 
 /* ========= Dashboard ========= */
 async function renderDash(){
