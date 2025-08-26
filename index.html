@@ -9,16 +9,16 @@
 <style>
 :root{
   --blue:#0f3a78;--lime:#9be22d;--ink:#0f172a;--mut:#64748b;
-  --b:#e2e8f0;--bg:#f7f8fa;--ok:#d9f99d;--mid:#fef9c3;--no:#fee2e2;
+  --b:#e2e8f0;--bg:#f7f8fa;--ok:#d9f99d;--mid:#fef9c3;--no:#fee2e2;--white:#fff;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
 a{color:inherit}
-.btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer}
-.btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
+.btn{border:1px solid var(--b);border-radius:12px;padding:10px 14px;background:#fff;cursor:pointer;font-weight:600}
+.btn.p{background:var(--lime);border-color:#a3e635}
 .btn.s{background:#f8fafc}
 .badge{font-size:11px;border:1px solid var(--b);border-radius:999px;padding:2px 8px;background:#f8fafc}
-.top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+.top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
 .brand{display:flex;gap:10px;align-items:center}
 .brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
 .nav{display:flex;gap:8px;flex-wrap:wrap}
@@ -28,23 +28,44 @@ a{color:inherit}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
-/* Calendario */
-.filters-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+
+/* ============ Calendario mensual ============ */
+.monthbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.monthbar .title{font-size:22px;font-weight:800}
+.monthbar .arrows{display:flex;gap:6px}
+.monthbar .arrows button{width:40px;height:40px;border-radius:12px}
+
 .cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;position:sticky;top:114px;z-index:5;background:#fff;padding:6px 0;border-bottom:1px solid var(--b)}
-.cal-head>div{text-align:center;font-weight:700;color:#0f3a78}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.cal-cell{min-height:140px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;overflow:hidden}
-.cal-time{font-size:12px;font-weight:700;color:#0f3a78}
-.tag{font-size:10px;border:1px solid #0001;border-radius:999px;padding:2px 6px;display:inline-block;margin-bottom:4px}
-.match{background:#e0edff;border-color:#b7d1ff;color:#0f3a78}
-.train{background:#e9fbd0;border-color:#c6f28a;color:#2d5a00}
-.team{font-size:10px;background:#eaf7d7;border:1px solid #c8ef7a;border-radius:999px;padding:1px 6px;margin-left:6px;font-weight:700}
-/* Footer */
-footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size:14px}
+.cal-head>div{text-align:center;font-weight:800;color:var(--blue)}
+.cal-month{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.day{min-height:160px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;overflow:hidden;display:flex;flex-direction:column}
+.day.today{outline:2px solid var(--blue);outline-offset:-2px}
+.day .dnum{font-size:13px;font-weight:800;color:#334155;display:flex;align-items:center;justify-content:space-between}
+.day .events{margin-top:6px;display:flex;flex-direction:column;gap:6px}
+.evt{border:1px solid #0001;border-radius:10px;padding:8px;background:#f8fafc}
+.evt.training{background:#ecfccb;border-color:#d9f99d}
+.evt.match{background:#e0edff;border-color:#bfd7ff}
+.evt .title{font-weight:800;font-size:14px;line-height:1.2;margin-bottom:2px}
+.evt .meta{font-size:12px;color:#334155}
+
+/* Modal */
+.modal-wrap{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal{width:min(560px,100%);background:#fff;border:1px solid var(--b);border-radius:14px;box-shadow:0 16px 60px #00000025}
+.modal .mh{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--b)}
+.modal .mh strong{font-size:16px}
+.modal .mc{padding:14px}
+.modal .mf{display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;border-top:1px solid var(--b)}
+.frm{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.frm label{font-size:12px;color:#334155;font-weight:700}
+.frm input,.frm select{width:100%;padding:10px;border:1px solid var(--b);border-radius:10px}
+.frm .span2{grid-column:span 2}
+
 /* Responsive */
 @media (max-width: 900px){
   .grid{grid-template-columns:1fr}
   .cal-head{top:154px}
+  .day{min-height:140px}
+  .evt .title{font-size:13px}
 }
 </style>
 </head>
@@ -83,34 +104,23 @@ footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size
     </div>
   </section>
 
-  <!-- EVENTOS -->
-<!-- EVENTOS -->
-<section id="v-events" style="display:none">
-  <div class="card">
-    <div class="filters-row" style="justify-content:space-between">
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn s" id="prevMonth">←</button>
-        <strong id="monthLabel"></strong>
-        <button class="btn s" id="nextMonth">→</button>
-      </div>
-      <button class="btn p" id="btnNewEvent">Nuevo Evento</button>
-    </div>
-
-    <div class="cal-head">
-      <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div>
-      <div>Vie</div><div>Sáb</div><div>Dom</div>
-    </div>
-
-    <div id="calGrid" class="cal-grid"></div>
-  </div>
-</section>
+  <!-- EVENTOS (Calendario mensual) -->
   <section id="v-events" style="display:none">
     <div class="card">
-      <div class="filters-row">
+      <div class="monthbar">
+        <div class="arrows">
+          <button class="btn" id="btnPrevMonth" title="Mes anterior">«</button>
+          <button class="btn" id="btnToday" title="Hoy">Hoy</button>
+          <button class="btn" id="btnNextMonth" title="Mes siguiente">»</button>
+        </div>
+        <div class="title" id="monthTitle">Mes Año</div>
         <button class="btn p" id="btnNewEvent">Nuevo Evento</button>
       </div>
-      <div class="cal-head"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
-      <div id="calGrid" class="cal-grid"></div>
+
+      <div class="cal-head">
+        <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+      </div>
+      <div id="calMonth" class="cal-month"></div>
     </div>
   </section>
 
@@ -134,7 +144,58 @@ footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size
   </section>
 </div>
 
-<footer>Golden Moms · hecho con 💚 lima & azul</footer>
+<footer style="padding-bottom:40px;text-align:center;color:var(--mut);font-size:14px">Golden Moms · hecho con 💚 lima & azul</footer>
+
+<!-- ========== Modal de Evento ========== -->
+<div id="eventModal" class="modal-wrap" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="mh">
+      <strong id="mTitle">Nuevo evento</strong>
+      <button class="btn" id="mClose">✕</button>
+    </div>
+    <div class="mc">
+      <form id="evtForm" class="frm">
+        <input type="hidden" id="evtId" />
+        <div class="span2">
+          <label>Título</label>
+          <input id="evtTitle" required/>
+        </div>
+        <div>
+          <label>Tipo</label>
+          <select id="evtType">
+            <option>Entrenamiento</option>
+            <option>Partido</option>
+          </select>
+        </div>
+        <div>
+          <label>Equipo</label>
+          <input id="evtTeam" value="Golden Moms"/>
+        </div>
+        <div class="span2">
+          <label>Fecha & hora</label>
+          <input id="evtDateTime" type="datetime-local" required/>
+        </div>
+        <div>
+          <label>Ubicación</label>
+          <input id="evtLocation" placeholder="Colegio / Cancha"/>
+        </div>
+        <div>
+          <label>Rival (opcional)</label>
+          <input id="evtOpponent"/>
+        </div>
+        <div class="span2">
+          <label>Uniforme (opcional)</label>
+          <input id="evtUniform" placeholder="Polera azul / verde lima"/>
+        </div>
+      </form>
+    </div>
+    <div class="mf">
+      <button class="btn" id="mDelete" style="display:none;background:#fee2e2;border-color:#fecaca">Eliminar</button>
+      <button class="btn s" id="mCancel">Cancelar</button>
+      <button class="btn p" id="mSave">Guardar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ========= SUPABASE ========= */
@@ -156,65 +217,11 @@ function showView(v){
   ['dash','events','roster','track'].forEach(id=>document.getElementById('v-'+id).style.display='none');
   document.getElementById('v-'+v).style.display='block';
   if(v==='dash') renderDash();
-  if(v==='events') renderEvents();
+  if(v==='events') renderMonth();
   if(v==='roster') renderRoster();
   if(v==='track') renderTrack();
 }
 
-/* ========= Eventos ========= */
-async function renderEvents(){
-  const {data}=await supa.from("events").select("*").order("datetime",{ascending:true});
-  const grid=document.getElementById('calGrid'); grid.innerHTML="";
-  (data||[]).forEach(e=>{
-    const d=new Date(e.datetime);
-    const c=document.createElement("div"); c.className="cal-cell";
-    c.innerHTML=`
-      <div class="tag ${e.type=='Partido'?'match':'train'}">${e.type}</div>
-      <div class="cal-time">${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}</div>
-      <div><strong>${e.title}</strong> <span class="team">${e.team}</span></div>
-      <div>📍 ${e.cancha||""}</div>`;
-    grid.appendChild(c);
-  });
-}
-
-/* ========= Plantel ========= */
-async function renderRoster(){
-  const {data}=await supa.from("players").select("*");
-  const grid=document.getElementById('rosterGrid'); grid.innerHTML="";
-  (data||[]).forEach(p=>{
-    const c=document.createElement("div"); c.className="card";
-    c.innerHTML=`<strong>${p.nombre}</strong><br/>${p.apodo||""}<br/><span>${p.posicion||""}</span>`;
-    grid.appendChild(c);
-  });
-}
-
-/* ========= Seguimiento ========= */
-async function renderTrack(){
-  const {data}=await supa.from("matches").select("*").order("datetime",{ascending:false});
-  const wrap=document.getElementById("trackList"); wrap.innerHTML="";
-  (data||[]).forEach(m=>{
-    const d=new Date(m.datetime);
-    const div=document.createElement("div"); div.className="card";
-    div.innerHTML=`<strong>${m.title}</strong><br/>
-      ${d.toLocaleDateString("es-CL",{weekday:'short',day:'2-digit',month:'short'})}<br/>
-      Goleadora: ${m.Goleadora||"-"}`;
-    wrap.appendChild(div);
-  });
-}
-
-/* ========= Crear Evento ========= */
-document.getElementById("btnNewEvent").onclick = async () => {
-  const title = prompt("Título del evento:");
-  const datetime = prompt("Fecha y hora (YYYY-MM-DD HH:MM):");
-  const type = prompt("Tipo (Entrenamiento o Partido):");
-  const team = prompt("Equipo:");
-  const cancha = prompt("Cancha:");
-  if(!title || !datetime) return alert("Faltan datos");
-  const { error } = await supa.from("events").insert([{ title, datetime, type, team, cancha }]);
-  if(error){ alert("❌ Error al guardar: " + error.message); }
-  else { alert("✅ Evento guardado"); renderEvents(); renderDash(); }
-};
-  
 /* ========= Dashboard ========= */
 async function renderDash(){
   const {data:events}=await supa.from("events").select("*").gte("datetime", new Date().toISOString());
@@ -228,7 +235,7 @@ async function renderDash(){
 
   // 🎂 Próximos cumpleaños
   try {
-    const { data: birthdays, error: bErr } = await supa
+    const { data: birthdays } = await supa
       .from("vw_upcoming_birthdays")
       .select("*")
       .order("proximo_cumple", { ascending: true })
@@ -236,49 +243,224 @@ async function renderDash(){
 
     const list = document.getElementById("upBirth");
     list.innerHTML = "";
-
-    if (bErr) {
-      console.error("Error cumpleaños:", bErr.message);
-      list.innerHTML = "<li>Error al cargar cumpleaños</li>";
-    } else {
-      (birthdays || []).forEach(p => {
-        if (p.proximo_cumple) {
-          const bd = new Date(p.proximo_cumple);
-          list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
-        }
-      });
-    }
+    (birthdays || []).forEach(p => {
+      if (p.proximo_cumple) {
+        const bd = new Date(p.proximo_cumple);
+        list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+      }
+    });
   } catch(e) {
-    console.error("Fallo cumpleaños:", e);
+    document.getElementById("upBirth").innerHTML="<li>Error al cargar cumpleaños</li>";
   }
 
-  // 📅 Eventos de la semana
+  // 📅 Eventos de la semana — usa vista si la tienes creada
   try {
     const { data: weekEvents, error: eErr } = await supa
       .from("vw_events_this_week")
       .select("*")
-      .order("datetime", { ascending: true });
-
-    const week = document.getElementById('weekEvents'); 
-    week.innerHTML="";
-
-    if (eErr) {
-      console.error("Error eventos:", eErr.message);
-      week.innerHTML = "<li>Error al cargar eventos</li>";
-    } else {
-      (weekEvents||[]).forEach(e=>{
-        const d = new Date(e.datetime);
-        week.innerHTML += `<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
-      });
-    }
+      .order("datetime",{ascending:true});
+    const ul=document.getElementById('weekEvents'); ul.innerHTML="";
+    if(eErr){ ul.innerHTML="<li>Error al cargar eventos</li>"; return; }
+    (weekEvents||[]).forEach(e=>{
+      const d=new Date(e.datetime);
+      ul.innerHTML+=`<li><strong>${e.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
+    });
   } catch(e) {
-    console.error("Fallo eventos:", e);
+    document.getElementById('weekEvents').innerHTML="<li>Error al cargar eventos</li>";
   }
-} // 👈 cierre correcto de renderDash
+}
+
+/* ========= Plantel ========= */
+async function renderRoster(){
+  const {data}=await supa.from("players").select("*").order('nombre');
+  const grid=document.getElementById('rosterGrid'); grid.innerHTML="";
+  (data||[]).forEach(p=>{
+    const c=document.createElement("div"); c.className="card";
+    c.innerHTML=`<strong>${p.nombre}</strong><br/>${p.apodo||""}<br/><span>${p.rol||""}</span>`;
+    grid.appendChild(c);
+  });
+}
+
+/* ========= Seguimiento ========= */
+async function renderTrack(){
+  const {data}=await supa.from("matches").select("*").order("event_id",{ascending:false});
+  const wrap=document.getElementById("trackList"); wrap.innerHTML="";
+  (data||[]).forEach(m=>{
+    const div=document.createElement("div"); div.className="card";
+    div.innerHTML=`<strong>${m.competition||"Partido"}</strong><br/>GF ${m.gf||0} - GA ${m.ga||0}<br/>${m.notes||""}`;
+    wrap.appendChild(div);
+  });
+}
+
+/* ========= Calendario Mensual ========= */
+const st = {
+  month: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  cache: []  // eventos del mes actual
+};
+const monthTitle = document.getElementById('monthTitle');
+document.getElementById('btnPrevMonth').onclick = ()=>{ st.month.setMonth(st.month.getMonth()-1); renderMonth(); };
+document.getElementById('btnNextMonth').onclick = ()=>{ st.month.setMonth(st.month.getMonth()+1); renderMonth(); };
+document.getElementById('btnToday').onclick     = ()=>{ st.month = new Date(new Date().getFullYear(), new Date().getMonth(), 1); renderMonth(); };
+
+function fmtMonthTitle(d){
+  return d.toLocaleDateString("es-CL",{month:"long", year:"numeric"}).replace(/^./,c=>c.toUpperCase());
+}
+
+async function fetchMonthEvents(){
+  const y = st.month.getFullYear();
+  const m = st.month.getMonth();
+  const start = new Date(y, m, 1, 0,0,0);
+  const end   = new Date(y, m+1, 0, 23,59,59);
+  const { data } = await supa
+    .from('events')
+    .select('*')
+    .gte('datetime', start.toISOString())
+    .lte('datetime', end.toISOString())
+    .order('datetime', { ascending:true });
+  st.cache = data||[];
+}
+
+function eventChip(e){
+  const d = new Date(e.datetime);
+  const div = document.createElement('div');
+  div.className = `evt ${e.type==='Partido'?'match':'training'}`;
+  div.innerHTML = `
+    <div class="title">${e.title}</div>
+    <div class="meta">${d.toLocaleTimeString("es-CL",{hour:'2-digit',minute:'2-digit'})} · ${e.team||''}</div>
+  `;
+  div.onclick = () => openModal(e); // editar
+  return div;
+}
+
+async function renderMonth(){
+  monthTitle.textContent = fmtMonthTitle(st.month);
+
+  await fetchMonthEvents();
+
+  const wrap = document.getElementById('calMonth'); 
+  wrap.innerHTML = "";
+  const y = st.month.getFullYear();
+  const m = st.month.getMonth();
+
+  const first = new Date(y,m,1);
+  const firstWeekday = (first.getDay()+6)%7; // 0=Lun
+  const daysInMonth = new Date(y,m+1,0).getDate();
+
+  // Relleno días previos (vacíos)
+  for(let i=0;i<firstWeekday;i++){
+    const d=document.createElement('div'); d.className="day"; wrap.appendChild(d);
+  }
+
+  // Días del mes
+  for(let day=1; day<=daysInMonth; day++){
+    const cellDate = new Date(y,m,day);
+    const isToday = new Date().toDateString() === cellDate.toDateString();
+
+    const cell = document.createElement('div');
+    cell.className = "day" + (isToday ? " today" : "");
+    cell.innerHTML = `
+      <div class="dnum">
+        <span>${day}</span>
+        <button class="btn s" style="padding:4px 8px;font-size:12px" title="Agregar evento">+</button>
+      </div>
+      <div class="events"></div>
+    `;
+    // agregar rápido
+    cell.querySelector('button').onclick = () => openModal({
+      id:null, title:"", type:"Entrenamiento", team:"Golden Moms",
+      datetime: new Date(y,m,day,19,0,0).toISOString(),
+      location:"", opponent:"", uniform:""
+    });
+
+    // eventos del día
+    const list = cell.querySelector('.events');
+    (st.cache||[])
+      .filter(e => new Date(e.datetime).toDateString() === cellDate.toDateString())
+      .forEach(e => list.appendChild(eventChip(e)));
+
+    wrap.appendChild(cell);
+  }
+}
+
+/* ========= Modal CRUD ========= */
+const modal = document.getElementById('eventModal');
+const mClose = document.getElementById('mClose');
+const mCancel= document.getElementById('mCancel');
+const mSave  = document.getElementById('mSave');
+const mDel   = document.getElementById('mDelete');
+const mTitle = document.getElementById('mTitle');
+
+const fId = document.getElementById('evtId');
+const fTitle = document.getElementById('evtTitle');
+const fType = document.getElementById('evtType');
+const fTeam = document.getElementById('evtTeam');
+const fDT = document.getElementById('evtDateTime');
+const fLoc = document.getElementById('evtLocation');
+const fOpp = document.getElementById('evtOpponent');
+const fUni = document.getElementById('evtUniform');
+
+function openModal(evt){
+  mTitle.textContent = evt.id ? "Editar evento" : "Nuevo evento";
+  fId.value = evt.id || "";
+  fTitle.value = evt.title || "";
+  fType.value = evt.type || "Entrenamiento";
+  fTeam.value = evt.team || "Golden Moms";
+  // a datetime-local (zona local)
+  const d = new Date(evt.datetime || new Date());
+  const local = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  fDT.value = local;
+  fLoc.value = evt.location || "";
+  fOpp.value = evt.opponent || "";
+  fUni.value = evt.uniform || "";
+  mDel.style.display = evt.id ? "inline-flex" : "none";
+  modal.style.display="flex";
+}
+function closeModal(){ modal.style.display="none"; }
+mClose.onclick = mCancel.onclick = closeModal;
+
+async function saveModal(){
+  const payload = {
+    title: fTitle.value.trim(),
+    type: fType.value,
+    team: fTeam.value.trim(),
+    datetime: new Date(fDT.value).toISOString(),
+    location: fLoc.value.trim() || null,
+    opponent: fOpp.value.trim() || null,
+    uniform: fUni.value.trim() || null
+  };
+  if(!payload.title || !fDT.value){ alert("Completa título y fecha/hora"); return; }
+
+  if(fId.value){
+    await supa.from('events').update(payload).eq('id', fId.value);
+  }else{
+    await supa.from('events').insert([payload]);
+  }
+  closeModal();
+  renderMonth(); // refresca mes
+  renderDash();  // refresca KPIs
+}
+mSave.onclick = saveModal;
+
+async function deleteEvt(){
+  if(!fId.value) return;
+  if(!confirm("¿Eliminar este evento?")) return;
+  await supa.from('events').delete().eq('id', fId.value);
+  closeModal(); renderMonth(); renderDash();
+}
+mDel.onclick = deleteEvt;
+
+/* Botón “Nuevo Evento” en barra del mes */
+document.getElementById("btnNewEvent").onclick = () => {
+  const y=st.month.getFullYear(), m=st.month.getMonth();
+  openModal({ id:null, title:"", type:"Entrenamiento", team:"Golden Moms",
+    datetime: new Date(y,m,Math.min(15, new Date().getDate()),19,0,0).toISOString(),
+    location:"", opponent:"", uniform:""
+  });
+};
 
 /* ========= Inicial ========= */
-renderDash();
+renderDash();            // dashboard al cargar
+// para entrar directo en “Eventos” usar: showView('events')
 </script>
-
 </body>
 </html>
