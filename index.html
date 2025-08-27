@@ -7,122 +7,76 @@
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
-/* ====== Tema básico ====== */
 :root{
   --blue:#0f3a78;--lime:#9be22d;--ink:#0f172a;--mut:#64748b;
   --b:#e2e8f0;--bg:#f7f8fa;--ok:#d9f99d;--mid:#fef9c3;--no:#fee2e2;
-  --card:#fff;
+  --pill:#eef2ff; --pillb:#c7d2fe;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
 a{color:inherit}
-.container{max-width:1200px;margin:14px auto;padding:0 12px}
-.card{background:var(--card);border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
-.badge{font-size:11px;border:1px solid var(--b);border-radius:999px;padding:2px 8px;background:#f8fafc}
 .btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer}
 .btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
 .btn.s{background:#f8fafc}
-.btn.icon{width:36px;height:36px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:700}
-.top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+.badge{font-size:11px;border:1px solid var(--b);border-radius:999px;padding:2px 8px;background:#f8fafc}
+.top{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
 .brand{display:flex;gap:10px;align-items:center}
 .brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
 .nav{display:flex;gap:8px;flex-wrap:wrap}
 .nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
 .nav .tab.active{background:var(--blue);color:#fff}
-
-/* --- Calendario mensual: mejoras móvil y cabecera --- */
-.month-head { 
-  position: sticky; top: 72px; z-index: 6; 
-  background:#fff; padding:12px 10px; 
-  border-bottom:1px solid var(--b);
-  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
-}
-.month-title{font-weight:800;font-size:22px}
-.month-grid{
-  display:grid; grid-template-columns:repeat(7,1fr); gap:12px;
-}
-.day-cell{
-  min-height:220px; background:#fff; border:1px solid var(--b); border-radius:14px;
-  padding:10px; display:flex; flex-direction:column; gap:8px;
-}
-.day-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px}
-.day-num{font-weight:800}
-.day-dow{color:var(--mut); font-size:12px; text-transform:lowercase}
-.day-add{width:28px;height:28px;border-radius:999px;border:1px solid var(--b);background:#fff;cursor:pointer}
-.ev-card{
-  border-radius:12px; padding:10px; box-shadow:0 6px 16px #0000000b;
-  border:1px solid var(--b);
-  background:#f0f7ff;
-  font-size:14px; line-height:1.25;
-}
-.ev-train{ background:#edf9d9 }
-.ev-match{ background:#eaf1ff }
-.ev-title{font-weight:800}
-.ev-meta{color:var(--mut); font-size:12px}
-
-/* Móvil */
-@media (max-width: 900px){
-  .month-head{ top: 120px }
-  .month-title{ font-size:20px }
-  .month-grid{ grid-template-columns:1fr } /* vista lista en móvil */
-  .day-cell{ min-height:auto }
-}
-
-
-/* ====== KPI ====== */
+.container{max-width:1200px;margin:14px auto;padding:0 12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
 
-/* ====== Eventos (mes) ====== */
-.ev-head{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:8px}
-.ev-title{font-weight:800;font-size:22px}
-.ev-nav{display:flex;gap:8px;align-items:center}
-.ev-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* ====== EVENTOS (vista mensual) ====== */
+.cal-wrap{position:relative}
+.cal-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-month{font-weight:800;font-size:22px}
+.cal-head{position:sticky;top:74px;z-index:30;background:var(--bg);display:grid;grid-template-columns:repeat(7,1fr);gap:10px;padding:6px 0 10px;border-bottom:1px solid var(--b)}
+.cal-head>div{text-align:center;font-weight:700;color:var(--blue);font-size:14px}
+.cal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
+.cal-day{min-height:160px;background:#fff;border:1px solid var(--b);border-radius:14px;padding:10px 8px;overflow:hidden;display:flex;flex-direction:column}
+.cal-day .dtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.dnum{font-weight:800}
+.add-mini{width:28px;height:28px;border-radius:50%;border:1px solid var(--b);background:#fff;display:inline-grid;place-items:center;font-weight:800;cursor:pointer}
+.ev{border:1px solid var(--pillb);background:var(--pill);border-radius:12px;padding:8px;margin-top:8px}
+.ev.train{background:#effad7;border-color:#cde68d}
+.ev.match{background:#e8f0ff;border-color:#c7d2fe}
+.ev .t{font-weight:700;font-size:13px;color:#0f3a78}
+.ev .h{font-size:12px;color:#475569}
+.ev .loc{font-size:12px;margin-top:2px}
+.dot{display:inline-block;width:4px;height:4px;border-radius:50%;background:#ef4444;margin-right:6px;position:relative;top:-1px}
+.sticky-pad{height:6px}
 
-/* Agenda móvil (lista de días) */
-.month-list{display:flex;flex-direction:column;gap:10px}
-.day-row{position:relative;border:1px solid var(--b);border-radius:12px;background:#fff;overflow:hidden}
-.day-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--b);background:#fff;position:sticky;top:0}
-.day-num{font-weight:900;font-size:20px}
-.day-wd{color:var(--mut);text-transform:lowercase}
-.day-plus{position:absolute;right:10px;top:8px}
-.ev-list{display:flex;flex-direction:column;gap:8px;padding:10px 12px}
+/* Modal */
+.modal{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;padding:14px;z-index:100}
+.modal.show{display:flex}
+.sheet{width:min(860px,100%);background:#fff;border-radius:16px;border:1px solid var(--b);box-shadow:0 25px 60px #00000022;overflow:hidden}
+.sheet header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--b);font-weight:800}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px}
+.form .full{grid-column:1/-1}
+label{font-size:12px;color:#475569;font-weight:700;display:block;margin-bottom:4px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--b);border-radius:10px;background:#fff}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.actions{display:flex;gap:10px;justify-content:flex-end;padding:12px;border-top:1px solid var(--b)}
+.note{font-size:12px;color:#64748b}
 
-/* Tarjeta de evento */
-.event{border:1px solid var(--b);border-radius:10px;padding:10px 12px;background:#f8fafc}
-.event .meta{font-size:12px;color:var(--mut)}
-.event .title{font-weight:800}
-.event.train{background:#e9fbd0;border-color:#c6f28a}
-.event.match{background:#e0edff;border-color:#b7d1ff}
-.pin{font-size:14px;margin-right:6px}
-
-/* Grilla desktop opcional (auto) */
-@media (min-width: 900px){
-  .month-list{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
-  .day-row{min-height:220px}
-  .day-head{position:sticky;top:auto;border-bottom:1px dashed var(--b)}
+/* Mobile */
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .cal-head{top:114px}
+}
+@media (max-width:720px){
+  .cal-head{top:154px}
+  .form{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .sheet header{font-size:18px}
 }
 
-/* ====== Modal ====== */
-.modal-back{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:50;padding:12px}
-.modal{width:min(900px,96vw);background:#fff;border-radius:16px;border:1px solid var(--b);box-shadow:0 20px 60px #0003;overflow:hidden}
-.modal-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--b)}
-.modal-body{padding:14px 16px}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.form-grid .full{grid-column:1 / -1}
-label{font-size:12px;color:var(--mut);display:block;margin-bottom:4px}
-input[type="text"],input[type="datetime-local"],select,textarea{
-  width:100%;border:1px solid var(--b);border-radius:10px;padding:10px 12px;background:#fff;font:inherit
-}
-textarea{min-height:70px;resize:vertical}
-.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--b)}
-@media (max-width: 720px){
-  .form-grid{grid-template-columns:1fr}
-}
-
-/* Misc */
-footer{margin:30px 0 14px;text-align:center;color:var(--mut)}
-.hide{display:none}
+/* Footer */
+footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size:14px}
 </style>
 </head>
 <body>
@@ -161,25 +115,30 @@ footer{margin:30px 0 14px;text-align:center;color:var(--mut)}
   </section>
 
   <!-- EVENTOS -->
-  <section id="v-events" class="hide">
-    <div class="card">
-      <div class="ev-head">
-        <div class="ev-actions">
-          <button id="btnToday" class="btn s">Hoy</button>
-          <div class="ev-nav">
-            <button id="btnPrev" class="btn icon">‹</button>
-            <div id="monthTitle" class="ev-title">Mes</div>
-            <button id="btnNext" class="btn icon">›</button>
-          </div>
+  <section id="v-events" style="display:none">
+    <div class="card cal-wrap">
+      <div class="cal-toolbar">
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn s" id="btnToday">Hoy</button>
+          <div class="cal-month" id="lblMonth">Mes</div>
         </div>
-        <button class="btn p" id="btnNewEvent">Nuevo Evento</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn s" id="btnPrev">◀</button>
+          <button class="btn s" id="btnNext">▶</button>
+          <button class="btn p" id="btnNewEvent">Nuevo Evento</button>
+        </div>
       </div>
-      <div id="monthGrid" class="month-list"></div>
+
+      <div class="cal-head">
+        <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+      </div>
+      <div class="sticky-pad"></div>
+      <div id="monthGrid" class="cal-month-grid"></div>
     </div>
   </section>
 
   <!-- PLANTEL -->
-  <section id="v-roster" class="hide">
+  <section id="v-roster" style="display:none">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <strong>Plantel</strong>
@@ -190,7 +149,7 @@ footer{margin:30px 0 14px;text-align:center;color:var(--mut)}
   </section>
 
   <!-- SEGUIMIENTO -->
-  <section id="v-track" class="hide">
+  <section id="v-track" style="display:none">
     <div class="card">
       <strong>Seguimiento de partidos</strong>
       <div id="trackList"></div>
@@ -200,67 +159,57 @@ footer{margin:30px 0 14px;text-align:center;color:var(--mut)}
 
 <footer>Golden Moms · hecho con 💚 lima & azul</footer>
 
-<!-- ===== Modal Crear/Editar ===== -->
-<div id="modalBack" class="modal-back">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
-    <div class="modal-head">
-      <strong id="mTitle">Nuevo evento</strong>
-      <button id="mClose" class="btn icon" aria-label="Cerrar">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="full">
-          <label>Título</label>
-          <input id="fTitle" type="text" placeholder="Ej: Entrenamiento Colegio"/>
-        </div>
+<!-- MODAL CREAR/EDITAR -->
+<div class="modal" id="evModal">
+  <div class="sheet">
+    <header>
+      <span id="evTitle">Nuevo evento</span>
+      <button class="btn s" id="evClose">✕</button>
+    </header>
+    <div class="form">
+      <div class="full">
+        <label>Título</label>
+        <input id="f_title" placeholder="Ej: Entrenamiento Colegio">
+      </div>
 
-        <div>
-          <label>Fecha y hora</label>
-          <input id="fWhen" type="datetime-local"/>
-        </div>
+      <div>
+        <label>Fecha y hora</label>
+        <input id="f_datetime" type="datetime-local">
+      </div>
+      <div>
+        <label>Tipo</label>
+        <select id="f_type">
+          <option>Entrenamiento</option>
+          <option>Partido</option>
+        </select>
+      </div>
 
-        <div>
-          <label>Tipo</label>
-          <select id="fType">
-            <option value="Entrenamiento">Entrenamiento</option>
-            <option value="Partido">Partido</option>
-          </select>
-        </div>
+      <div>
+        <label>Equipo</label>
+        <input id="f_team" value="Golden Moms">
+      </div>
+      <div>
+        <label>Rival (si aplica)</label>
+        <input id="f_opponent" placeholder="Rivales / Liga">
+      </div>
 
-        <div>
-          <label>Equipo</label>
-          <input id="fTeam" type="text" value="Golden Moms"/>
-        </div>
-
-        <div>
-          <label>Rival (si aplica)</label>
-          <input id="fOpponent" type="text" placeholder="Rivales / Liga"/>
-        </div>
-
-        <div>
-          <label>Uniforme</label>
-          <select id="fUniform">
-            <option value="">(definir)</option>
-            <option>Polera azul</option>
-            <option>Polera verde lima</option>
-          </select>
-          <div class="meta">* Siempre medias verde lima</div>
-        </div>
-
-        <div class="full">
-          <label>Ubicación</label>
-          <input id="fLocation" type="text" placeholder="Colegio / Cancha / Dirección"/>
-        </div>
-
-        <div class="full">
-          <label>Notas</label>
-          <textarea id="fNotes" placeholder=""></textarea>
-        </div>
+      <div>
+        <label>Uniforme</label>
+        <select id="f_uniform">
+          <option>(definir)</option>
+          <option>Polera azul</option>
+          <option>Polera verde lima</option>
+        </select>
+        <div class="note">* Siempre medias verde lima</div>
+      </div>
+      <div>
+        <label>Ubicación</label>
+        <input id="f_location" placeholder="Colegio / Cancha / Dirección">
       </div>
     </div>
-    <div class="modal-foot">
-      <button id="mCancel" class="btn s">Cancelar</button>
-      <button id="mSave" class="btn p">Guardar</button>
+    <div class="actions">
+      <button class="btn s" id="evCancel">Cancelar</button>
+      <button class="btn p" id="evSave">Guardar</button>
     </div>
   </div>
 </div>
@@ -272,66 +221,6 @@ const SUPA = {
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
 };
 const supa = supabase.createClient(SUPA.url, SUPA.key);
-<script>
-// ========= Zona horaria & fechas (Chile) =========
-const CL_TZ = 'America/Santiago';
-
-// Devuelve partes locales (año/mes/día/hora/min) de un ISO/timestamptz guardado en Supabase
-function localParts(iso, tz = CL_TZ){
-  const d = new Date(iso);
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-CA', {
-      timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit',
-      hour:'2-digit', minute:'2-digit', hour12:false
-    }).formatToParts(d).map(p => [p.type, p.value])
-  );
-  return {
-    y: +parts.year, m: +parts.month, d:+parts.day,
-    hh:+parts.hour, mm:+parts.minute
-  };
-}
-
-// Texto fecha/hora bonito en Chile
-function prettyDateTime(iso){
-  const d = new Date(iso);
-  return new Intl.DateTimeFormat('es-CL',{
-    timeZone: CL_TZ,
-    weekday:'short', day:'2-digit', month:'short',
-    hour:'2-digit', minute:'2-digit'
-  }).format(d).replaceAll('.', '');
-}
-
-// Primer día del mes en hora Chile
-function firstOfMonthLocal(year, month){ // month 1-12
-  // “en-CA” da yyyy-mm-dd fácil de parsear
-  const s = `${year.toString().padStart(4,'0')}-${month.toString().padStart(2,'0')}-01T00:00:00`;
-  return new Date(new Date(s).toLocaleString('en-CA', { timeZone: CL_TZ }));
-}
-
-// Índice lunes=0..domingo=6
-function mondayIndex(jsGetDay){ return (jsGetDay + 6) % 7; }
-</script>
-
-/* ========= Utiles ========= */
-const TZ = "America/Santiago";
-const fmtTime = (d)=> new Intl.DateTimeFormat("es-CL",{hour:"2-digit",minute:"2-digit",hour12:true,timeZone:TZ}).format(d);
-const fmtWeekday = (d)=> new Intl.DateTimeFormat("es-CL",{weekday:"short"}).format(d).toLowerCase();
-const monthName = (d)=> new Intl.DateTimeFormat("es-CL",{month:"long",year:"numeric"}).format(d);
-
-/* convierte yyyy-mm-ddTHH:MM (local) -> ISO UTC */
-function localToISO(dtLocal){
-  if(!dtLocal) return null;
-  const [date,time] = dtLocal.split("T");
-  const [y,m,d] = date.split("-").map(Number);
-  const [hh,mm] = time.split(":").map(Number);
-  const dt = new Date(y, m-1, d, hh, mm, 0); // local time
-  return dt.toISOString();
-}
-/* to Date in TZ for display only */
-function asTZ(iso){
-  // Use Date normally; .format with TZ handles it
-  return new Date(iso);
-}
 
 /* ========= Navegación ========= */
 document.querySelectorAll('.nav .tab').forEach(btn=>{
@@ -342,57 +231,71 @@ document.querySelectorAll('.nav .tab').forEach(btn=>{
   };
 });
 function showView(v){
-  ['dash','events','roster','track'].forEach(id=>document.getElementById('v-'+id).classList.add('hide'));
-  document.getElementById('v-'+v).classList.remove('hide');
+  ['dash','events','roster','track'].forEach(id=>document.getElementById('v-'+id).style.display='none');
+  document.getElementById('v-'+v).style.display='block';
   if(v==='dash') renderDash();
   if(v==='events') renderMonth();
   if(v==='roster') renderRoster();
   if(v==='track') renderTrack();
 }
 
+/* ========= Util: fechas ========= */
+/* Corrige horas: interpreta timestamptz de Supabase como fecha/hora LOCAL (Chile)
+   ignorando el offset si viene con +00:00, para evitar corrimientos visuales. */
+const parseSupaLocal = (iso) => {
+  if(!iso) return null;
+  const clean = iso.split(/[Z+]/)[0]; // quita Z o +00:00
+  const [d,t] = clean.split('T');
+  const [y,m,da] = d.split('-').map(Number);
+  const [hh,mm] = (t||'00:00').split(':').map(Number);
+  return new Date(y, (m-1), da, hh, mm);
+};
+const fmtCL = (d, opts={}) =>
+  d.toLocaleString('es-CL', { timeZone: 'America/Santiago', ...opts });
+
 /* ========= Dashboard ========= */
 async function renderDash(){
   const {data:events}=await supa.from("events").select("*").gte("datetime", new Date().toISOString());
   const {data:players}=await supa.from("players").select("*");
 
-  // KPIs
   document.getElementById('kEvents').textContent=events?.length||0;
   document.getElementById('kRoster').textContent=players?.length||0;
   document.getElementById('kOk').textContent=0;
   document.getElementById('kGames').textContent=0;
 
-  // 🎂 Próximos cumpleaños (vista próxima ocurrencia)
+  // 🎂 Próximos cumpleaños (usando vista que ya tienes)
   try{
     const { data: birthdays } = await supa
       .from("vw_upcoming_birthdays")
       .select("*")
       .order("proximo_cumple", { ascending: true })
       .limit(5);
-    const list = document.getElementById("upBirth"); list.innerHTML="";
+    const list=document.getElementById('upBirth'); list.innerHTML="";
     (birthdays||[]).forEach(p=>{
       if(p.proximo_cumple){
-        const bd = new Date(p.proximo_cumple);
-        list.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+        const bd=parseSupaLocal(p.proximo_cumple);
+        list.innerHTML += `<li>${p.apodo||p.nombre} — ${fmtCL(bd,{day:'2-digit',month:'short'})}</li>`;
       }
     });
-  }catch(e){ console.error(e); }
+  }catch{}
 
-  // 📅 Semana (vista materializada)
+  // 📅 Eventos de la semana (vista)
   try{
-    const { data: weekEvents, error } = await supa
+    const { data: weekEvents } = await supa
       .from("vw_events_this_week")
       .select("*")
-      .order("datetime",{ascending:true});
+      .order("datetime", { ascending: true });
     const ul=document.getElementById('weekEvents'); ul.innerHTML="";
-    if(error){ ul.innerHTML="<li>Error al cargar eventos</li>"; return; }
-    (weekEvents||[]).forEach(ev=>{
-      const d = asTZ(ev.datetime);
-      ul.innerHTML += `<li><strong>${ev.title}</strong> — ${d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
+    (weekEvents||[]).forEach(e=>{
+      const d=parseSupaLocal(e.datetime);
+      ul.innerHTML += `<li><strong>${e.title}</strong> — ${fmtCL(d,{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
     });
-  }catch(e){ console.error(e); }
+  }catch(e){
+    document.getElementById('weekEvents').innerHTML="<li>Error al cargar eventos</li>";
+  }
 }
 
-/* ========= Plantel ========= */
+/* ========= Plantel & Seguimiento (sin cambios de lógica) ========= */
 async function renderRoster(){
   const {data}=await supa.from("players").select("*");
   const grid=document.getElementById('rosterGrid'); grid.innerHTML="";
@@ -402,166 +305,163 @@ async function renderRoster(){
     grid.appendChild(c);
   });
 }
-
-/* ========= Seguimiento ========= */
 async function renderTrack(){
   const {data}=await supa.from("matches").select("*").order("datetime",{ascending:false});
   const wrap=document.getElementById("trackList"); wrap.innerHTML="";
   (data||[]).forEach(m=>{
-    const d=new Date(m.datetime);
+    const d=parseSupaLocal(m.datetime);
     const div=document.createElement("div"); div.className="card";
     div.innerHTML=`<strong>${m.title}</strong><br/>
-      ${d.toLocaleDateString("es-CL",{weekday:'short',day:'2-digit',month:'short'})}<br/>
+      ${fmtCL(d,{weekday:'short',day:'2-digit',month:'short'})}<br/>
       Goleadora: ${m.Goleadora||"-"}`;
     wrap.appendChild(div);
   });
 }
 
-/* ========= Calendario mensual ========= */
-let currentMonth = new Date(); // hoy
+/* ========= EVENTOS Mensual ========= */
+let cur = new Date(); // mes actual
+let cacheEvents = [];
 
-document.getElementById('btnPrev').onclick=()=>{ currentMonth.setMonth(currentMonth.getMonth()-1); renderMonth(); }
-document.getElementById('btnNext').onclick=()=>{ currentMonth.setMonth(currentMonth.getMonth()+1); renderMonth(); }
-document.getElementById('btnToday').onclick=()=>{ currentMonth=new Date(); renderMonth(); }
-document.getElementById('btnNewEvent').onclick=()=> openModal(); // sin fecha
+const monthLabel = (d)=> fmtCL(d,{month:'long', year:'numeric'});
 
-function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
-function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0, 23,59,59); }
+const mondayIndex = d => (d+6)%7; // transforma Domingo=0 a Lunes=0
 
-async function renderMonth(){
-  document.getElementById('monthTitle').textContent = monthName(currentMonth);
-  const first = startOfMonth(currentMonth);
-  const last  = endOfMonth(currentMonth);
-
-  // Trae solo eventos del mes visible
-  const { data: events } = await supa
-    .from("events")
-    .select("*")
-    .gte("datetime", first.toISOString())
-    .lte("datetime", new Date(last.getTime()+1000).toISOString())
-    .order("datetime", { ascending:true });
-
-  // Mapa por día (1..31)
-  const byDay = {};
-  (events||[]).forEach(e=>{
-    const d = asTZ(e.datetime);
-    const key = d.toISOString().slice(0,10);
-    (byDay[key] ||= []).push(e);
-  });
-
-  // Días del mes (sin filas vacías)
-  const days = [];
-  for(let day=1; day<= last.getDate(); day++){
-    days.push(new Date(first.getFullYear(), first.getMonth(), day));
-  }
-
-  const grid = document.getElementById('monthGrid'); grid.innerHTML="";
-  days.forEach(d=>{
-    const key = d.toISOString().slice(0,10);
-    const row = document.createElement('div'); row.className="day-row";
-
-    row.innerHTML = `
-      <div class="day-head">
-        <div class="day-num">${d.getDate()}</div>
-        <div class="day-wd">${fmtWeekday(d)}</div>
-        <button class="btn icon day-plus" title="Nuevo" aria-label="Nuevo evento">+</button>
-      </div>
-      <div class="ev-list"></div>
-    `;
-    row.querySelector('.day-plus').onclick=()=> openModal(d);
-
-    const list = row.querySelector('.ev-list');
-    (byDay[key]||[]).forEach(ev=>{
-      const dt = asTZ(ev.datetime);
-      const div = document.createElement('div');
-      div.className = "event " + (ev.type==="Partido" ? "match" : "train");
-      div.innerHTML = `
-        <div class="meta">${fmtTime(dt)} — <span class="badge">${ev.type}</span></div>
-        <div class="title">${ev.title}</div>
-        <div class="meta">${ev.team||""}${ev.opponent?` · vs ${ev.opponent}`:""}</div>
-        <div class="meta"><span class="pin">📍</span>${ev.location||""}</div>
-        ${ev.uniform?`<div class="meta">Uniforme: ${ev.uniform} · <em>medias verde lima</em></div>`:""}
-      `;
-      div.onclick=()=> openModal(d, ev); // editar
-      list.appendChild(div);
-    });
-
-    grid.appendChild(row);
-  });
-}
-
-/* ========= Modal ========= */
-const $back = document.getElementById('modalBack');
-const $title = document.getElementById('mTitle');
-const $fTitle = document.getElementById('fTitle');
-const $fWhen = document.getElementById('fWhen');
-const $fType = document.getElementById('fType');
-const $fTeam = document.getElementById('fTeam');
-const $fOpponent = document.getElementById('fOpponent');
-const $fUniform = document.getElementById('fUniform');
-const $fLocation = document.getElementById('fLocation');
-const $fNotes = document.getElementById('fNotes');
-let editingId = null;
-
-function openModal(datePref=null, event=null){
-  editingId = event?.id || null;
-  $title.textContent = editingId ? "Editar evento" : "Nuevo evento";
-  $fTitle.value = event?.title || "";
-  $fType.value = event?.type || "Entrenamiento";
-  $fTeam.value = event?.team || "Golden Moms";
-  $fOpponent.value = event?.opponent || "";
-  $fUniform.value = event?.uniform || "";
-  $fLocation.value = event?.location || "";
-  $fNotes.value = event?.notes || "";
-
-  // fecha: si edita -> del evento; si crea -> día seleccionado a las 19:00
-  let d;
-  if(event){ d = new Date(event.datetime); }
-  else{
-    const base = datePref ? new Date(datePref) : new Date();
-    d = new Date(base.getFullYear(),base.getMonth(),base.getDate(),19,0,0);
-  }
-  // setear control datetime-local en local time (sin zona)
-  const pad = n=>String(n).padStart(2,"0");
-  const v = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  $fWhen.value = v;
-
-  $back.style.display="flex";
-}
-function closeModal(){ $back.style.display="none"; }
-document.getElementById('mClose').onclick=closeModal;
-document.getElementById('mCancel').onclick=closeModal;
-
-document.getElementById('mSave').onclick = async ()=>{
-  const payload = {
-    title: $fTitle.value?.trim(),
-    type: $fType.value,
-    team: $fTeam.value?.trim(),
-    opponent: $fOpponent.value?.trim() || null,
-    uniform: $fUniform.value || null,
-    location: $fLocation.value?.trim() || null,
-    notes: $fNotes.value?.trim() || null,
-    datetime: localToISO($fWhen.value)
-  };
-  if(!payload.title || !payload.datetime) { alert("Título y fecha/hora son obligatorios"); return; }
-
-  let err=null;
-  if(editingId){
-    const { error } = await supa.from("events").update(payload).eq("id", editingId);
-    err = error;
-  }else{
-    const { error } = await supa.from("events").insert([payload]);
-    err = error;
-  }
-  if(err){ alert("❌ Error al guardar: " + err.message); return; }
-
-  closeModal();
-  renderMonth();
-  renderDash();
+const monthBounds = (dt)=>{
+  const y = dt.getFullYear(), m = dt.getMonth();
+  const first = new Date(y,m,1);
+  const last = new Date(y,m+1,0);
+  const start = new Date(first); start.setDate(first.getDate() - mondayIndex(first.getDay()));
+  const end = new Date(last); end.setDate(last.getDate() + (6 - mondayIndex(last.getDay())));
+  return {start, end};
 };
 
+async function loadMonthData(){
+  const {start,end} = monthBounds(cur);
+  const { data } = await supa
+    .from("events")
+    .select("*")
+    .gte("datetime", start.toISOString())
+    .lte("datetime", end.toISOString())
+    .order("datetime", { ascending: true });
+  cacheEvents = (data||[]).map(e => ({...e, _dt: parseSupaLocal(e.datetime)}));
+}
+
+function renderMonthGrid(){
+  document.getElementById('lblMonth').textContent = monthLabel(cur);
+  const {start,end} = monthBounds(cur);
+  const grid=document.getElementById('monthGrid'); grid.innerHTML="";
+  const day = new Date(start);
+
+  while(day <= end){
+    const cell=document.createElement('div'); cell.className='cal-day';
+    const dnum = day.getDate();
+    const isCurMonth = day.getMonth()===cur.getMonth();
+    cell.style.opacity = isCurMonth ? 1 : 0.45;
+
+    const top = document.createElement('div'); top.className='dtop';
+    top.innerHTML = `<div class="dnum">${dnum}</div>`;
+    const add = document.createElement('button');
+    add.className='add-mini'; add.textContent='+';
+    add.onclick=()=> openModal({ datetime: new Date(day), title:'', type:'Entrenamiento', team:'Golden Moms', location:'', opponent:'', uniform:'(definir)' });
+    top.appendChild(add);
+    cell.appendChild(top);
+
+    // eventos del día
+    const todays = cacheEvents.filter(ev => ev._dt.toDateString() === day.toDateString());
+    todays.forEach(ev=>{
+      const wrap=document.createElement('div');
+      wrap.className='ev ' + (ev.type==='Partido'?'match':'train');
+      const hour = fmtCL(ev._dt,{hour:'2-digit',minute:'2-digit'});
+      wrap.innerHTML = `
+        <div class="h">${hour} — <span class="t">${ev.title}</span></div>
+        <div style="font-size:12px">${ev.team}${ev.opponent?` <span style="color:#64748b">- vs ${ev.opponent}</span>`:''}</div>
+        <div class="loc"><span class="dot"></span>${ev.location||''}</div>
+      `;
+      wrap.onclick=()=> openModal(ev);
+      cell.appendChild(wrap);
+    });
+
+    grid.appendChild(cell);
+    day.setDate(day.getDate()+1);
+  }
+}
+
+async function renderMonth(){
+  await loadMonthData();
+  renderMonthGrid();
+}
+
+/* Toolbar */
+document.getElementById('btnPrev').onclick = async ()=>{ cur.setMonth(cur.getMonth()-1); await renderMonth(); };
+document.getElementById('btnNext').onclick = async ()=>{ cur.setMonth(cur.getMonth()+1); await renderMonth(); };
+document.getElementById('btnToday').onclick = async ()=>{ cur = new Date(); await renderMonth(); };
+
+/* Botón principal crear */
+document.getElementById('btnNewEvent').onclick = ()=> openModal({
+  datetime: new Date(),
+  title:'', type:'Entrenamiento', team:'Golden Moms', location:'', opponent:'', uniform:'(definir)'
+});
+
+/* ========= Modal ========= */
+const modal = document.getElementById('evModal');
+const closeModal = ()=> modal.classList.remove('show');
+document.getElementById('evClose').onclick = closeModal;
+document.getElementById('evCancel').onclick = closeModal;
+
+let editingId = null;
+
+function fillForm(ev){
+  document.getElementById('evTitle').textContent = editingId ? 'Editar evento' : 'Nuevo evento';
+  document.getElementById('f_title').value = ev.title||'';
+  document.getElementById('f_type').value = ev.type||'Entrenamiento';
+  document.getElementById('f_team').value = ev.team||'Golden Moms';
+  document.getElementById('f_opponent').value = ev.opponent||'';
+  document.getElementById('f_uniform').value = ev.uniform||'(definir)';
+  document.getElementById('f_location').value = ev.location||'';
+  // datetime-local (YYYY-MM-DDTHH:MM)
+  const d = parseSupaLocal(ev.datetime||ev._dt||new Date());
+  const iso = new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('f_datetime').value = iso;
+}
+
+function openModal(ev){
+  editingId = ev.id || null;
+  fillForm(ev);
+  modal.classList.add('show');
+}
+
+async function saveEvent(){
+  const t = document.getElementById('f_title').value.trim();
+  const dtLocal = new Date(document.getElementById('f_datetime').value);
+  const type = document.getElementById('f_type').value;
+  const team = document.getElementById('f_team').value.trim();
+  const opponent = document.getElementById('f_opponent').value.trim();
+  const uniform = document.getElementById('f_uniform').value;
+  const location = document.getElementById('f_location').value.trim();
+
+  if(!t || !dtLocal) return alert('Completa título y fecha/hora');
+
+  // Guardamos en UTC correcto:
+  const isoUTC = new Date(dtLocal.getTime()-dtLocal.getTimezoneOffset()*60000).toISOString();
+
+  if(editingId){
+    const {error} = await supa.from('events').update({
+      title:t, datetime: isoUTC, type, team, opponent, uniform, location
+    }).eq('id', editingId);
+    if(error) return alert('❌ ' + error.message);
+  }else{
+    const {error} = await supa.from('events').insert([{
+      title:t, datetime: isoUTC, type, team, opponent, uniform, location
+    }]);
+    if(error) return alert('❌ ' + error.message);
+  }
+  closeModal();
+  await renderMonth();
+}
+document.getElementById('evSave').onclick = saveEvent;
+
 /* ========= Inicial ========= */
-renderDash();
+renderDash(); // cae en dashboard por defecto
 </script>
 </body>
 </html>
