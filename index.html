@@ -30,6 +30,45 @@ a{color:inherit}
 .nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
 .nav .tab.active{background:var(--blue);color:#fff}
 
+/* --- Calendario mensual: mejoras móvil y cabecera --- */
+.month-head { 
+  position: sticky; top: 72px; z-index: 6; 
+  background:#fff; padding:12px 10px; 
+  border-bottom:1px solid var(--b);
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+}
+.month-title{font-weight:800;font-size:22px}
+.month-grid{
+  display:grid; grid-template-columns:repeat(7,1fr); gap:12px;
+}
+.day-cell{
+  min-height:220px; background:#fff; border:1px solid var(--b); border-radius:14px;
+  padding:10px; display:flex; flex-direction:column; gap:8px;
+}
+.day-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px}
+.day-num{font-weight:800}
+.day-dow{color:var(--mut); font-size:12px; text-transform:lowercase}
+.day-add{width:28px;height:28px;border-radius:999px;border:1px solid var(--b);background:#fff;cursor:pointer}
+.ev-card{
+  border-radius:12px; padding:10px; box-shadow:0 6px 16px #0000000b;
+  border:1px solid var(--b);
+  background:#f0f7ff;
+  font-size:14px; line-height:1.25;
+}
+.ev-train{ background:#edf9d9 }
+.ev-match{ background:#eaf1ff }
+.ev-title{font-weight:800}
+.ev-meta{color:var(--mut); font-size:12px}
+
+/* Móvil */
+@media (max-width: 900px){
+  .month-head{ top: 120px }
+  .month-title{ font-size:20px }
+  .month-grid{ grid-template-columns:1fr } /* vista lista en móvil */
+  .day-cell{ min-height:auto }
+}
+
+
 /* ====== KPI ====== */
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
@@ -233,6 +272,45 @@ const SUPA = {
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
 };
 const supa = supabase.createClient(SUPA.url, SUPA.key);
+<script>
+// ========= Zona horaria & fechas (Chile) =========
+const CL_TZ = 'America/Santiago';
+
+// Devuelve partes locales (año/mes/día/hora/min) de un ISO/timestamptz guardado en Supabase
+function localParts(iso, tz = CL_TZ){
+  const d = new Date(iso);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit', hour12:false
+    }).formatToParts(d).map(p => [p.type, p.value])
+  );
+  return {
+    y: +parts.year, m: +parts.month, d:+parts.day,
+    hh:+parts.hour, mm:+parts.minute
+  };
+}
+
+// Texto fecha/hora bonito en Chile
+function prettyDateTime(iso){
+  const d = new Date(iso);
+  return new Intl.DateTimeFormat('es-CL',{
+    timeZone: CL_TZ,
+    weekday:'short', day:'2-digit', month:'short',
+    hour:'2-digit', minute:'2-digit'
+  }).format(d).replaceAll('.', '');
+}
+
+// Primer día del mes en hora Chile
+function firstOfMonthLocal(year, month){ // month 1-12
+  // “en-CA” da yyyy-mm-dd fácil de parsear
+  const s = `${year.toString().padStart(4,'0')}-${month.toString().padStart(2,'0')}-01T00:00:00`;
+  return new Date(new Date(s).toLocaleString('en-CA', { timeZone: CL_TZ }));
+}
+
+// Índice lunes=0..domingo=6
+function mondayIndex(jsGetDay){ return (jsGetDay + 6) % 7; }
+</script>
 
 /* ========= Utiles ========= */
 const TZ = "America/Santiago";
