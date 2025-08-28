@@ -8,8 +8,12 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --blue:#0f3a78;--lime:#9be22d;--ink:#0f172a;--mut:#64748b;
+  --blue:#0b3a9b;         /* azul más predominante */
+  --blue-ink:#0f172a;
+  --lime:#8fdc00;         /* verde lima más fuerte */
+  --ink:#0f172a;--mut:#64748b;
   --b:#e2e8f0;--bg:#f7f8fa;--ok:#d9f99d;--mid:#fef9c3;--no:#fee2e2;
+  --chip-text:#0b1220;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
@@ -28,23 +32,49 @@ a{color:inherit}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
-/* Calendario */
-.filters-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;position:sticky;top:114px;z-index:5;background:#fff;padding:6px 0;border-bottom:1px solid var(--b)}
-.cal-head>div{text-align:center;font-weight:700;color:#0f3a78}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.cal-cell{min-height:140px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;overflow:hidden}
-.cal-time{font-size:12px;font-weight:700;color:#0f3a78}
-.tag{font-size:10px;border:1px solid #0001;border-radius:999px;padding:2px 6px;display:inline-block;margin-bottom:4px}
-.match{background:#e0edff;border-color:#b7d1ff;color:#0f3a78}
-.train{background:#e9fbd0;border-color:#c6f28a;color:#2d5a00}
-.team{font-size:10px;background:#eaf7d7;border:1px solid #c8ef7a;border-radius:999px;padding:1px 6px;margin-left:6px;font-weight:700}
+
+/* ====== Calendario (Eventos) ====== */
+.cal-wrap{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
+.cal-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
+.cal-bar h3{margin:0;font-weight:800;color:var(--blue-ink)}
+.cal-nav{display:flex;gap:6px}
+.cal-nav .btn{padding:6px 10px}
+.week-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;position:sticky;top:114px;z-index:5;background:#fff;padding:6px 0;border-bottom:1px solid var(--b)}
+.week-head>div{text-align:center;font-weight:700;color:var(--blue)}
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.day-cell{min-height:120px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;overflow:hidden;display:flex;flex-direction:column}
+.day-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.day-num{font-size:12px;font-weight:700;color:var(--blue)}
+.add-day{border:none;background:#f1f5f9;border-radius:6px;padding:2px 6px;cursor:pointer;font-weight:700}
+.add-day:hover{background:#e2e8f0}
+.day-events{display:flex;flex-direction:column;gap:6px}
+.evt{border-radius:10px;padding:6px 8px;line-height:1.2;font-size:12px;color:var(--chip-text);cursor:pointer;user-select:none}
+/* colores más marcados, sin negrita en el título */
+.evt-train{background: #d6f69a;border:1px solid #b5e76a}
+.evt-match{background: #cfe1ff;border:1px solid #9fc2ff}
+
+/* Modal */
+.modal-back{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:60}
+.modal{width:min(720px,92vw);background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 12px 36px #00000022;padding:14px}
+.modal h4{margin:0 0 10px 0}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-row .full{grid-column:1 / -1}
+.modal .actions{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.modal input,.modal select,.modal textarea{
+  width:100%;padding:10px;border:1px solid var(--b);border-radius:10px;background:#fff
+}
+
 /* Footer */
 footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size:14px}
+
 /* Responsive */
 @media (max-width: 900px){
   .grid{grid-template-columns:1fr}
-  .cal-head{top:154px}
+  .week-head{top:154px}
+}
+@media (max-width: 640px){
+  .form-row{grid-template-columns:1fr}
+  .day-cell{min-height:100px}
 }
 </style>
 </head>
@@ -68,21 +98,19 @@ footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size
   <!-- DASHBOARD -->
   <section id="v-dash">
     <div class="grid">
-      <div class="card kpi" style="grid-column:span 4"><h3>Próximos eventos</h3><div class="n" id="kEvents">0</div></div>
-      <div class="card kpi" style="grid-column:span 4"><h3>Plantel</h3><div class="n" id="kRoster">0</div></div>
-      <div class="card kpi" style="grid-column:span 4"><h3>Partidos jugados</h3><div class="n" id="kGames">0</div></div>
+      <div class="card kpi" style="grid-column:span 3"><h3>Próximos eventos</h3><div class="n" id="kEvents">0</div></div>
+      <div class="card kpi" style="grid-column:span 3"><h3>Plantel</h3><div class="n" id="kRoster">0</div></div>
+      <!-- Eliminado “Convocadas (próx.)” -->
+      <div class="card kpi" style="grid-column:span 3"><h3>Partidos jugados</h3><div class="n" id="kGames">0</div></div>
     </div>
-
     <div class="card" style="margin-top:12px">
       <strong>🎂 Próximos cumpleaños</strong>
       <ul id="upBirth" style="margin:8px 0 0 16px"></ul>
     </div>
-
     <div class="card" style="margin-top:12px">
       <strong>📅 Hoy</strong>
       <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
     </div>
-
     <div class="card" style="margin-top:12px">
       <strong>📅 Eventos de la semana</strong>
       <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
@@ -91,12 +119,20 @@ footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size
 
   <!-- EVENTOS -->
   <section id="v-events" style="display:none">
-    <div class="card">
-      <div class="filters-row">
-        <button class="btn p" id="btnNewEvent">Nuevo Evento</button>
+    <div class="cal-wrap">
+      <div class="cal-bar">
+        <div class="cal-nav">
+          <button class="btn" id="prevMonth">◀︎</button>
+          <button class="btn" id="todayBtn">Hoy</button>
+          <button class="btn" id="nextMonth">▶︎</button>
+        </div>
+        <h3 id="monthLabel">Mes Año</h3>
+        <button class="btn p" id="addQuick">+ Evento</button>
       </div>
-      <div class="cal-head"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
-      <div id="calGrid" class="cal-grid"></div>
+      <div class="week-head">
+        <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+      </div>
+      <div id="monthGrid" class="month-grid"></div>
     </div>
   </section>
 
@@ -122,6 +158,58 @@ footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size
 
 <footer>Golden Moms · hecho con 💚 lima & azul</footer>
 
+<!-- Modal Evento -->
+<div class="modal-back" id="modalBack">
+  <div class="modal">
+    <h4 id="mTitle">Evento</h4>
+    <div class="form-row">
+      <div>
+        <label>Título</label>
+        <input id="f_title" />
+      </div>
+      <div>
+        <label>Tipo</label>
+        <select id="f_type">
+          <option>Entrenamiento</option>
+          <option>Partido</option>
+        </select>
+      </div>
+      <div>
+        <label>Fecha</label>
+        <input id="f_date" type="date"/>
+      </div>
+      <div>
+        <label>Hora</label>
+        <input id="f_time" type="time" />
+      </div>
+      <div>
+        <label>Uniforme</label>
+        <select id="f_uniform">
+          <option value="">(Definir)</option>
+          <option value="Polera azul">Polera azul</option>
+          <option value="Polera verde lima">Polera verde lima</option>
+        </select>
+        <div style="font-size:12px;color:#475569;margin-top:4px">* siempre <b>medias verde lima</b></div>
+      </div>
+      <div>
+        <label>Rival</label>
+        <input id="f_opponent" />
+      </div>
+      <div class="full">
+        <label>Ubicación</label>
+        <input id="f_location" placeholder="Colegio, Universidad de los Andes, Cancha Oriente, etc."/>
+      </div>
+    </div>
+    <div class="actions">
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="mClose">Cerrar</button>
+        <button class="btn p" id="mSave">Guardar</button>
+      </div>
+      <button class="btn" id="mDelete" style="border-color:#fecaca;background:#ffecec">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ========= SUPABASE ========= */
 const SUPA = {
@@ -130,27 +218,28 @@ const SUPA = {
 };
 const supa = supabase.createClient(SUPA.url, SUPA.key);
 
-/* ========= Helpers de fecha/hora (America/Santiago) ========= */
+/* ========= Utilidades ========= */
 const CL_TZ = 'America/Santiago';
-const fmt = (d, opts={}) => new Intl.DateTimeFormat('es-CL', { timeZone: CL_TZ, ...opts }).format(d);
-const parseToLocal = (iso) => new Date(iso); // supabase entrega ISO; mostramos con TZ CL vía Intl
+const fmtChile = (d, withTime=true) =>
+  new Intl.DateTimeFormat('es-CL', {
+    timeZone: CL_TZ,
+    weekday: withTime ? 'short' : undefined,
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: withTime ? '2-digit' : undefined,
+    minute: withTime ? '2-digit' : undefined
+  }).format(d);
 
-function startOfWeek(d){
-  // semana Lunes-Domingo
-  const x = new Date(d);
-  const day = (x.getDay()+6)%7; // 0=Lun
-  x.setHours(0,0,0,0);
-  x.setDate(x.getDate()-day);
-  return x;
+function ymd(date){ // retorna YYYY-MM-DD en TZ Chile
+  const d = new Date(date);
+  const parts = new Intl.DateTimeFormat('en-CA',{ timeZone: CL_TZ, year:'numeric',month:'2-digit',day:'2-digit' }).formatToParts(d);
+  const get = k => parts.find(p=>p.type===k).value;
+  return `${get('year')}-${get('month')}-${get('day')}`;
 }
-function endOfWeek(d){
-  const s = startOfWeek(d);
-  const e = new Date(s);
-  e.setDate(s.getDate()+7);
-  return e;
-}
-function isSameLocalDay(a,b){
-  return fmt(a,{year:'numeric',month:'2-digit',day:'2-digit'}) === fmt(b,{year:'numeric',month:'2-digit',day:'2-digit'});
+function hm(date){
+  const d = new Date(date);
+  const parts = new Intl.DateTimeFormat('en-GB',{ timeZone: CL_TZ, hour:'2-digit',minute:'2-digit',hour12:false }).formatToParts(d);
+  const get = k => parts.find(p=>p.type===k).value;
+  return `${get('hour')}:${get('minute')}`;
 }
 
 /* ========= Navegación ========= */
@@ -165,24 +254,57 @@ function showView(v){
   ['dash','events','roster','track'].forEach(id=>document.getElementById('v-'+id).style.display='none');
   document.getElementById('v-'+v).style.display='block';
   if(v==='dash') renderDash();
-  if(v==='events') renderEvents();
+  if(v==='events') renderMonth();
   if(v==='roster') renderRoster();
   if(v==='track') renderTrack();
 }
 
-/* ========= Eventos (lista simple existente) ========= */
-async function renderEvents(){
-  const {data}=await supa.from("events").select("*").order("datetime",{ascending:true});
-  const grid=document.getElementById('calGrid'); grid.innerHTML="";
-  (data||[]).forEach(e=>{
-    const d=parseToLocal(e.datetime);
-    const c=document.createElement("div"); c.className="cal-cell";
-    c.innerHTML=`
-      <div class="tag ${e.type=='Partido'?'match':'train'}">${e.type}</div>
-      <div class="cal-time">${fmt(d,{weekday:'short', hour:'2-digit', minute:'2-digit'})}</div>
-      <div><strong>${e.title}</strong> <span class="team">${e.team||''}</span></div>
-      <div>📍 ${e.location||""}</div>`;
-    grid.appendChild(c);
+/* ========= Dashboard ========= */
+async function renderDash(){
+  const now = new Date();
+  const {data:events}=await supa.from("events").select("*").gte("datetime", now.toISOString());
+  const {data:players}=await supa.from("players").select("*");
+
+  // KPIs
+  document.getElementById('kEvents').textContent=events?.length||0;
+  document.getElementById('kRoster').textContent=players?.length||0;
+  document.getElementById('kGames').textContent=0;
+
+  // 🎂 Próximos cumpleaños (máx 5)
+  try {
+    const { data: birthdays } = await supa
+      .from("vw_upcoming_birthdays")
+      .select("*")
+      .order("proximo_cumple", { ascending: true })
+      .limit(5);
+    const list = document.getElementById("upBirth");
+    list.innerHTML = "";
+    (birthdays||[]).forEach(p=>{
+      if(p.proximo_cumple){
+        const bd = new Date(p.proximo_cumple);
+        list.innerHTML += `<li>${p.apodo || p.nombre} — ${new Intl.DateTimeFormat('es-CL',{timeZone:CL_TZ, day:'2-digit', month:'short'}).format(bd)}</li>`;
+      }
+    });
+  } catch(e){ console.error(e); }
+
+  // 📅 Hoy
+  const todayList = document.getElementById('todayEvents'); todayList.innerHTML='';
+  (events||[]).forEach(e=>{
+    const d = new Date(e.datetime);
+    const sameDay = ymd(d) === ymd(now);
+    if(sameDay){
+      todayList.innerHTML += `<li><strong>${e.title}</strong> — ${fmtChile(d,true)}</li>`;
+    }
+  });
+
+  // 📅 Semana
+  const weekList = document.getElementById('weekEvents'); weekList.innerHTML='';
+  const end = new Date(now); end.setDate(end.getDate()+7);
+  (events||[]).forEach(e=>{
+    const d = new Date(e.datetime);
+    if(d >= now && d <= end){
+      weekList.innerHTML += `<li><strong>${e.title}</strong> — ${fmtChile(d,true)}</li>`;
+    }
   });
 }
 
@@ -202,88 +324,175 @@ async function renderTrack(){
   const {data}=await supa.from("matches").select("*").order("datetime",{ascending:false});
   const wrap=document.getElementById("trackList"); wrap.innerHTML="";
   (data||[]).forEach(m=>{
-    const d=parseToLocal(m.datetime);
+    const d=new Date(m.datetime);
     const div=document.createElement("div"); div.className="card";
     div.innerHTML=`<strong>${m.title}</strong><br/>
-      ${fmt(d,{weekday:'short',day:'2-digit',month:'short'})}<br/>
+      ${new Intl.DateTimeFormat('es-CL',{timeZone:CL_TZ, weekday:'short',day:'2-digit',month:'short'}).format(d)}<br/>
       Goleadora: ${m.Goleadora||"-"}`;
     wrap.appendChild(div);
   });
 }
 
-/* ========= Crear Evento ========= */
-document.getElementById("btnNewEvent").onclick = async () => {
-  const title = prompt("Título del evento:");
-  const datetime = prompt("Fecha y hora (YYYY-MM-DD HH:MM):");
-  const type = prompt("Tipo (Entrenamiento o Partido):");
-  const team = prompt("Equipo:");
-  const location = prompt("Ubicación:");
-  if(!title || !datetime) return alert("Faltan datos");
-  const { error } = await supa.from("events").insert([{ title, datetime, type, team, location }]);
-  if(error){ alert("❌ Error al guardar: " + error.message); }
-  else { alert("✅ Evento guardado"); renderEvents(); renderDash(); }
-};
+/* ========= EVENTOS (Mensual) ========= */
+let viewMonth = (()=>{ const d=new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })();
+const monthLabel = document.getElementById('monthLabel');
+document.getElementById('prevMonth').onclick=()=>{ viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1); renderMonth(); };
+document.getElementById('nextMonth').onclick=()=>{ viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1); renderMonth(); };
+document.getElementById('todayBtn').onclick=()=>{ const d=new Date(); viewMonth = new Date(d.getFullYear(), d.getMonth(), 1); renderMonth(); };
+document.getElementById('addQuick').onclick=()=> openModal(); // sin fecha (rápido)
 
-/* ========= Dashboard ========= */
-async function renderDash(){
-  // Trae TODO próximo (desde ahora en adelante)
-  const now = new Date();
-  const {data:events}=await supa.from("events").select("*").gte("datetime", now.toISOString()).order("datetime",{ascending:true});
-  const {data:players}=await supa.from("players").select("*");
-
-  // KPIs
-  document.getElementById('kEvents').textContent=events?.length||0;
-  document.getElementById('kRoster').textContent=players?.length||0;
-  document.getElementById('kGames').textContent=(events||[]).filter(e=>e.type==='Partido' && parseToLocal(e.datetime) < now).length;
-
-  // 🎂 Próximos cumpleaños (usa tu vista si la tienes; si no, filtra por mes actual)
-  const list=document.getElementById('upBirth'); list.innerHTML="";
-  try{
-    // Si existe la vista:
-    const { data: bdays, error: bErr } = await supa.from("vw_upcoming_birthdays").select("*").order("proximo_cumple",{ascending:true}).limit(5);
-    if(!bErr && bdays && bdays.length){
-      bdays.forEach(p=>{
-        if(p.proximo_cumple){
-          const d=parseToLocal(p.proximo_cumple);
-          list.innerHTML += `<li>${p.apodo || p.nombre} — ${fmt(d,{day:"2-digit",month:"short"})}</li>`;
-        }
-      });
-    } else {
-      // Fallback por si no tienes la vista:
-      (players||[]).forEach(p=>{
-        if(!p.fecha_nacimiento) return;
-        const d=new Date(p.fecha_nacimiento);
-        const isSameMonth = (d.getMonth()=== now.getMonth());
-        if(isSameMonth && d.getDate()>= now.getDate()){
-          list.innerHTML += `<li>${p.apodo || p.nombre} — ${fmt(d,{day:"2-digit",month:"short"})}</li>`;
-        }
-      });
-    }
-  }catch(err){
-    console.error(err);
-  }
-
-  // 📅 Hoy
-  const todayUl = document.getElementById('todayEvents'); todayUl.innerHTML='';
-  const todayList = (events||[]).filter(e=> isSameLocalDay(parseToLocal(e.datetime), now));
-  todayList.forEach(e=>{
-    const d=parseToLocal(e.datetime);
-    todayUl.innerHTML += `<li><strong>${e.title}</strong> — ${fmt(d,{weekday:"short",hour:"2-digit",minute:"2-digit"})} · ${e.location||""}</li>`;
-  });
-
-  // 📅 Semana actual (Lun–Dom)
-  const weekUl=document.getElementById('weekEvents'); weekUl.innerHTML="";
-  const ws = startOfWeek(now), we = endOfWeek(now);
-  (events||[]).forEach(e=>{
-    const d=parseToLocal(e.datetime);
-    if(d>=ws && d<we){
-      weekUl.innerHTML += `<li><strong>${e.title}</strong> — ${fmt(d,{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})} · ${e.location||""}</li>`;
-    }
-  });
+function startOfWeekMonday(d){
+  const tmp = new Date(d.getFullYear(), d.getMonth(), 1);
+  let day = tmp.getDay(); // 0=Dom..6=Sab
+  day = (day===0)?7:day;   // 1..7 (Lun..Dom)
+  const diff = day-1; // cuantos días retroceder para llegar a Lunes
+  return new Date(tmp.getFullYear(), tmp.getMonth(), tmp.getDate()-diff);
 }
 
+async function renderMonth(){
+  // Etiqueta mes
+  const labelFmt = new Intl.DateTimeFormat('es-CL',{ timeZone:CL_TZ, month:'long', year:'numeric' });
+  monthLabel.textContent = labelFmt.format(viewMonth).replace(/^\w/, c=>c.toUpperCase());
+
+  // Rango a consultar
+  const monthStart = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+  const monthEnd   = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
+
+  const { data: evts } = await supa
+    .from("events")
+    .select("*")
+    .gte("datetime", monthStart.toISOString())
+    .lt("datetime", monthEnd.toISOString())
+    .order("datetime", { ascending: true });
+
+  // Indexar por día YYYY-MM-DD (en Chile)
+  const byDay = {};
+  (evts||[]).forEach(e=>{
+    const dkey = ymd(new Date(e.datetime));
+    byDay[dkey] ??= [];
+    byDay[dkey].push(e);
+  });
+
+  // Construir grilla desde el lunes de la 1ª semana del mes hasta cubrir 5–6 filas
+  const grid = document.getElementById('monthGrid'); grid.innerHTML='';
+  const firstCell = startOfWeekMonday(viewMonth);
+  // 6 filas * 7 días (cubre cualquier mes)
+  for(let i=0;i<42;i++){
+    const cdate = new Date(firstCell.getFullYear(), firstCell.getMonth(), firstCell.getDate()+i);
+    const cell = document.createElement('div');
+    cell.className='day-cell';
+
+    // Top con número + "+"
+    const top = document.createElement('div'); top.className='day-top';
+    const num = document.createElement('div'); num.className='day-num'; num.textContent = cdate.getDate();
+    const add = document.createElement('button'); add.className='add-day'; add.textContent='+';
+    add.onclick = ()=> openModal({ date: cdate });
+    top.appendChild(num); top.appendChild(add);
+    cell.appendChild(top);
+
+    // Eventos del día (solo título, sin negrita, color por tipo)
+    const list = document.createElement('div'); list.className='day-events';
+    const k = ymd(cdate);
+    (byDay[k]||[]).forEach(e=>{
+      const pill = document.createElement('div');
+      pill.className = 'evt ' + (e.type==='Partido' ? 'evt-match' : 'evt-train');
+      pill.textContent = e.title; // sin negrita
+      pill.onclick = ()=> openModal({ event: e });
+      list.appendChild(pill);
+    });
+    cell.appendChild(list);
+
+    // Atenuar días fuera del mes, pero manteniendo la celda (sin “rectángulos vacíos” arriba)
+    if(cdate.getMonth() !== viewMonth.getMonth()){
+      cell.style.opacity = .45;
+      cell.style.background = '#f8fafc';
+    }
+
+    grid.appendChild(cell);
+  }
+}
+
+/* ========= Modal Crear/Editar ========= */
+const modalBack = document.getElementById('modalBack');
+const mTitle = document.getElementById('mTitle');
+const f_title = document.getElementById('f_title');
+const f_type = document.getElementById('f_type');
+const f_date = document.getElementById('f_date');
+const f_time = document.getElementById('f_time');
+const f_uniform = document.getElementById('f_uniform');
+const f_opponent = document.getElementById('f_opponent');
+const f_location = document.getElementById('f_location');
+const mDelete = document.getElementById('mDelete');
+let editingId = null;
+
+function openModal({event=null, date=null} = {}){
+  modalBack.style.display='flex';
+  if(event){
+    editingId = event.id;
+    mTitle.textContent = 'Editar evento';
+    f_title.value = event.title || '';
+    f_type.value = event.type || 'Entrenamiento';
+    const d = new Date(event.datetime);
+    f_date.value = ymd(d);
+    f_time.value = hm(d);
+    f_uniform.value = event.uniform || '';
+    f_opponent.value = event.opponent || '';
+    f_location.value = event.location || '';
+    mDelete.style.display = 'inline-block';
+  }else{
+    editingId = null;
+    mTitle.textContent = 'Nuevo evento';
+    f_title.value = '';
+    f_type.value = 'Entrenamiento';
+    const d = date ? new Date(date) : new Date();
+    f_date.value = ymd(d);
+    f_time.value = '19:30';
+    f_uniform.value = '';
+    f_opponent.value = '';
+    f_location.value = '';
+    mDelete.style.display = 'none';
+  }
+}
+function closeModal(){ modalBack.style.display='none'; }
+
+document.getElementById('mClose').onclick = closeModal;
+modalBack.addEventListener('click', (e)=>{ if(e.target===modalBack) closeModal(); });
+
+document.getElementById('mSave').onclick = async ()=>{
+  const dtStr = `${f_date.value} ${f_time.value}`;
+  const payload = {
+    title: f_title.value.trim(),
+    type: f_type.value,
+    team: 'Golden Moms',
+    datetime: dtStr,       // Supabase timestamptz; se guarda tal cual, se muestra en TZ Chile
+    uniform: f_uniform.value || null,
+    opponent: f_opponent.value || null,
+    location: f_location.value || null
+  };
+  if(!payload.title) return alert('Falta título');
+
+  if(editingId){
+    const { error } = await supa.from('events').update(payload).eq('id', editingId);
+    if(error) return alert('❌ Error al guardar: '+error.message);
+  }else{
+    const { error } = await supa.from('events').insert([payload]);
+    if(error) return alert('❌ Error al crear: '+error.message);
+  }
+  closeModal(); renderMonth(); renderDash();
+};
+
+mDelete.onclick = async ()=>{
+  if(!editingId) return;
+  if(!confirm('¿Eliminar este evento?')) return;
+  const { error } = await supa.from('events').delete().eq('id', editingId);
+  if(error) return alert('❌ Error al eliminar: '+error.message);
+  closeModal(); renderMonth(); renderDash();
+};
+
 /* ========= Inicial ========= */
-renderDash();
+renderDash(); // dashboard
+// para entrar con la pestaña actual por defecto (Dashboard ya activo):
+// si quieres arrancar mostrando eventos, llama showView('events')
 </script>
 
 </body>
