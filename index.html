@@ -571,7 +571,6 @@ function openModal(opts={}){
     f_opponent.value = e.opponent||'';
     f_uniform.value  = e.uniform||'';
     f_location.value = e.location||'';
-    // Traer datos de match si la tabla existe y supa disponible
     (async ()=>{
       if(!supa) return;
       try{
@@ -579,12 +578,15 @@ function openModal(opts={}){
         if(error) { console.warn('openModal match select', error); }
         if(data && data.length){
           const m = data[0];
-          f_goals_for.value = m.goals_for ?? '';
-          f_goals_against.value = m.goals_against ?? '';
-          f_scorers.value = (m.scorers || []).join(', ');
-          f_assists.value = (m.assists || []).join(', ');
+          if(f_goals_for) f_goals_for.value = m.goals_for ?? '';
+          if(f_goals_against) f_goals_against.value = m.goals_against ?? '';
+          if(f_scorers) f_scorers.value = (m.scorers || []).join(', ');
+          if(f_assists) f_assists.value = (m.assists || []).join(', ');
         } else {
-          f_goals_for.value = ''; f_goals_against.value = ''; f_scorers.value=''; f_assists.value='';
+          if(f_goals_for) f_goals_for.value = '';
+          if(f_goals_against) f_goals_against.value = '';
+          if(f_scorers) f_scorers.value = '';
+          if(f_assists) f_assists.value = '';
         }
       }catch(err){
         console.warn('Error trayendo match (posible tabla matches inexistente):', err);
@@ -601,7 +603,10 @@ function openModal(opts={}){
     f_opponent.value = '';
     f_uniform.value  = '';
     f_location.value = '';
-    f_goals_for?.value = ''; f_goals_against?.value=''; f_scorers?.value=''; f_assists?.value='';
+    if(f_goals_for) f_goals_for.value = '';
+    if(f_goals_against) f_goals_against.value = '';
+    if(f_scorers) f_scorers.value = '';
+    if(f_assists) f_assists.value = '';
     btnDelete.style.display='none';
   }
   toggleMatchFields();
@@ -638,7 +643,6 @@ btnSave.onclick=async()=>{
   const location = f_location.value.trim();
   if(!title || !f_dt.value){ alert('Completa título y fecha/hora'); return; }
 
-  // Si no hay conexión a supa, avisar
   if(!supa){
     alert('No conectado a Supabase. Revisa la conexión y el estado en la esquina inferior.');
     modalBg.style.display='none';
