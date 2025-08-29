@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel (Modal sin campos match al editar)</title>
+<title>Golden Moms — Panel (Modal corregido)</title>
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -59,7 +59,7 @@ a{color:inherit;text-decoration:none}
 .day-date{min-width:52px;border-radius:8px;background:#f1f5f9;padding:6px 8px;text-align:center;font-weight:700;color:var(--mut)}
 .events-column{flex:1;display:flex;flex-direction:column;gap:6px}
 
-/* Modal */
+/* Modal: centrado y comportamiento móvil */
 .modal-bg{
   position:fixed;
   inset:0;
@@ -287,7 +287,6 @@ a{color:inherit;text-decoration:none}
         <input id="f_location" class="input" placeholder="Colegio / Cancha / Dirección">
       </div>
       <div>
-        <!-- match fields remain in HTML but will be hidden when editing -->
         <div id="matchExtra" style="display:none">
           <label>Goles a favor</label>
           <input id="f_goals_for" class="input" type="number" min="0" placeholder="Goles a favor">
@@ -535,7 +534,6 @@ function openModal(opts={}){
     // --- IMPORTANT: when editing we HIDE match fields and DO NOT fetch/update matches ---
     matchExtra.style.display = 'none';
     matchPeopleRow.style.display = 'none';
-    // clear match inputs (to avoid accidental overwrite)
     if(f_goals_for) f_goals_for.value = '';
     if(f_goals_against) f_goals_against.value = '';
     if(f_scorers) f_scorers.value = '';
@@ -543,7 +541,6 @@ function openModal(opts={}){
 
     btnDelete.style.display='';
   }else{
-    // creating new event -> show match fields depending on type
     editingId = null;
     f_title.value = '';
     f_type.value  = 'Entrenamiento';
@@ -559,7 +556,6 @@ function openModal(opts={}){
     if(f_scorers) f_scorers.value = '';
     if(f_assists) f_assists.value = '';
     btnDelete.style.display='none';
-    // ensure match fields reflect chosen type
     toggleMatchFields();
   }
   modalBg.style.display='flex';
@@ -602,12 +598,9 @@ btnSave.onclick=async()=>{
 
   try{
     if(editingId){
-      // EDIT: only update the events row. do NOT touch matches table for now.
       const { error } = await supa.from('events').update(payloadEvent).eq('id', editingId);
       if(error) throw error;
-      // (no matches update while editing; we'll handle matches later)
     }else{
-      // NEW: insert event and if it's a Partido, insert into matches as previously
       const { data:inserted, error } = await supa.from('events').insert([payloadEvent]).select();
       if(error) throw error;
       const newEvent = inserted && inserted[0];
@@ -831,10 +824,20 @@ async function renderMatches(){
   }
 }
 
+/* Cerrar modal al tocar fuera (tap en fondo) */
+modalBg.addEventListener('click', (e)=>{
+  if(e.target === modalBg){
+    modalBg.style.display = 'none';
+  }
+});
+
 /* Inicial - init supabase antes de renderizar */
 document.addEventListener('DOMContentLoaded', async ()=>{
   await initSupabase();
-  showView('dash'); // showView('dash') llama a renderDash()
+  // Mostrar dashboard sin abrir modal
+  showView('dash');
+  // Garantizar que el modal esté oculto al inicio
+  try{ modalBg.style.display = 'none'; }catch(e){}
 });
 </script>
 </body>
