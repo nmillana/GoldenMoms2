@@ -913,17 +913,17 @@ async function renderMatches(){
 }
 
 /* ========= Inicial ========= */
-document.addEventListener('DOMContentLoaded', async ()=>{
-  // Mostrar la vista inicial
-  showView('dash');
-
-  // Intentar inicializar Supabase
+/* reemplaza tu handler DOMContentLoaded actual por este (líneas finales del script) */
+document.addEventListener('DOMContentLoaded', async () => {
+  // 1) Init Supabase primero (esperamos que termine)
   await initSupabase();
 
-  // Una vez intentado, renderizar datos (si supa ok, se cargarán; si no, se mostrará fallback)
-  renderDash();
-  // Nota: renderMonth/renderMatches se llamarán bajo demanda cuando el usuario cambie de pestaña
+  // 2) Luego mostramos la vista inicial; showView('dash') llamará a renderDash() ahora con supa inicializado
+  showView('dash');
+
+  // Nota: no hace falta llamar renderDash() de nuevo aquí porque showView('dash') ya lo invoca.
 });
+
 </script>
 </body>
 </html>
