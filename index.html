@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel (Responsive mejora móvil)</title>
+<title>Golden Moms — Panel (Responsive corregido modal)</title>
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -18,29 +18,34 @@ a{color:inherit;text-decoration:none}
 .btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer}
 .btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
 .btn.s{background:#f8fafc}
-.top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+
+/* TOP / NAV */
+.top{
+  position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);
+  display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+  overflow:visible; /* permitir que pestañas se muestren y no se recorten */
+}
 .brand{display:flex;gap:10px;align-items:center}
 .brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
 /* tabs: horizontal scroll on small screens */
-.nav{display:flex;gap:8px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding-bottom:4px}
+.nav{display:flex;gap:8px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding-bottom:4px;padding-right:16px}
 .nav::-webkit-scrollbar{height:6px}
 .nav::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:6px}
 .nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer;white-space:nowrap;flex:0 0 auto}
 .nav .tab.active{background:var(--blue);color:#fff}
+
 .container{max-width:1200px;margin:14px auto;padding:0 12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px;overflow:hidden}
+.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px; overflow:visible}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
 
 /* CALENDARIO */
-.month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px}
+.month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
 .month-title{font-weight:800;font-size:22px}
 .month-nav{display:flex;gap:6px}
 .month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;grid-auto-rows:minmax(90px,auto)}
 .weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:8px}
 .weekdays div{font-weight:700;color:var(--blue);text-align:center}
-
-/* default calendar day */
 .day{min-height:90px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;position:relative;display:flex;flex-direction:column;gap:6px}
 .day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .day-n{font-weight:700;color:var(--mut)}
@@ -48,17 +53,36 @@ a{color:inherit;text-decoration:none}
 .ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
-.ev .title{font-weight:600}
 
 /* LIST VIEW (mobile) */
-.month-list{display:flex;flex-direction:column;gap:8px}
+.month-list{display:none;flex-direction:column;gap:8px}
 .month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto}
 .day-date{min-width:52px;border-radius:8px;background:#f1f5f9;padding:6px 8px;text-align:center;font-weight:700;color:var(--mut)}
 .events-column{flex:1;display:flex;flex-direction:column;gap:6px}
 
-/* Modal */
-.modal-bg{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:60}
-.modal{width:min(860px,calc(100vw - 24px));background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;box-shadow:0 20px 40px #00000022;max-height:90vh;overflow:auto}
+/* Modal: cambiado para centrar correctamente */
+.modal-bg{
+  position:fixed;
+  inset:0;
+  background:#0006;
+  display:none;
+  z-index:1000;
+  /* centrado horizontal y espacio vertical desde arriba + scroll vertical si hace falta */
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding-top:6vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.modal{
+  /* evitar usar vw (problemas con scrollbars en mobile). usamos % respecto al contenedor */
+  width: min(860px, calc(100% - 24px));
+  margin: 0 auto; /* centrado horizontal dentro del fondo */
+  background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;box-shadow:0 20px 40px #00000022;
+  max-height:90vh; overflow:auto;
+  box-sizing:border-box;
+}
 .modal h3{margin:0 0 10px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:800px){.form-row{grid-template-columns:1fr}}
@@ -68,7 +92,7 @@ a{color:inherit;text-decoration:none}
 /* helper text */
 .section-note{font-size:13px;color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
 
-/* ================= MOBILE IMPROVEMENTS ================= */
+/* responsive improvements */
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}
   .month-grid, .weekdays{gap:6px}
@@ -81,22 +105,20 @@ a{color:inherit;text-decoration:none}
   .card-hoy{ order:1; } .card-birth-today{ order:2; } .card-birth-next{ order:3; } .card-week{ order:4; }
   .cards-dashboard h4{ font-size:16px; line-height:1.25; margin:0 0 6px; }
   .section-note{ font-size:12px; }
-  /* Make month-bar stack nicely */
   .month-bar{flex-wrap:wrap;align-items:center}
 }
 
-/* Small phones: use list view for calendar, smaller paddings & fonts */
+/* Small phones: switch to list view to avoid cramped grid */
 @media (max-width:420px){
-  .month-title{font-size:18px}
-  .month-grid{display:none} /* hide grid on very small screens */
+  .month-grid{display:none}
   .weekdays{display:none}
   .month-list{display:flex}
+  .month-title{font-size:18px}
   .day{padding:8px}
   .day-date{min-width:46px;padding:6px 6px}
   .ev{font-size:13px;padding:6px}
   .nav .tab{padding:6px 8px;font-size:13px}
   .container{padding:0 8px}
-  /* roster cards full width */
   #rosterGrid .card{grid-column:1 / -1 !important}
 }
 </style>
@@ -170,7 +192,7 @@ a{color:inherit;text-decoration:none}
     </div>
   </section>
 
-  <!-- EVENTOS (Calendario mensual) -->
+  <!-- EVENTOS -->
   <section id="v-events" style="display:none">
     <div class="card">
       <div class="month-bar">
@@ -185,17 +207,14 @@ a{color:inherit;text-decoration:none}
         </div>
       </div>
 
-      <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD) para evitar el desplazamiento de día por conversión UTC.</div>
+      <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD).</div>
 
       <div class="weekdays">
         <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
       </div>
 
-      <!-- GRID (desktop/tablet) -->
       <div id="monthGrid" class="month-grid"></div>
-
-      <!-- LIST (mobile) - will be filled dynamically -->
-      <div id="monthList" class="month-list" style="display:none"></div>
+      <div id="monthList" class="month-list"></div>
     </div>
   </section>
 
@@ -208,7 +227,7 @@ a{color:inherit;text-decoration:none}
     </div>
   </section>
 
-  <!-- PARTIDOS JUGADOS -->
+  <!-- PARTIDOS -->
   <section id="v-matches" style="display:none">
     <div class="card">
       <h4>Partidos jugados</h4>
@@ -220,10 +239,11 @@ a{color:inherit;text-decoration:none}
 
 <footer style="text-align:center;padding:16px;color:var(--mut);font-size:14px">Golden Moms · hecho con 💚 lima & azul</footer>
 
-<!-- MODAL EVENTO -->
+<!-- MODAL -->
 <div class="modal-bg" id="modalBg">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true">
     <h3 id="modalTitle">Nuevo evento</h3>
+
     <div class="form-row">
       <div>
         <label>Título</label>
@@ -237,6 +257,7 @@ a{color:inherit;text-decoration:none}
         </select>
       </div>
     </div>
+
     <div class="form-row">
       <div>
         <label>Fecha y hora</label>
@@ -247,6 +268,7 @@ a{color:inherit;text-decoration:none}
         <input id="f_team" class="input" value="Golden Moms">
       </div>
     </div>
+
     <div class="form-row">
       <div>
         <label>Rival (si aplica)</label>
@@ -261,6 +283,7 @@ a{color:inherit;text-decoration:none}
         </select>
       </div>
     </div>
+
     <div class="form-row">
       <div>
         <label>Ubicación</label>
@@ -275,6 +298,7 @@ a{color:inherit;text-decoration:none}
         </div>
       </div>
     </div>
+
     <div class="form-row" id="matchPeopleRow" style="display:none">
       <div>
         <label>Goleadoras (coma-separadas)</label>
@@ -285,6 +309,7 @@ a{color:inherit;text-decoration:none}
         <input id="f_assists" class="input" placeholder="NombreA, NombreB">
       </div>
     </div>
+
     <div class="form-row">
       <div>
         <label>&nbsp;</label>
@@ -296,6 +321,7 @@ a{color:inherit;text-decoration:none}
       </div>
       <div></div>
     </div>
+
   </div>
 </div>
 
@@ -309,12 +335,10 @@ let supa = null;
 async function initSupabase(timeoutMs = 8000){
   try{
     if(typeof createClient === 'function'){
-      supa = createClient(SUPA.url, SUPA.key);
-      return supa;
+      supa = createClient(SUPA.url, SUPA.key); return supa;
     }
     if(window.supabase && typeof window.supabase.createClient === 'function'){
-      supa = window.supabase.createClient(SUPA.url, SUPA.key);
-      return supa;
+      supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa;
     }
     await new Promise((resolve,reject)=>{
       const s = document.createElement('script');
@@ -329,14 +353,10 @@ async function initSupabase(timeoutMs = 8000){
     if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
     if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
     throw new Error('SDK cargado pero no se encontró createClient/supabase.createClient');
-  }catch(err){
-    console.error('initSupabase error:', err);
-    supa = null;
-    return null;
-  }
+  }catch(err){ console.error('initSupabase error:', err); supa = null; return null; }
 }
 
-/* Navegación */
+/* NAV */
 document.querySelectorAll('.nav .tab').forEach(btn=>{
   btn.onclick=()=>{ document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); showView(btn.dataset.view); };
 });
@@ -396,7 +416,6 @@ async function renderMonth(){
   renderMonthTitle();
   const {start,end} = getMonthRange(monthCursor);
   cachedEvents = await fetchEventsRange(start,end);
-  // responsive: small phones use list view
   if(window.matchMedia('(max-width:420px)').matches){
     monthGrid.style.display = 'none';
     monthList.style.display = 'block';
@@ -444,7 +463,6 @@ function drawMonthList(start,end){
     const row = document.createElement('div'); row.className='day';
     const dateBox = document.createElement('div'); dateBox.className='day-date'; dateBox.innerText = `${pad(day.getDate())}\n${day.toLocaleString('es-CL',{month:'short'})}`;
     const col = document.createElement('div'); col.className='events-column';
-    // header row inside the card
     const headRow = document.createElement('div'); headRow.style.display='flex'; headRow.style.justifyContent='space-between'; headRow.style.alignItems='center';
     const title = document.createElement('div'); title.style.fontWeight='700'; title.innerText = day.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
     const plus = document.createElement('button'); plus.className='day-add'; plus.title='Nuevo evento'; plus.innerText='+';
@@ -467,7 +485,7 @@ function drawMonthList(start,end){
   }
 }
 
-/* Modal + form fields (igual que antes) */
+/* Modal fields */
 const modalBg = document.getElementById('modalBg');
 const f_title = document.getElementById('f_title');
 const f_type = document.getElementById('f_type');
@@ -485,6 +503,7 @@ const matchPeopleRow = document.getElementById('matchPeopleRow');
 const btnDelete = document.getElementById('btnDelete');
 const btnCancel = document.getElementById('btnCancel');
 const btnSave   = document.getElementById('btnSave');
+
 let editingId = null;
 function toggleMatchFields(){ if(f_type.value==='Partido'){ matchExtra.style.display=''; matchPeopleRow.style.display=''; } else { matchExtra.style.display='none'; matchPeopleRow.style.display='none'; } }
 f_type.addEventListener('change', toggleMatchFields);
@@ -572,7 +591,7 @@ btnSave.onclick=async()=>{
   modalBg.style.display='none'; renderMonth(); renderDash();
 };
 
-/* DASHBOARD & ROSTER & MATCHES (igual lógica, con fallbacks) */
+/* Dashboard / roster / matches (lógica igual que antes) */
 async function renderDash(){
   try{
     const now = new Date();
@@ -585,7 +604,7 @@ async function renderDash(){
     if(supa){
       const {data:events, error} = await supa.from("events").select("*").gte("datetime", weekStart.toISOString()).lte("datetime", weekEnd.toISOString()).order("datetime",{ascending:true});
       if(error){ console.warn('renderDash events error', error); evs=[]; } else evs = events || [];
-    } else { evs = []; }
+    } else evs=[];
 
     let players = [];
     if(supa){
@@ -656,7 +675,7 @@ async function renderMatches(){
 /* Inicial - init supabase antes de renderizar */
 document.addEventListener('DOMContentLoaded', async ()=>{
   await initSupabase();
-  showView('dash'); // showView('dash') llama a renderDash()
+  showView('dash');
 });
 </script>
 </body>
