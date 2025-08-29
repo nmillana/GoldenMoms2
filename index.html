@@ -1,298 +1,304 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel</title>
-<link rel="icon" href="Logo.webp"/>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<style>
-:root{
-  --blue:#0f3a78;--lime:#9be22d;--ink:#0f172a;--mut:#64748b;
-  --b:#e2e8f0;--bg:#f7f8fa;--ok:#d9f99d;--mid:#fef9c3;--no:#fee2e2;
-  --card:#ffffff;
-}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
-a{color:inherit}
-.container{max-width:1200px;margin:14px auto;padding:0 12px}
-.top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
-.brand{display:flex;gap:10px;align-items:center}
-.brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
-.nav{display:flex;gap:8px;flex-wrap:wrap}
-.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
-.nav .tab.active{background:var(--blue);color:#fff}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-.card{background:var(--card);border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
-.kpi h3{margin:0;color:var(--mut);font-size:14px}
-.kpi .n{font-size:22px;font-weight:800}
-.list{margin:8px 0 0 16px;padding:0}
-.list li{margin:4px 0}
+<!-- ========== EVENTOS (reemplazar tu sección v-events completa por esta) ========== -->
+<section id="v-events" style="display:none">
+  <style>
+    /* ====== Eventos: estilos locales ====== */
+    #eventsWrap{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    #monthLbl{font-weight:800;font-size:18px}
+    .ev-btn{border:1px solid var(--b);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
+    .ev-btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
+    .ev-cal{
+      display:grid;gap:10px;
+      grid-template-columns:repeat(7,1fr)
+    }
+    .ev-day{
+      background:#fff;border:1px solid var(--b);border-radius:12px;
+      min-height:140px;padding:8px;position:relative;overflow:hidden
+    }
+    .ev-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .ev-dow{color:var(--mut);font-size:12px}
+    .ev-num{font-weight:800}
+    .ev-add{border:1px dashed var(--b);border-radius:10px;width:26px;height:26px;line-height:24px;text-align:center;font-weight:700;color:var(--mut);cursor:pointer;background:#fff}
+    .ev-card{
+      margin:6px 0 0 0;padding:8px;border-radius:10px;border:1px solid #0001;
+      font-size:13px;font-weight:400;cursor:pointer
+    }
+    /* Colores por tipo */
+    .is-train{background:#ccfb90;border-color:#a3e635}     /* verde lima más fuerte */
+    .is-match{background:#ddebff;border-color:#b7d1ff}     /* azul predominante */
+    /* Evitar negrita del título */
+    .ev-title{font-weight:400}
 
-/* Sections visibility */
-section{display:none}
-#v-dash{display:block}
+    /* ====== Responsive ====== */
+    @media (max-width:1100px){ .ev-cal{grid-template-columns:repeat(3,1fr)} }
+    @media (max-width:720px){  .ev-cal{grid-template-columns:1fr} }
+  </style>
 
-/* Responsive */
-@media (max-width: 900px){
-  .grid{grid-template-columns:1fr}
-}
-
-/* ===== (el resto de vistas reutiliza tu estilo por compatibilidad) ===== */
-.filters-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;position:sticky;top:114px;z-index:5;background:#fff;padding:6px 0;border-bottom:1px solid var(--b)}
-.cal-head>div{text-align:center;font-weight:700;color:#0f3a78}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.cal-cell{min-height:140px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;overflow:hidden}
-footer{margin-top:40px;text-align:center;padding:16px;color:var(--mut);font-size:14px}
-</style>
-</head>
-<body>
-
-<!-- Top -->
-<div class="top">
-  <div class="brand">
-    <img src="Logo.webp" alt="GM"/>
-    <div><strong>Golden</strong> <span style="color:var(--lime);font-weight:800">Moms</span></div>
+  <!-- Barra superior de navegación de mes -->
+  <div id="eventsWrap">
+    <button id="btnPrevMonth" class="ev-btn">◀</button>
+    <div id="monthLbl">—</div>
+    <button id="btnNextMonth" class="ev-btn">▶</button>
+    <div style="flex:1"></div>
+    <button id="btnToday" class="ev-btn">Hoy</button>
+    <button id="btnNewEvent" class="ev-btn p">Nuevo Evento</button>
   </div>
-  <div class="nav">
-    <button class="tab active" data-view="dash">Dashboard</button>
-    <button class="tab" data-view="events">Eventos</button>
-    <button class="tab" data-view="roster">Plantel</button>
-    <button class="tab" data-view="track">Seguimiento</button>
-  </div>
-</div>
 
-<div class="container">
-  <!-- DASHBOARD -->
-  <section id="v-dash">
-    <div class="grid" id="kpiRow">
-      <div class="card kpi" style="grid-column:span 3">
-        <h3>Próximos eventos</h3><div class="n" id="kEvents">0</div>
+  <!-- Calendario -->
+  <div id="calMonth" class="ev-cal"></div>
+
+  <!-- Modal Crear/Editar -->
+  <dialog id="evModal" style="border:none;border-radius:12px;padding:0;max-width:520px;width:calc(100% - 24px)">
+    <form method="dialog" id="evForm" style="padding:14px">
+      <h3 id="evModalTitle" style="margin:0 0 10px 0">Nuevo evento</h3>
+      <input type="hidden" id="f_id"/>
+      <div style="display:grid;gap:10px">
+        <label>Título
+          <input id="f_title" class="ev-in" placeholder="Ej: Entrenamiento Colegio" style="width:100%;padding:8px;border:1px solid var(--b);border-radius:8px"/>
+        </label>
+
+        <label>Tipo
+          <select id="f_type" style="width:100%;padding:8px;border:1px solid var(--b);border-radius:8px">
+            <option>Entrenamiento</option>
+            <option>Partido</option>
+          </select>
+        </label>
+
+        <div style="display:grid;gap:10px;grid-template-columns:1fr 1fr">
+          <label>Fecha y hora
+            <input id="f_datetime" type="datetime-local" style="width:100%;padding:8px;border:1px solid var(--b);border-radius:8px"/>
+          </label>
+          <label>Equipo
+            <input id="f_team" value="Golden Moms" style="width:100%;padding:8px;border:1px solid var(--b);border-radius:8px"/>
+          </label>
+        </div>
+
+        <label>Rival (si aplica)
+          <input id="f_opponent" placeholder="Rivales / Liga" style="width:100%;padding:8px;border:1px solid var(--b);border-radius:8px"/>
+        </label>
+
+        <label>Uniforme
+          <select id="f_uniform" style="width:100%;padding:8px;border:1px solid var(--b);border-radius:8px">
+            <option value="">(definir)</option>
+            <option>Polera azul</option>
+            <option>Polera verde lima</option>
+          </select>
+          <div style="color:var(--mut);font-size:12px;margin-top:4px">* Siempre medias verde lima</div>
+        </label>
+
+        <label>Ubicación
+          <input id="f_location" placeholder="Colegio / Cancha / Dirección" style="width:100%;padding:8px;border:1px solid var(--b);border-radius:8px"/>
+        </label>
       </div>
-      <div class="card kpi" style="grid-column:span 3">
-        <h3>Plantel</h3><div class="n" id="kRoster">0</div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <button class="ev-btn" id="btnDelete" type="button" style="display:none;border-color:#fecaca;background:#fee2e2">Eliminar</button>
+        <button class="ev-btn" id="btnCancel" type="button">Cancelar</button>
+        <button class="ev-btn p" id="btnSave" type="submit">Guardar</button>
       </div>
-      <div class="card kpi" style="grid-column:span 3">
-        <h3>Partidos jugados</h3><div class="n" id="kGames">0</div>
-      </div>
-      <div class="card kpi" style="grid-column:span 3">
-        <h3>Cumpleaños (hoy)</h3><div class="n" id="kBdayToday">—</div>
-      </div>
-    </div>
+    </form>
+  </dialog>
 
-    <div class="card" style="margin-top:12px">
-      <strong>📅 Hoy</strong>
-      <ul id="todayEvents" class="list"></ul>
-    </div>
+  <script>
+    /* ================== Eventos: lógica ================== */
+    // Re-usa tu cliente supa ya creado arriba:
+    // const supa = supabase.createClient(SUPA.url, SUPA.key);
 
-    <div class="card" style="margin-top:12px">
-      <strong>🗓️ Eventos de la semana</strong>
-      <ul id="weekEvents" class="list"></ul>
-    </div>
+    const tz = "America/Santiago"; // evitar corrimientos
+    const $ = (s, r=document)=>r.querySelector(s);
+    const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
 
-    <div class="card" style="margin-top:12px">
-      <strong>🎂 Próximos cumpleaños</strong>
-      <ul id="upBirth" class="list"></ul>
-    </div>
-  </section>
+    const calEl  = $("#calMonth");
+    const monthLbl = $("#monthLbl");
+    let cursor = new Date();   // mes mostrado
+    cursor.setDate(1);
 
-  <!-- EVENTOS -->
-  <section id="v-events">
-    <div class="card">
-      <div class="filters-row">
-        <button class="btn p" id="btnNewEvent">Nuevo Evento</button>
-      </div>
-      <div class="cal-head"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
-      <div id="calGrid" class="cal-grid"></div>
-    </div>
-  </section>
+    // Helpers
+    const fmtMonth = (d)=>
+      d.toLocaleDateString("es-CL",{month:"long",year:"numeric", timeZone: tz});
+    const startOfWeekIndex = 1; // lunes
 
-  <!-- PLANTEL -->
-  <section id="v-roster">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong>Plantel</strong>
-        <button id="btnAddPlayer" class="btn s">Agregar jugadora</button>
-      </div>
-      <div id="rosterGrid" class="grid"></div>
-    </div>
-  </section>
+    function firstDayGrid(d){
+      const x = new Date(d);
+      const dow = (x.getDay()+6)%7; // L=0..D=6
+      x.setDate(x.getDate() - ((dow - startOfWeekIndex + 7)%7));
+      return x;
+    }
+    const toLocalDayKey = (iso)=>{
+      // clave YYYY-MM-DD en zona CL
+      const dt = new Date(iso);
+      const y = dt.toLocaleString("en-CA",{year:"numeric", timeZone: tz});
+      const m = dt.toLocaleString("en-CA",{month:"2-digit", timeZone: tz});
+      const d = dt.toLocaleString("en-CA",{day:"2-digit", timeZone: tz});
+      return `${y}-${m}-${d}`;
+    }
+    const dayKeyFromDate = (d)=>{
+      const y = d.toLocaleString("en-CA",{year:"numeric", timeZone: tz});
+      const m = d.toLocaleString("en-CA",{month:"2-digit", timeZone: tz});
+      const dd= d.toLocaleString("en-CA",{day:"2-digit", timeZone: tz});
+      return `${y}-${m}-${dd}`;
+    }
 
-  <!-- SEGUIMIENTO -->
-  <section id="v-track">
-    <div class="card">
-      <strong>Seguimiento de partidos</strong>
-      <div id="trackList"></div>
-    </div>
-  </section>
-</div>
+    // Render
+    async function renderMonth(){
+      monthLbl.textContent = capitalize(fmtMonth(cursor));
+      calEl.innerHTML = "";
 
-<footer>Golden Moms · hecho con 💚 lima & azul</footer>
+      const monthStart = new Date(cursor);
+      const monthEnd   = new Date(cursor.getFullYear(), cursor.getMonth()+1, 0);
 
-<script>
-/* ========= SUPABASE ========= */
-const SUPA = {
-  url: "https://xglojvvbgaivwbpdxvne.supabase.co",
-  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
-};
-const supa = supabase.createClient(SUPA.url, SUPA.key);
+      // rango extendido para cubrir grilla (6 semanas máx)
+      const gridStart = firstDayGrid(monthStart);
+      const gridDays = 42; // 6 filas
 
-/* ========= Tabs ========= */
-document.querySelectorAll('.nav .tab').forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    ['dash','events','roster','track'].forEach(id=>document.getElementById('v-'+id).style.display='none');
-    document.getElementById('v-'+btn.dataset.view).style.display='block';
-    if(btn.dataset.view==='dash') renderDash();
-    if(btn.dataset.view==='events') renderEvents();
-    if(btn.dataset.view==='roster') renderRoster();
-    if(btn.dataset.view==='track') renderTrack();
-  };
-});
+      // Cargar eventos del rango (en UTC pero convertimos al agrupar)
+      const fromISO = new Date(gridStart);
+      const toISO = new Date(gridStart); toISO.setDate(toISO.getDate()+gridDays);
 
-/* ========= Helpers fecha ========= */
-const tzOffsetMs = new Date().getTimezoneOffset() * 60000;
-const toUTCISO = d => new Date(d.getTime() - tzOffsetMs).toISOString();
-const fmt = d => d.toLocaleDateString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+      const { data: events, error } = await supa
+        .from("events")
+        .select("*")
+        .gte("datetime", fromISO.toISOString())
+        .lt("datetime", toISO.toISOString())
+        .order("datetime", { ascending: true });
 
-/* Lunes como inicio de semana */
-function startOfWeek(d=new Date()){
-  const x = new Date(d);
-  const dow = (x.getDay()+6)%7;  // lun=0..dom=6
-  x.setDate(x.getDate()-dow);
-  x.setHours(0,0,0,0);
-  return x;
-}
-function endOfWeek(d=new Date()){
-  const s = startOfWeek(d);
-  const e = new Date(s);
-  e.setDate(s.getDate()+7);
-  e.setHours(0,0,0,0);
-  return e;
-}
-function startOfDay(d=new Date()){
-  const x=new Date(d); x.setHours(0,0,0,0); return x;
-}
-function endOfDay(d=new Date()){
-  const x=new Date(d); x.setDate(x.getDate()+1); x.setHours(0,0,0,0); return x;
-}
+      if(error){ console.error(error); }
 
-/* ========= Eventos (vista) — mantiene tu implementación base ========= */
-async function renderEvents(){
-  const {data}=await supa.from("events").select("*").order("datetime",{ascending:true});
-  const grid=document.getElementById('calGrid'); grid.innerHTML="";
-  (data||[]).forEach(e=>{
-    const d=new Date(e.datetime);
-    const c=document.createElement("div"); c.className="cal-cell";
-    c.innerHTML=`
-      <div style="font-size:12px;color:#0f3a78;font-weight:700">${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}</div>
-      <div style="font-weight:600">${e.title}</div>
-      <div style="font-size:12px;color:#475569">${e.team||""}</div>`;
-    grid.appendChild(c);
-  });
-}
+      // Agrupar por día (en TZ CL)
+      const byDay = {};
+      (events||[]).forEach(e=>{
+        const k = toLocalDayKey(e.datetime);
+        (byDay[k] ??= []).push(e);
+      });
 
-/* ========= Plantel ========= */
-async function renderRoster(){
-  const {data}=await supa.from("players").select("*").order("nombre");
-  const grid=document.getElementById('rosterGrid'); grid.innerHTML="";
-  (data||[]).forEach(p=>{
-    const c=document.createElement("div"); c.className="card";
-    c.innerHTML=`<strong>${p.nombre}</strong><br/>${p.apodo||""}<br/><span>${p.posicion||""}</span>`;
-    grid.appendChild(c);
-  });
-}
+      // Construir celdas
+      const DOW = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+      for(let i=0;i<gridDays;i++){
+        const d = new Date(gridStart); d.setDate(d.getDate()+i);
+        const key = dayKeyFromDate(d);
 
-/* ========= Seguimiento ========= */
-async function renderTrack(){
-  const {data}=await supa.from("matches").select("*").order("datetime",{ascending:false});
-  const wrap=document.getElementById("trackList"); wrap.innerHTML="";
-  (data||[]).forEach(m=>{
-    const d=new Date(m.datetime);
-    const div=document.createElement("div"); div.className="card";
-    div.innerHTML=`<strong>${m.title||"Partido"}</strong><br/>
-      ${d.toLocaleDateString("es-CL",{weekday:'short',day:'2-digit',month:'short'})}<br/>
-      Goleadora: ${m.Goleadora||"-"}`;
-    wrap.appendChild(div);
-  });
-}
+        const cell = document.createElement("div");
+        cell.className = "ev-day";
 
-/* ========= Crear Evento (simple) ========= */
-document.getElementById("btnNewEvent").onclick = async () => {
-  const title = prompt("Título del evento:");
-  const datetime = prompt("Fecha y hora (YYYY-MM-DD HH:MM):");
-  const type = prompt("Tipo (Entrenamiento o Partido):");
-  const team = prompt("Equipo:");
-  const cancha = prompt("Lugar:");
-  if(!title || !datetime) return alert("Faltan datos");
-  const { error } = await supa.from("events").insert([{ title, datetime, type, team, location: cancha }]);
-  if(error){ alert("❌ Error al guardar: " + error.message); }
-  else { alert("✅ Evento guardado"); renderEvents(); renderDash(); }
-};
+        // header día
+        const hdr = document.createElement("div");
+        hdr.className = "ev-hdr";
+        hdr.innerHTML = `
+          <div>
+            <div class="ev-dow">${DOW[(d.getDay()+6)%7]}</div>
+            <div class="ev-num">${d.getDate()}</div>
+          </div>
+          <button class="ev-add" title="Nuevo">+</button>
+        `;
+        hdr.querySelector(".ev-add").onclick = ()=> openModalForNew(d);
+        cell.appendChild(hdr);
 
-/* ========= Dashboard ========= */
-async function renderDash(){
-  const now = new Date();
+        // tarjetas
+        (byDay[key]||[]).forEach(e=>{
+          const tag = document.createElement("div");
+          tag.className = "ev-card "+ (e.type==="Entrenamiento" ? "is-train":"is-match");
+          tag.innerHTML = `<div class="ev-title">${escapeHTML(e.title||"(sin título)")}</div>`;
+          tag.onclick = ()=> openModalForEdit(e);
+          cell.appendChild(tag);
+        });
 
-  // KPIs básicos
-  const {data:events}=await supa.from("events").select("*").gte("datetime", toUTCISO(now));
-  const {data:players}=await supa.from("players").select("id,nombre,apodo,fecha_nacimiento");
-  document.getElementById('kEvents').textContent = events?.length||0;
-  document.getElementById('kRoster').textContent = players?.length||0;
-  document.getElementById('kGames').textContent = 0;
+        calEl.appendChild(cell);
+      }
+    }
 
-  /* Cumpleaños HOY (tarjeta KPI) */
-  const mdToday = (d)=> `${d.getMonth()+1}-${d.getDate()}`;
-  const todayKey = mdToday(now);
-  const bdayToday = (players||[]).filter(p=>{
-    if(!p.fecha_nacimiento) return false;
-    const d=new Date(p.fecha_nacimiento);
-    return mdToday(d)===todayKey;
-  });
-  document.getElementById('kBdayToday').textContent =
-    bdayToday.length ? bdayToday.map(p=>p.apodo||p.nombre).join(", ") : "—";
+    // Modal
+    const dlg = $("#evModal");
+    const f_id = $("#f_id"), f_title = $("#f_title"), f_type = $("#f_type"),
+          f_datetime = $("#f_datetime"), f_team = $("#f_team"),
+          f_opponent=$("#f_opponent"), f_uniform=$("#f_uniform"),
+          f_location=$("#f_location");
+    const btnDel = $("#btnDelete"), btnCancel=$("#btnCancel"), btnSave=$("#btnSave");
 
-  /* Hoy */
-  const tStart = startOfDay(now), tEnd=endOfDay(now);
-  const {data:today}=await supa.from("events").select("*")
-    .gte("datetime", toUTCISO(tStart)).lt("datetime", toUTCISO(tEnd)).order("datetime",{ascending:true});
-  const listToday=document.getElementById('todayEvents'); listToday.innerHTML="";
-  (today||[]).forEach(e=>{
-    const d=new Date(e.datetime);
-    listToday.innerHTML += `<li>${e.title} — ${fmt(d)}</li>`;
-  });
+    function setModalData(e){
+      $("#evModalTitle").textContent = e?.id ? "Editar evento" : "Nuevo evento";
+      f_id.value = e?.id || "";
+      f_title.value = e?.title || "";
+      f_type.value  = e?.type || "Entrenamiento";
+      // datetime-local en TZ local CL
+      f_datetime.value = e?.datetime ? toLocalDatetimeLocal(e.datetime) : "";
+      f_team.value = e?.team || "Golden Moms";
+      f_opponent.value = e?.opponent || "";
+      f_uniform.value = e?.uniform || "";
+      f_location.value = e?.location || "";
+      btnDel.style.display = e?.id ? "inline-flex":"none";
+    }
+    function openModalForNew(dayDate){
+      const d = new Date(dayDate);
+      // por defecto 19:30
+      d.setHours(19,30,0,0);
+      setModalData({ datetime: d.toISOString() });
+      dlg.showModal();
+    }
+    function openModalForEdit(e){
+      setModalData(e);
+      dlg.showModal();
+    }
+    btnCancel.onclick = ()=> dlg.close();
 
-  /* Semana actual (lun-dom) */
-  const wStart=startOfWeek(now), wEnd=endOfWeek(now);
-  const {data:week}=await supa.from("events").select("*")
-    .gte("datetime", toUTCISO(wStart)).lt("datetime", toUTCISO(wEnd))
-    .order("datetime",{ascending:true});
-  const listWeek=document.getElementById('weekEvents'); listWeek.innerHTML="";
-  (week||[]).forEach(e=>{
-    const d=new Date(e.datetime);
-    listWeek.innerHTML += `<li>${e.title} — ${fmt(d)}</li>`;
-  });
+    btnDel.onclick = async ()=>{
+      if(!f_id.value) return;
+      const { error } = await supa.from("events").delete().eq("id", f_id.value);
+      if(error) alert("❌ No se pudo eliminar: "+error.message);
+      dlg.close(); renderMonth();
+    };
 
-  /* Próximos cumpleaños (abajo) — próximos 5 según vista */
-  const { data: birthdays } = await supa
-    .from("vw_upcoming_birthdays")
-    .select("*")
-    .order("proximo_cumple", { ascending: true })
-    .limit(5);
+    $("#evForm").onsubmit = async (ev)=>{
+      ev.preventDefault();
+      const payload = {
+        title: f_title.value?.trim(),
+        type:  f_type.value,
+        team:  f_team.value?.trim() || "Golden Moms",
+        opponent: f_opponent.value?.trim() || null,
+        uniform:  f_uniform.value || null,
+        location: f_location.value?.trim() || null,
+        datetime: fromLocalDatetimeLocal(f_datetime.value)  // a ISO
+      };
+      if(!payload.title || !payload.datetime){ alert("Falta título y/o fecha"); return; }
 
-  const bList = document.getElementById("upBirth"); bList.innerHTML="";
-  (birthdays||[]).forEach(p=>{
-    if(!p.proximo_cumple) return;
-    const bd = new Date(p.proximo_cumple);
-    bList.innerHTML += `<li>${p.apodo || p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
-  });
-}
+      let error;
+      if(f_id.value){
+        ({error} = await supa.from("events").update(payload).eq("id", f_id.value));
+      }else{
+        ({error} = await supa.from("events").insert([payload]));
+      }
+      if(error) alert("❌ Error al guardar: "+error.message);
+      dlg.close(); renderMonth();
+    };
 
-/* ========= Inicial ========= */
-renderDash();
-</script>
+    // Controles superiores
+    $("#btnPrevMonth").onclick = ()=>{ cursor.setMonth(cursor.getMonth()-1); renderMonth(); };
+    $("#btnNextMonth").onclick = ()=>{ cursor.setMonth(cursor.getMonth()+1); renderMonth(); };
+    $("#btnToday").onclick     = ()=>{ const t=new Date(); cursor=new Date(t.getFullYear(),t.getMonth(),1); renderMonth(); };
+    $("#btnNewEvent").onclick  = ()=> openModalForNew(new Date());
 
-</body>
-</html>
+    // utilidades
+    function escapeHTML(s){ return (s||"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
+    function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+    function toLocalDatetimeLocal(iso){
+      if(!iso) return "";
+      const d = new Date(iso);
+      // a texto local (TZ CL) para input datetime-local
+      const y = d.toLocaleString("en-CA",{year:"numeric", timeZone: tz});
+      const m = d.toLocaleString("en-CA",{month:"2-digit", timeZone: tz});
+      const da= d.toLocaleString("en-CA",{day:"2-digit", timeZone: tz});
+      const hh= d.toLocaleString("en-CA",{hour:"2-digit", hour12:false, timeZone: tz});
+      const mi= d.toLocaleString("en-CA",{minute:"2-digit", timeZone: tz});
+      return `${y}-${m}-${da}T${hh}:${mi}`;
+    }
+    function fromLocalDatetimeLocal(v){
+      // interpreta valor local y lo convierte a ISO (manteniendo la hora local CL)
+      if(!v) return null;
+      // El input está en zona local del dispositivo; asumimos misma hora local => creamos Date local
+      const d = new Date(v);
+      return d.toISOString();
+    }
+
+    // Inicial
+    renderMonth();
+  </script>
+</section>
