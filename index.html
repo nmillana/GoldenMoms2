@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel (Dashboard actualizado)</title>
+<title>Golden Moms — Panel (Responsive mejora móvil)</title>
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --blue:#0f3a78; --lime:#9be22d; --ink:#0f172a; --mut:#64748b;
-  --b:#e2e8f0; --bg:#f7f8fa; --ok:#d9f99d; --mid:#fef9c3; --no:#fee2e2;
+  --b:#e2e8f0; --bg:#f7f8fa;
   --lime-strong:#7fd410; --blue-strong:#0a2a58;
 }
 *{box-sizing:border-box}
@@ -18,10 +18,10 @@ a{color:inherit;text-decoration:none}
 .btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer}
 .btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
 .btn.s{background:#f8fafc}
-.badge{font-size:11px;border:1px solid var(--b);border-radius:999px;padding:2px 8px;background:#f8fafc}
 .top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
 .brand{display:flex;gap:10px;align-items:center}
 .brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
+/* tabs: horizontal scroll on small screens */
 .nav{display:flex;gap:8px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding-bottom:4px}
 .nav::-webkit-scrollbar{height:6px}
 .nav::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:6px}
@@ -32,7 +32,7 @@ a{color:inherit;text-decoration:none}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px;overflow:hidden}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
 
-/* ====== EVENTOS (Calendario mensual) ====== */
+/* CALENDARIO */
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px}
 .month-title{font-weight:800;font-size:22px}
 .month-nav{display:flex;gap:6px}
@@ -40,14 +40,21 @@ a{color:inherit;text-decoration:none}
 .weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:8px}
 .weekdays div{font-weight:700;color:var(--blue);text-align:center}
 
+/* default calendar day */
 .day{min-height:90px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;position:relative;display:flex;flex-direction:column;gap:6px}
 .day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .day-n{font-weight:700;color:var(--mut)}
 .day-add{border:none;background:#eef4ff;color:var(--blue);width:26px;height:26px;border-radius:999px;cursor:pointer}
-.ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word;max-width:100%}
+.ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
 .ev .title{font-weight:600}
+
+/* LIST VIEW (mobile) */
+.month-list{display:flex;flex-direction:column;gap:8px}
+.month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto}
+.day-date{min-width:52px;border-radius:8px;background:#f1f5f9;padding:6px 8px;text-align:center;font-weight:700;color:var(--mut)}
+.events-column{flex:1;display:flex;flex-direction:column;gap:6px}
 
 /* Modal */
 .modal-bg{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:60}
@@ -61,7 +68,7 @@ a{color:inherit;text-decoration:none}
 /* helper text */
 .section-note{font-size:13px;color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
 
-/* ====== MÓVIL: mejoras responsive ====== */
+/* ================= MOBILE IMPROVEMENTS ================= */
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}
   .month-grid, .weekdays{gap:6px}
@@ -69,47 +76,33 @@ a{color:inherit;text-decoration:none}
   .kpi { padding:12px 10px; }
   .card { padding:12px; }
   footer{font-size:13px}
-
-  /* Apilar y ordenar las tarjetas del dashboard */
-  .cards-dashboard{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-  }
+  .cards-dashboard{display:flex;flex-direction:column;gap:12px}
   .cards-dashboard .card{ grid-column:auto !important; }
-
-  .card-hoy{ order:1; }
-  .card-birth-today{ order:2; }
-  .card-birth-next{ order:3; }
-  .card-week{ order:4; }
-
+  .card-hoy{ order:1; } .card-birth-today{ order:2; } .card-birth-next{ order:3; } .card-week{ order:4; }
   .cards-dashboard h4{ font-size:16px; line-height:1.25; margin:0 0 6px; }
   .section-note{ font-size:12px; }
+  /* Make month-bar stack nicely */
+  .month-bar{flex-wrap:wrap;align-items:center}
 }
 
-/* Ajustes para teléfonos pequeños */
+/* Small phones: use list view for calendar, smaller paddings & fonts */
 @media (max-width:420px){
-  .top{padding:8px}
-  .brand img{width:28px;height:28px}
+  .month-title{font-size:18px}
+  .month-grid{display:none} /* hide grid on very small screens */
+  .weekdays{display:none}
+  .month-list{display:flex}
+  .day{padding:8px}
+  .day-date{min-width:46px;padding:6px 6px}
+  .ev{font-size:13px;padding:6px}
   .nav .tab{padding:6px 8px;font-size:13px}
-  .month-grid{grid-auto-rows:minmax(70px,auto);gap:6px}
-  .day{min-height:80px;padding:6px}
-  .ev{padding:6px;font-size:13px}
   .container{padding:0 8px}
-  .card{padding:10px}
-  .kpi .n{font-size:20px}
-  /* Roster: que las tarjetas ocupen ancho completo */
+  /* roster cards full width */
   #rosterGrid .card{grid-column:1 / -1 !important}
-  /* Hacer que el calendario pueda desplazar verticalmente si queda largo */
-  .month-grid{overflow:visible}
 }
-
-/* remove supa status banner (we intentionally don't render it) */
 </style>
 </head>
 <body>
 
-<!-- Top (se quitaron las acciones en la cabecera solicitadas) -->
 <div class="top">
   <div class="brand">
     <img src="Logo.webp" alt="GM"/>
@@ -120,9 +113,8 @@ a{color:inherit;text-decoration:none}
       <button class="tab active" data-view="dash">Dashboard</button>
       <button class="tab" data-view="events">Eventos</button>
       <button class="tab" data-view="roster">Plantel</button>
-      <button class="tab" data-view="matches">Partidos jugados</button>
+      <button class="tab" data-view="matches">Partidos</button>
     </div>
-    <!-- header action buttons removed as requested -->
   </div>
 </div>
 
@@ -130,7 +122,6 @@ a{color:inherit;text-decoration:none}
 
   <!-- DASHBOARD -->
   <section id="v-dash">
-    <!-- KPI row: Plantel / Partidos jugados -->
     <div class="grid" style="align-items:stretch">
       <div class="card kpi" style="grid-column:span 6;display:flex;flex-direction:column;justify-content:space-between">
         <div>
@@ -138,7 +129,6 @@ a{color:inherit;text-decoration:none}
           <div class="n" id="kRoster">0</div>
           <div style="font-size:12px;color:var(--mut)">Integrantes registrados</div>
         </div>
-        <!-- 'Administrar plantel' button removed per request -->
       </div>
 
       <div class="card kpi" style="grid-column:span 6;display:flex;flex-direction:column;justify-content:space-between">
@@ -153,7 +143,6 @@ a{color:inherit;text-decoration:none}
       </div>
     </div>
 
-    <!-- Row: Cumpleaños hoy + Próximos cumpleaños + Hoy + Semana -->
     <div class="grid cards-dashboard" style="margin-top:12px;grid-template-columns:repeat(12,1fr);gap:12px">
       <div class="card card-birth-today" style="grid-column:span 4">
         <h4>🎂 Cumpleaños — Hoy</h4>
@@ -169,7 +158,7 @@ a{color:inherit;text-decoration:none}
 
       <div class="card card-hoy" style="grid-column:span 4">
         <h4>📅 Hoy</h4>
-        <div class="section-note">Eventos que ocurren hoy (comparación por fecha local).</div>
+        <div class="section-note">Eventos que ocurren hoy (fecha local).</div>
         <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
       </div>
 
@@ -190,17 +179,23 @@ a{color:inherit;text-decoration:none}
           <button class="btn s" id="btnToday">Hoy</button>
           <button class="btn s" id="btnNextMonth">▶</button>
         </div>
-        <div class="month-title" id="monthTitle">Mes</div>
-        <!-- Keep 'Nuevo Evento' inside calendar (not header). Remove if you want. -->
-        <button class="btn p" id="btnNewEventTop">Nuevo Evento</button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="month-title" id="monthTitle">Mes</div>
+          <button class="btn p" id="btnNewEventTop">Nuevo Evento</button>
+        </div>
       </div>
 
-      <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD) para evitar el desplazamiento de día causado por la conversión UTC.</div>
+      <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD) para evitar el desplazamiento de día por conversión UTC.</div>
 
       <div class="weekdays">
         <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
       </div>
+
+      <!-- GRID (desktop/tablet) -->
       <div id="monthGrid" class="month-grid"></div>
+
+      <!-- LIST (mobile) - will be filled dynamically -->
+      <div id="monthList" class="month-list" style="display:none"></div>
     </div>
   </section>
 
@@ -208,7 +203,7 @@ a{color:inherit;text-decoration:none}
   <section id="v-roster" style="display:none">
     <div class="card">
       <h4>Plantel</h4>
-      <div class="section-note">Aquí verás listado del plantel (traído de la tabla <code>players</code>).</div>
+      <div class="section-note">Listado del plantel (tabla <code>players</code>).</div>
       <div id="rosterGrid" class="grid" style="margin-top:8px"></div>
     </div>
   </section>
@@ -218,7 +213,6 @@ a{color:inherit;text-decoration:none}
     <div class="card">
       <h4>Partidos jugados</h4>
       <div class="section-note">Registro de partidos: goles, diferencia y goleadoras/asistencias.</div>
-
       <div id="matchesList" style="margin-top:12px"></div>
     </div>
   </section>
@@ -226,11 +220,10 @@ a{color:inherit;text-decoration:none}
 
 <footer style="text-align:center;padding:16px;color:var(--mut);font-size:14px">Golden Moms · hecho con 💚 lima & azul</footer>
 
-<!-- MODAL EVENTO (campos extra si es Partido) -->
+<!-- MODAL EVENTO -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <h3 id="modalTitle">Nuevo evento</h3>
-
     <div class="form-row">
       <div>
         <label>Título</label>
@@ -244,7 +237,6 @@ a{color:inherit;text-decoration:none}
         </select>
       </div>
     </div>
-
     <div class="form-row">
       <div>
         <label>Fecha y hora</label>
@@ -255,7 +247,6 @@ a{color:inherit;text-decoration:none}
         <input id="f_team" class="input" value="Golden Moms">
       </div>
     </div>
-
     <div class="form-row">
       <div>
         <label>Rival (si aplica)</label>
@@ -270,7 +261,6 @@ a{color:inherit;text-decoration:none}
         </select>
       </div>
     </div>
-
     <div class="form-row">
       <div>
         <label>Ubicación</label>
@@ -279,13 +269,12 @@ a{color:inherit;text-decoration:none}
       <div>
         <div id="matchExtra" style="display:none">
           <label>Goles a favor</label>
-          <input id="f_goals_for" class="input" type="number" min="0" placeholder="Goles a favor (ej: 2)">
+          <input id="f_goals_for" class="input" type="number" min="0" placeholder="Goles a favor">
           <label style="margin-top:8px">Goles en contra</label>
-          <input id="f_goals_against" class="input" type="number" min="0" placeholder="Goles en contra (ej: 1)">
+          <input id="f_goals_against" class="input" type="number" min="0" placeholder="Goles en contra">
         </div>
       </div>
     </div>
-
     <div class="form-row" id="matchPeopleRow" style="display:none">
       <div>
         <label>Goleadoras (coma-separadas)</label>
@@ -296,7 +285,6 @@ a{color:inherit;text-decoration:none}
         <input id="f_assists" class="input" placeholder="NombreA, NombreB">
       </div>
     </div>
-
     <div class="form-row">
       <div>
         <label>&nbsp;</label>
@@ -308,25 +296,16 @@ a{color:inherit;text-decoration:none}
       </div>
       <div></div>
     </div>
-
   </div>
 </div>
 
 <script>
-/* ========= SUPABASE (segura + reintento de carga) ========= */
+/* ========= Supabase (robusto) ========= */
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
 };
-
-/* exposicion global del cliente */
 let supa = null;
-
-/* intenta inicializar Supabase de forma robusta:
-   - Si createClient está disponible directamente lo usa
-   - Si window.supabase.createClient existe lo usa
-   - Si no, intenta cargar dinámicamente desde jsDelivr
-*/
 async function initSupabase(timeoutMs = 8000){
   try{
     if(typeof createClient === 'function'){
@@ -337,25 +316,18 @@ async function initSupabase(timeoutMs = 8000){
       supa = window.supabase.createClient(SUPA.url, SUPA.key);
       return supa;
     }
-    // fallback dynamic load
-    await new Promise((resolve, reject)=>{
+    await new Promise((resolve,reject)=>{
       const s = document.createElement('script');
       s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js';
       s.async = true;
-      let done = false;
-      const to = setTimeout(()=>{ if(!done){ done=true; reject(new Error('timeout cargando supabase')); } }, timeoutMs);
-      s.onload = ()=>{ if(done) return; done=true; clearTimeout(to); resolve(); };
-      s.onerror = (e)=>{ if(done) return; done=true; clearTimeout(to); reject(new Error('error cargando supabase script')); };
+      let done=false;
+      const to=setTimeout(()=>{ if(!done){ done=true; reject(new Error('timeout cargando supabase')); }}, timeoutMs);
+      s.onload=()=>{ if(done) return; done=true; clearTimeout(to); resolve(); };
+      s.onerror=()=>{ if(done) return; done=true; clearTimeout(to); reject(new Error('error cargando supabase')); };
       document.head.appendChild(s);
     });
-    if(typeof createClient === 'function'){
-      supa = createClient(SUPA.url, SUPA.key);
-      return supa;
-    }
-    if(window.supabase && typeof window.supabase.createClient === 'function'){
-      supa = window.supabase.createClient(SUPA.url, SUPA.key);
-      return supa;
-    }
+    if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
+    if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
     throw new Error('SDK cargado pero no se encontró createClient/supabase.createClient');
   }catch(err){
     console.error('initSupabase error:', err);
@@ -364,19 +336,12 @@ async function initSupabase(timeoutMs = 8000){
   }
 }
 
-/* ========= Navegación ========= */
+/* Navegación */
 document.querySelectorAll('.nav .tab').forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    showView(btn.dataset.view);
-  };
+  btn.onclick=()=>{ document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); showView(btn.dataset.view); };
 });
 function showView(v){
-  ['dash','events','roster','matches'].forEach(id=>{
-    const el = document.getElementById('v-'+id);
-    if(el) el.style.display='none';
-  });
+  ['dash','events','roster','matches'].forEach(id=>{ const el=document.getElementById('v-'+id); if(el) el.style.display='none'; });
   const target = document.getElementById('v-'+v) || document.getElementById('v-matches');
   if(target) target.style.display='block';
   if(v==='dash') renderDash();
@@ -384,40 +349,18 @@ function showView(v){
   if(v==='matches') renderMatches();
 }
 
-/* ===== util ===== */
+/* util */
 function pad(n){return n.toString().padStart(2,'0');}
+function localInputToISOWithOffset(inp){ if(!inp) return null; const [d,t]=inp.split('T'); const offMin = -new Date().getTimezoneOffset(); const sign = offMin>=0?'+':'-'; const abs=Math.abs(offMin); const oh=pad(Math.floor(abs/60)); const om=pad(abs%60); return `${d}T${t}:00${sign}${oh}:${om}`; }
+function isoToLocalInput(iso){ if(!iso) return ''; const d=new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function localDateYMD(d){ const D=new Date(d); return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`; }
 
-/* === TZ helpers (mantener hora local) === */
-function localInputToISOWithOffset(inp){
-  if(!inp) return null;
-  const [d, t] = inp.split('T');
-  const offMin = -new Date().getTimezoneOffset();
-  const sign = offMin >= 0 ? '+' : '-';
-  const abs = Math.abs(offMin);
-  const oh = pad(Math.floor(abs/60));
-  const om = pad(abs%60);
-  return `${d}T${t}:00${sign}${oh}:${om}`;
-}
-function isoToLocalInput(iso){
-  if(!iso) return '';
-  const d = new Date(iso);
-  const y = d.getFullYear();
-  const m = pad(d.getMonth()+1);
-  const da = pad(d.getDate());
-  const hh = pad(d.getHours());
-  const mm = pad(d.getMinutes());
-  return `${y}-${m}-${da}T${hh}:${mm}`;
-}
-function localDateYMD(d){
-  const D = new Date(d);
-  return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`;
-}
-
-/* ========= EVENTOS / CALENDARIO ========= */
+/* CALENDARIO */
 let monthCursor = new Date();
 let cachedEvents = [];
 const monthTitle = document.getElementById('monthTitle');
 const monthGrid = document.getElementById('monthGrid');
+const monthList = document.getElementById('monthList');
 document.getElementById('btnPrevMonth')?.addEventListener('click', ()=>{ monthCursor.setMonth(monthCursor.getMonth()-1); renderMonth(); });
 document.getElementById('btnNextMonth')?.addEventListener('click', ()=>{ monthCursor.setMonth(monthCursor.getMonth()+1); renderMonth(); });
 document.getElementById('btnToday')?.addEventListener('click', ()=>{ monthCursor = new Date(); renderMonth(); });
@@ -436,23 +379,12 @@ function getMonthRange(d){
 }
 
 async function fetchEventsRange(start,end){
-  if(!supa){
-    console.warn('fetchEventsRange: Supabase no disponible');
-    return [];
-  }
+  if(!supa){ console.warn('fetchEventsRange: Supabase no disponible'); return []; }
   try{
-    const {data, error} = await supa
-      .from("events")
-      .select("*")
-      .gte("datetime", start.toISOString())
-      .lte("datetime", end.toISOString())
-      .order("datetime", {ascending:true});
+    const {data, error} = await supa.from("events").select("*").gte("datetime", start.toISOString()).lte("datetime", end.toISOString()).order("datetime", {ascending:true});
     if(error){ console.error(error); return []; }
     return data || [];
-  }catch(err){
-    console.error('fetchEventsRange error', err);
-    return [];
-  }
+  }catch(err){ console.error('fetchEventsRange error', err); return []; }
 }
 
 function renderMonthTitle(){
@@ -464,34 +396,34 @@ async function renderMonth(){
   renderMonthTitle();
   const {start,end} = getMonthRange(monthCursor);
   cachedEvents = await fetchEventsRange(start,end);
-  drawMonthGrid(start,end);
+  // responsive: small phones use list view
+  if(window.matchMedia('(max-width:420px)').matches){
+    monthGrid.style.display = 'none';
+    monthList.style.display = 'block';
+    drawMonthList(start,end);
+  } else {
+    monthList.style.display = 'none';
+    monthGrid.style.display = '';
+    drawMonthGrid(start,end);
+  }
 }
 
 function drawMonthGrid(start,end){
   if(!monthGrid) return;
   monthGrid.innerHTML='';
-  const days = [];
-  let d = new Date(start);
-  while(d<=end){
-    days.push(new Date(d));
-    d.setDate(d.getDate()+1);
-  }
+  const days=[];
+  let d=new Date(start);
+  while(d<=end){ days.push(new Date(d)); d.setDate(d.getDate()+1); }
   for(const day of days){
-    const cell = document.createElement('div');
-    cell.className='day';
-    const head = document.createElement('div');
-    head.className='day-head';
-    head.innerHTML = `<div class="day-n">${pad(day.getDate())}</div>
-      <button class="day-add" title="Nuevo evento">+</button>`;
+    const cell=document.createElement('div'); cell.className='day';
+    const head=document.createElement('div'); head.className='day-head';
+    head.innerHTML = `<div class="day-n">${pad(day.getDate())}</div><button class="day-add" title="Nuevo evento">+</button>`;
     head.querySelector('.day-add').onclick=()=>openModal({ date: day });
     cell.appendChild(head);
-
     const dayStrLocal = localDateYMD(day);
     const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
-
     for(const e of events){
-      const ev = document.createElement('div');
-      ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
+      const ev = document.createElement('div'); ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
       ev.innerHTML = `<div class="title">${e.title}</div>`;
       ev.onclick=()=>openModal({ existing:e });
       cell.appendChild(ev);
@@ -500,7 +432,42 @@ function drawMonthGrid(start,end){
   }
 }
 
-/* ========= Modal evento (actualizado para partido) ========= */
+function drawMonthList(start,end){
+  if(!monthList) return;
+  monthList.innerHTML='';
+  const days=[];
+  let d=new Date(start);
+  while(d<=end){ days.push(new Date(d)); d.setDate(d.getDate()+1); }
+  for(const day of days){
+    const dayStrLocal = localDateYMD(day);
+    const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
+    const row = document.createElement('div'); row.className='day';
+    const dateBox = document.createElement('div'); dateBox.className='day-date'; dateBox.innerText = `${pad(day.getDate())}\n${day.toLocaleString('es-CL',{month:'short'})}`;
+    const col = document.createElement('div'); col.className='events-column';
+    // header row inside the card
+    const headRow = document.createElement('div'); headRow.style.display='flex'; headRow.style.justifyContent='space-between'; headRow.style.alignItems='center';
+    const title = document.createElement('div'); title.style.fontWeight='700'; title.innerText = day.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
+    const plus = document.createElement('button'); plus.className='day-add'; plus.title='Nuevo evento'; plus.innerText='+';
+    plus.onclick=()=>openModal({ date: day });
+    headRow.appendChild(title); headRow.appendChild(plus);
+    col.appendChild(headRow);
+    if(events.length){
+      for(const e of events){
+        const ev = document.createElement('div'); ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
+        ev.innerHTML = `<div class="title">${e.title}</div>`;
+        ev.onclick=()=>openModal({ existing:e });
+        col.appendChild(ev);
+      }
+    } else {
+      const n = document.createElement('div'); n.style.color='var(--mut)'; n.style.fontSize='13px'; n.innerText='—';
+      col.appendChild(n);
+    }
+    row.appendChild(dateBox); row.appendChild(col);
+    monthList.appendChild(row);
+  }
+}
+
+/* Modal + form fields (igual que antes) */
 const modalBg = document.getElementById('modalBg');
 const f_title = document.getElementById('f_title');
 const f_type = document.getElementById('f_type');
@@ -518,21 +485,11 @@ const matchPeopleRow = document.getElementById('matchPeopleRow');
 const btnDelete = document.getElementById('btnDelete');
 const btnCancel = document.getElementById('btnCancel');
 const btnSave   = document.getElementById('btnSave');
-
 let editingId = null;
-
-function toggleMatchFields(){
-  if(f_type.value === 'Partido'){
-    matchExtra.style.display = '';
-    matchPeopleRow.style.display = '';
-  } else {
-    matchExtra.style.display = 'none';
-    matchPeopleRow.style.display = 'none';
-  }
-}
+function toggleMatchFields(){ if(f_type.value==='Partido'){ matchExtra.style.display=''; matchPeopleRow.style.display=''; } else { matchExtra.style.display='none'; matchPeopleRow.style.display='none'; } }
 f_type.addEventListener('change', toggleMatchFields);
 
-function openModal(opts={}){
+function openModal(opts={}) {
   document.getElementById('modalTitle').textContent = opts.existing ? 'Editar evento' : 'Nuevo evento';
   editingId = null;
   if(opts.existing){
@@ -549,7 +506,6 @@ function openModal(opts={}){
       if(!supa) return;
       try{
         const { data, error } = await supa.from('matches').select('*').eq('event_id', editingId).limit(1);
-        if(error) { console.warn('openModal match select', error); }
         if(data && data.length){
           const m = data[0];
           if(f_goals_for) f_goals_for.value = m.goals_for ?? '';
@@ -562,335 +518,145 @@ function openModal(opts={}){
           if(f_scorers) f_scorers.value = '';
           if(f_assists) f_assists.value = '';
         }
-      }catch(err){
-        console.warn('Error trayendo match (posible tabla matches inexistente):', err);
-      }
+      }catch(err){ console.warn('openModal match select', err); }
     })();
     btnDelete.style.display='';
-  }else{
-    f_title.value = '';
-    f_type.value  = 'Entrenamiento';
-    const base = opts.date ? new Date(opts.date) : new Date();
-    base.setHours(19,30,0,0);
+  } else {
+    f_title.value=''; f_type.value='Entrenamiento';
+    const base = opts.date ? new Date(opts.date) : new Date(); base.setHours(19,30,0,0);
     f_dt.value = isoToLocalInput(base.toISOString());
-    f_team.value  = 'Golden Moms';
-    f_opponent.value = '';
-    f_uniform.value  = '';
-    f_location.value = '';
-    if(f_goals_for) f_goals_for.value = '';
-    if(f_goals_against) f_goals_against.value = '';
-    if(f_scorers) f_scorers.value = '';
-    if(f_assists) f_assists.value = '';
+    f_team.value='Golden Moms'; f_opponent.value=''; f_uniform.value=''; f_location.value='';
+    if(f_goals_for) f_goals_for.value=''; if(f_goals_against) f_goals_against.value=''; if(f_scorers) f_scorers.value=''; if(f_assists) f_assists.value='';
     btnDelete.style.display='none';
   }
   toggleMatchFields();
   modalBg.style.display='flex';
 }
 btnCancel.onclick=()=>modalBg.style.display='none';
-
 btnDelete.onclick=async()=>{
-  if(!editingId) return;
-  if(!confirm('¿Eliminar este evento?')) return;
-  if(!supa){
-    alert('No conectado a Supabase. No se puede eliminar desde aquí.');
-    modalBg.style.display='none';
-    return;
-  }
-  try{
-    await supa.from('events').delete().eq('id', editingId);
-    await supa.from('matches').delete().eq('event_id', editingId);
-  }catch(err){
-    console.warn('Error eliminando (ignorado)', err);
-    alert('Error eliminando: revisa la consola.');
-  }
-  modalBg.style.display='none';
-  renderMonth();
-  renderDash();
+  if(!editingId) return; if(!confirm('¿Eliminar este evento?')) return; if(!supa){ alert('No conectado a Supabase.'); modalBg.style.display='none'; return; }
+  try{ await supa.from('events').delete().eq('id', editingId); await supa.from('matches').delete().eq('event_id', editingId); }catch(err){ console.warn('Error eliminando', err); alert('Error eliminando: revisa consola'); }
+  modalBg.style.display='none'; renderMonth(); renderDash();
 };
-
 btnSave.onclick=async()=>{
-  const title = f_title.value.trim();
-  const type  = f_type.value;
-  const team  = f_team.value.trim();
-  const opponent = f_opponent.value.trim();
-  const uniform  = f_uniform.value;
-  const location = f_location.value.trim();
+  const title = f_title.value.trim(); const type = f_type.value; const team = f_team.value.trim(); const opponent = f_opponent.value.trim(); const uniform = f_uniform.value; const location = f_location.value.trim();
   if(!title || !f_dt.value){ alert('Completa título y fecha/hora'); return; }
-
-  if(!supa){
-    alert('No conectado a Supabase. Revisa la consola.');
-    modalBg.style.display='none';
-    return;
-  }
-
+  if(!supa){ alert('No conectado a Supabase.'); modalBg.style.display='none'; return; }
   const datetime = localInputToISOWithOffset(f_dt.value);
   const payloadEvent = { title, type, team, opponent, uniform, location, datetime };
-
   try{
     if(editingId){
       const { error } = await supa.from('events').update(payloadEvent).eq('id', editingId);
       if(error) throw error;
-      if(type === 'Partido'){
+      if(type==='Partido'){
         const goalsFor = f_goals_for.value ? parseInt(f_goals_for.value) : null;
         const goalsAgainst = f_goals_against.value ? parseInt(f_goals_against.value) : null;
         const diff = (goalsFor!=null && goalsAgainst!=null) ? (goalsFor - goalsAgainst) : null;
-        const matchPayload = {
-          event_id: editingId,
-          goals_for: goalsFor,
-          goals_against: goalsAgainst,
-          goal_difference: diff,
-          scorers: f_scorers.value ? f_scorers.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
-          assists: f_assists.value ? f_assists.value.split(',').map(s=>s.trim()).filter(Boolean) : []
-        };
-        try{
-          const { data:existing, error:exErr } = await supa.from('matches').select('id').eq('event_id', editingId).limit(1);
-          if(exErr) { console.warn('matches select error', exErr); }
-          if(existing && existing.length){
-            await supa.from('matches').update(matchPayload).eq('event_id', editingId);
-          } else {
-            await supa.from('matches').insert([matchPayload]);
-          }
-        }catch(err){
-          console.warn('Error guardando match (posible tabla matches inexistente):', err.message || err);
-        }
+        const matchPayload = { event_id: editingId, goals_for: goalsFor, goals_against: goalsAgainst, goal_difference: diff, scorers: f_scorers.value ? f_scorers.value.split(',').map(s=>s.trim()).filter(Boolean) : [], assists: f_assists.value ? f_assists.value.split(',').map(s=>s.trim()).filter(Boolean) : [] };
+        const { data:existing } = await supa.from('matches').select('id').eq('event_id', editingId).limit(1);
+        if(existing && existing.length) await supa.from('matches').update(matchPayload).eq('event_id', editingId); else await supa.from('matches').insert([matchPayload]);
       }
-    }else{
+    } else {
       const { data:inserted, error } = await supa.from('events').insert([payloadEvent]).select();
       if(error) throw error;
       const newEvent = inserted && inserted[0];
-      if(type === 'Partido' && newEvent){
+      if(type==='Partido' && newEvent){
         const goalsFor = f_goals_for.value ? parseInt(f_goals_for.value) : null;
         const goalsAgainst = f_goals_against.value ? parseInt(f_goals_against.value) : null;
         const diff = (goalsFor!=null && goalsAgainst!=null) ? (goalsFor - goalsAgainst) : null;
-        const matchPayload = {
-          event_id: newEvent.id,
-          goals_for: goalsFor,
-          goals_against: goalsAgainst,
-          goal_difference: diff,
-          scorers: f_scorers.value ? f_scorers.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
-          assists: f_assists.value ? f_assists.value.split(',').map(s=>s.trim()).filter(Boolean) : []
-        };
-        try{
-          await supa.from('matches').insert([matchPayload]);
-        }catch(err){
-          console.warn('Error guardando match (posible tabla matches inexistente):', err.message || err);
-        }
+        const matchPayload = { event_id: newEvent.id, goals_for: goalsFor, goals_against: goalsAgainst, goal_difference: diff, scorers: f_scorers.value ? f_scorers.value.split(',').map(s=>s.trim()).filter(Boolean) : [], assists: f_assists.value ? f_assists.value.split(',').map(s=>s.trim()).filter(Boolean) : [] };
+        try{ await supa.from('matches').insert([matchPayload]); }catch(err){ console.warn('Error guardando match', err); }
       }
     }
-  }catch(err){
-    alert('Error al guardar: '+(err.message||err));
-    return;
-  }
-
-  modalBg.style.display='none';
-  renderMonth();
-  renderDash();
+  }catch(err){ alert('Error al guardar: '+(err.message||err)); return; }
+  modalBg.style.display='none'; renderMonth(); renderDash();
 };
 
-/* ========= Dashboard (hoy/semana + birthdays) ========= */
+/* DASHBOARD & ROSTER & MATCHES (igual lógica, con fallbacks) */
 async function renderDash(){
   try{
     const now = new Date();
     const weekStart = new Date(now);
     weekStart.setDate(weekStart.getDate() - ((weekStart.getDay()+6)%7));
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate()+6);
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
     const todayStrLocal = localDateYMD(now);
 
     let evs = [];
     if(supa){
-      const {data:events, error} = await supa.from("events")
-        .select("*")
-        .gte("datetime", weekStart.toISOString())
-        .lte("datetime", weekEnd.toISOString())
-        .order("datetime",{ascending:true});
-      if(error){ console.warn('renderDash events error', error); evs = []; }
-      else evs = events || [];
-    } else {
-      console.warn('renderDash: Supabase no conectado, mostrando placeholders');
-      evs = [];
-    }
+      const {data:events, error} = await supa.from("events").select("*").gte("datetime", weekStart.toISOString()).lte("datetime", weekEnd.toISOString()).order("datetime",{ascending:true});
+      if(error){ console.warn('renderDash events error', error); evs=[]; } else evs = events || [];
+    } else { evs = []; }
 
     let players = [];
     if(supa){
-      try{
-        const resPlayers = await supa.from("players").select("*");
-        if(resPlayers && resPlayers.data) players = resPlayers.data;
-      }catch(err){
-        console.warn('Error cargando players', err);
-        players = [];
-      }
-    } else {
-      players = [];
-    }
-    document.getElementById('kRoster').textContent = (players||[]).length || 0;
+      try{ const resPlayers = await supa.from("players").select("*"); if(resPlayers && resPlayers.data) players = resPlayers.data; }catch(err){ console.warn('Error cargando players', err); players=[]; }
+    } else players=[];
 
+    document.getElementById('kRoster').textContent = (players||[]).length || 0;
     const matchesPlayed = (evs||[]).filter(e=> e.type==='Partido' && new Date(e.datetime) < now);
     document.getElementById('kGames').textContent = matchesPlayed.length;
-    if(matchesPlayed.length>0){
-      const last = matchesPlayed.sort((a,b)=> new Date(b.datetime)-new Date(a.datetime))[0];
-      const d = new Date(last.datetime);
-      document.getElementById('lastMatchSummary').textContent = `${last.title} — ${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})}`;
-    } else {
-      document.getElementById('lastMatchSummary').textContent = 'Sin partidos jugados aún';
-    }
+    if(matchesPlayed.length>0){ const last = matchesPlayed.sort((a,b)=> new Date(b.datetime)-new Date(a.datetime))[0]; const d=new Date(last.datetime); document.getElementById('lastMatchSummary').textContent = `${last.title} — ${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})}`; } else { document.getElementById('lastMatchSummary').textContent = 'Sin partidos jugados aún'; }
 
-    const upB = document.getElementById("upBirth"); upB.innerHTML = '';
-    const birthTodayEl = document.getElementById('birthToday'); birthTodayEl.innerHTML = '—';
+    const upB = document.getElementById("upBirth"); upB.innerHTML=''; const birthTodayEl = document.getElementById('birthToday'); birthTodayEl.innerHTML='—';
     try{
       if(supa){
         const { data:vw, error:vwErr } = await supa.from("vw_upcoming_birthdays").select("*").order("proximo_cumple",{ascending:true}).limit(5);
-        if(vwErr){ throw vwErr; }
+        if(vwErr) throw vwErr;
         if(vw && vw.length){
-          const seen = new Set();
-          const uniq = [];
-          for(const p of vw){
-            if(!seen.has(p.id)){
-              seen.add(p.id);
-              uniq.push(p);
-              if(uniq.length>=5) break;
-            }
-          }
-          uniq.forEach(p=>{
-            if(p.proximo_cumple){
-              const bd = new Date(p.proximo_cumple);
-              const li = document.createElement('li');
-              li.innerHTML = `${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}`;
-              upB.appendChild(li);
-            }
-          });
+          const seen=new Set(); const uniq=[];
+          for(const p of vw){ if(!seen.has(p.id)){ seen.add(p.id); uniq.push(p); if(uniq.length>=5) break; } }
+          uniq.forEach(p=>{ if(p.proximo_cumple){ const bd=new Date(p.proximo_cumple); const li=document.createElement('li'); li.innerHTML = `${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}`; upB.appendChild(li); }});
           const todayList = uniq.filter(p => p.proximo_cumple && localDateYMD(new Date(p.proximo_cumple)) === todayStrLocal);
-          if(todayList.length>0){
-            birthTodayEl.innerHTML = '<ul style="margin:6px 0 0 16px">' + todayList.map(p=>`<li><strong>${p.apodo||p.nombre}</strong> ${p.edad? '— '+p.edad+' años':''}</li>`).join('') + '</ul>';
-          } else {
-            birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>';
-          }
-        } else {
-          upB.innerHTML = '<li style="color:var(--mut)">No hay datos de cumpleaños</li>';
-          birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>';
-        }
-      } else {
-        upB.innerHTML = '<li style="color:var(--mut)">Sin conexión — no se pudieron cargar cumpleaños</li>';
-        birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños (offline)</div>';
-      }
-    }catch(err){
-      console.warn('Error trayendo cumpleaños', err);
-      upB.innerHTML = '<li style="color:var(--mut)">Error cargando datos</li>';
-      birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>';
-    }
+          if(todayList.length>0) birthTodayEl.innerHTML = '<ul style="margin:6px 0 0 16px">' + todayList.map(p=>`<li><strong>${p.apodo||p.nombre}</strong> ${p.edad? '— '+p.edad+' años':''}</li>`).join('') + '</ul>';
+          else birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>';
+        } else { upB.innerHTML = '<li style="color:var(--mut)">No hay datos de cumpleaños</li>'; birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>'; }
+      } else { upB.innerHTML = '<li style="color:var(--mut)">Sin conexión — no se pudieron cargar cumpleaños</li>'; birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños (offline)</div>'; }
+    }catch(err){ console.warn('Error trayendo cumpleaños', err); upB.innerHTML = '<li style="color:var(--mut)">Error cargando datos</li>'; birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>'; }
 
-    const todayEl = document.getElementById('todayEvents'); todayEl.innerHTML = '';
-    (evs||[]).filter(e => localDateYMD(new Date(e.datetime)) === todayStrLocal)
-      .forEach(e=>{
-        const d = new Date(e.datetime);
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}`;
-        todayEl.appendChild(li);
-      });
+    const todayEl = document.getElementById('todayEvents'); todayEl.innerHTML='';
+    (evs||[]).filter(e=> localDateYMD(new Date(e.datetime))===todayStrLocal).forEach(e=>{ const d=new Date(e.datetime); const li=document.createElement('li'); li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}`; todayEl.appendChild(li); });
     if(todayEl.innerHTML.trim()==='') todayEl.innerHTML = '<div style="color:var(--mut)">No hay eventos hoy</div>';
 
-    const wEl = document.getElementById('weekEvents'); wEl.innerHTML = '';
-    (evs||[]).forEach(e=>{
-      const d = new Date(e.datetime);
-      const li = document.createElement('li');
-      li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}`;
-      wEl.appendChild(li);
-    });
+    const wEl = document.getElementById('weekEvents'); wEl.innerHTML=''; (evs||[]).forEach(e=>{ const d=new Date(e.datetime); const li=document.createElement('li'); li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}`; wEl.appendChild(li); });
     if(wEl.innerHTML.trim()==='') wEl.innerHTML = '<div style="color:var(--mut)">No hay eventos esta semana</div>';
 
-    // Roster grid
-    const rosterGrid = document.getElementById('rosterGrid');
-    rosterGrid.innerHTML = '';
+    // roster
+    const rosterGrid = document.getElementById('rosterGrid'); rosterGrid.innerHTML='';
     try{
       if(supa){
         const { data:playersList } = await supa.from('players').select('*').order('nombre',{ascending:true});
         if(playersList && playersList.length){
-          playersList.forEach(p=>{
-            const c = document.createElement('div');
-            c.className = 'card';
-            c.style.gridColumn = 'span 3';
-            c.innerHTML = `<div style="font-weight:700">${p.apodo||p.nombre||'Sin nombre'}</div>
-                           <div style="font-size:13px;color:var(--mut)">${p.posicion||''} ${p.edad? '— '+p.edad+' años':''}</div>`;
-            rosterGrid.appendChild(c);
-          });
-        } else {
-          rosterGrid.innerHTML = '<div style="color:var(--mut)">No hay jugadores registrados</div>';
-        }
-      } else {
-        rosterGrid.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pudo cargar plantel</div>';
-      }
-    }catch(err){
-      console.warn('Error cargando roster', err);
-      rosterGrid.innerHTML = '<div style="color:var(--mut)">Error cargando plantel</div>';
-    }
+          playersList.forEach(p=>{ const c=document.createElement('div'); c.className='card'; c.style.gridColumn='span 3'; c.innerHTML=`<div style="font-weight:700">${p.apodo||p.nombre||'Sin nombre'}</div><div style="font-size:13px;color:var(--mut)">${p.posicion||''} ${p.edad? '— '+p.edad+' años':''}</div>`; rosterGrid.appendChild(c); });
+        } else rosterGrid.innerHTML = '<div style="color:var(--mut)">No hay jugadores registrados</div>';
+      } else rosterGrid.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pudo cargar plantel</div>';
+    }catch(err){ console.warn('Error cargando roster', err); rosterGrid.innerHTML = '<div style="color:var(--mut)">Error cargando plantel</div>'; }
 
-  }catch(err){
-    console.error(err);
-    document.getElementById('birthToday').innerHTML = '<div style="color:var(--mut)">Error cargando cumpleaños</div>';
-  }
+  }catch(err){ console.error(err); document.getElementById('birthToday').innerHTML = '<div style="color:var(--mut)">Error cargando cumpleaños</div>'; }
 }
 
-/* ========= Partidos jugados view (lista de matches) ========= */
 async function renderMatches(){
-  const container = document.getElementById('matchesList');
-  container.innerHTML = 'Cargando...';
+  const container = document.getElementById('matchesList'); container.innerHTML='Cargando...';
   try{
-    if(!supa){
-      console.warn('renderMatches: Supabase no disponible');
-      container.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pueden cargar partidos</div>';
-      return;
-    }
-
-    const { data, error } = await supa
-      .from('matches')
-      .select(`*, events:event_id ( id, title, datetime, team, opponent )`)
-      .order('created_at', {ascending:false});
+    if(!supa){ console.warn('renderMatches: Supabase no disponible'); container.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pueden cargar partidos</div>'; return; }
+    const { data, error } = await supa.from('matches').select(`*, events:event_id ( id, title, datetime, team, opponent )`).order('created_at', {ascending:false});
     if(error){
-      console.warn('Error cargando matches table:', error.message || error);
+      console.warn('Error cargando matches table:', error);
       const { data:events } = await supa.from('events').select('*').order('datetime',{ascending:false});
       const matchesFromEvents = (events||[]).filter(e=> e.type==='Partido');
-      if(matchesFromEvents.length===0){
-        container.innerHTML = '<div style="color:var(--mut)">No hay registros de partidos.</div>';
-        return;
-      }
-      container.innerHTML = '<ul>' + matchesFromEvents.map(ev=>{
-        const d = new Date(ev.datetime);
-        return `<li><strong>${ev.title}</strong> — ${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})} (${d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})})</li>`;
-      }).join('') + '</ul>';
+      if(matchesFromEvents.length===0){ container.innerHTML = '<div style="color:var(--mut)">No hay registros de partidos.</div>'; return;}
+      container.innerHTML = '<ul>' + matchesFromEvents.map(ev=>{ const d=new Date(ev.datetime); return `<li><strong>${ev.title}</strong> — ${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})} (${d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})})</li>`; }).join('') + '</ul>';
       return;
     }
-    if(!data || data.length===0){
-      container.innerHTML = '<div style="color:var(--mut)">No hay registros de partidos.</div>';
-      return;
-    }
-    const html = data.map(m=>{
-      const ev = m.events || {};
-      const d = ev.datetime ? new Date(ev.datetime) : null;
-      const dateTxt = d ? `${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}` : '';
-      const scorers = (m.scorers || []).join(', ') || '—';
-      const assists = (m.assists || []).join(', ') || '—';
-      return `<div style="border:1px solid var(--b);padding:10px;border-radius:8px;margin-bottom:8px">
-        <div style="font-weight:700">${ev.title || 'Partido'}</div>
-        <div style="font-size:13px;color:var(--mut)">${dateTxt}</div>
-        <div style="margin-top:6px">Resultado: <strong>${m.goals_for ?? '—'}</strong> — <strong>${m.goals_against ?? '—'}</strong> (Dif: ${m.goal_difference ?? '—'})</div>
-        <div style="margin-top:6px"><strong>Goleadoras:</strong> ${scorers}</div>
-        <div style="margin-top:4px"><strong>Asistencias:</strong> ${assists}</div>
-      </div>`;
-    }).join('');
+    if(!data || data.length===0){ container.innerHTML = '<div style="color:var(--mut)">No hay registros de partidos.</div>'; return; }
+    const html = data.map(m=>{ const ev=m.events||{}; const d = ev.datetime ? new Date(ev.datetime) : null; const dateTxt = d ? `${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}` : ''; const scorers = (m.scorers || []).join(', ') || '—'; const assists = (m.assists || []).join(', ') || '—'; return `<div style="border:1px solid var(--b);padding:10px;border-radius:8px;margin-bottom:8px"><div style="font-weight:700">${ev.title || 'Partido'}</div><div style="font-size:13px;color:var(--mut)">${dateTxt}</div><div style="margin-top:6px">Resultado: <strong>${m.goals_for ?? '—'}</strong> — <strong>${m.goals_against ?? '—'}</strong> (Dif: ${m.goal_difference ?? '—'})</div><div style="margin-top:6px"><strong>Goleadoras:</strong> ${scorers}</div><div style="margin-top:4px"><strong>Asistencias:</strong> ${assists}</div></div>`; }).join('');
     container.innerHTML = html;
-  }catch(err){
-    console.error('renderMatches error', err);
-    container.innerHTML = '<div style="color:var(--mut)">Error cargando partidos</div>';
-  }
+  }catch(err){ console.error('renderMatches error', err); container.innerHTML = '<div style="color:var(--mut)">Error cargando partidos</div>'; }
 }
 
-/* ========= Inicial ========= */
+/* Inicial - init supabase antes de renderizar */
 document.addEventListener('DOMContentLoaded', async ()=>{
-  // 1) Init Supabase primero
   await initSupabase();
-
-  // 2) Luego mostrar la vista inicial (renderDash será invocado desde showView)
-  showView('dash');
+  showView('dash'); // showView('dash') llama a renderDash()
 });
 </script>
 </body>
