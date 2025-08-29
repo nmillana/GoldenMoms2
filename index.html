@@ -45,8 +45,6 @@ a{color:inherit;text-decoration:none}
 .ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
-.ev .title{font-weight:600} /* (ligero, no bold fuerte) */
-.ev .title{font-weight:600}
 .ev .title{font-weight:600}
 
 /* Modal */
@@ -58,7 +56,9 @@ a{color:inherit;text-decoration:none}
 .input, select, textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:10px;background:#fff}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
 
-/* Responsive tweaks */
+/* small helper text to explain sections (for non-developers) */
+.section-note{font-size:13px;color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
+
 @media (max-width: 900px){
   .grid{grid-template-columns:1fr}
   .month-grid, .weekdays{gap:6px}
@@ -83,28 +83,37 @@ a{color:inherit;text-decoration:none}
 </div>
 
 <div class="container">
-  <!-- DASHBOARD (placeholder: deja tu contenido existente) -->
+
+  <!-- ====== SECCIÓN: DASHBOARD ====== -->
+  <!-- Nota visible para que entiendas qué hace: muestra KPIs, cumpleaños, eventos de hoy y de la semana.
+       (Código que usa Supabase para traer eventos y jugadores está más abajo en <script>) -->
   <section id="v-dash">
     <div class="grid">
       <div class="card kpi" style="grid-column:span 4"><h3>Próximos eventos</h3><div class="n" id="kEvents">0</div></div>
       <div class="card kpi" style="grid-column:span 4"><h3>Plantel</h3><div class="n" id="kRoster">0</div></div>
       <div class="card kpi" style="grid-column:span 4"><h3>Partidos jugados</h3><div class="n" id="kGames">0</div></div>
     </div>
+
     <div class="card" style="margin-top:12px">
-      <strong>🎂 Próximos cumpleaños</strong>
+      <h4>🎂 Próximos cumpleaños</h4>
+      <div class="section-note">Lista con los próximos 5 cumpleaños (si tu base tiene vista preparada).</div>
       <ul id="upBirth" style="margin:8px 0 0 16px"></ul>
     </div>
+
     <div class="card" style="margin-top:12px">
-      <strong>📅 Hoy</strong>
+      <h4>📅 Hoy</h4>
+      <div class="section-note">Eventos que ocurren hoy (comparación por <strong>fecha local</strong>).</div>
       <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
     </div>
+
     <div class="card" style="margin-top:12px">
-      <strong>📅 Eventos de la semana</strong>
+      <h4>📅 Eventos de la semana</h4>
+      <div class="section-note">Eventos de la semana actual (lunes a domingo).</div>
       <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
     </div>
   </section>
 
-  <!-- EVENTOS (calendario mensual) -->
+  <!-- ====== SECCIÓN: EVENTOS (Calendario mensual) ====== -->
   <section id="v-events" style="display:none">
     <div class="card">
       <div class="month-bar">
@@ -116,6 +125,9 @@ a{color:inherit;text-decoration:none}
         <div class="month-title" id="monthTitle">Mes</div>
         <button class="btn p" id="btnNewEventTop">Nuevo Evento</button>
       </div>
+
+      <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD) para evitar el desplazamiento de día causado por la conversión UTC.</div>
+
       <div class="weekdays">
         <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
       </div>
@@ -123,16 +135,20 @@ a{color:inherit;text-decoration:none}
     </div>
   </section>
 
-  <!-- PLANTEL (placeholder) -->
+  <!-- ====== SECCIÓN: PLANTEL ====== -->
   <section id="v-roster" style="display:none">
-    <div class="card"><strong>Plantel</strong>
+    <div class="card">
+      <h4>Plantel</h4>
+      <div class="section-note">Aquí verás listado del plantel (traído de la tabla <code>players</code>).</div>
       <div id="rosterGrid" class="grid" style="margin-top:8px"></div>
     </div>
   </section>
 
-  <!-- SEGUIMIENTO (placeholder) -->
+  <!-- ====== SECCIÓN: SEGUIMIENTO ====== -->
   <section id="v-track" style="display:none">
-    <div class="card"><strong>Seguimiento de partidos</strong>
+    <div class="card">
+      <h4>Seguimiento de partidos</h4>
+      <div class="section-note">Panel para métricas de seguimiento (placeholder).</div>
       <div id="trackList" style="margin-top:8px"></div>
     </div>
   </section>
@@ -206,7 +222,7 @@ const SUPA = {
 };
 const supa = supabase.createClient(SUPA.url, SUPA.key);
 
-/* ========= Navegación ========= */
+/* ========= Navegación (no tocar) ========= */
 document.querySelectorAll('.nav .tab').forEach(btn=>{
   btn.onclick=()=>{
     document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
@@ -221,6 +237,7 @@ function showView(v){
   if(v==='events') renderMonth();
 }
 
+/* ===== util ===== */
 function pad(n){return n.toString().padStart(2,'0');}
 
 /* === TZ helpers: mantener la hora local al guardar/editar === */
@@ -245,6 +262,15 @@ function isoToLocalInput(iso){
   const hh = pad(d.getHours());
   const mm = pad(d.getMinutes());
   return `${y}-${m}-${da}T${hh}:${mm}`;
+}
+
+/* ---------- NUEVO: comparador por FECHA LOCAL (YYYY-MM-DD) ----------
+   Usamos esto en la UI para agrupar/mostrar eventos por día local.
+   Evita que un evento guardado como "2025-08-30T21:00 -04:00" aparezca en UTC como 2025-08-31
+*/
+function localDateYMD(d){
+  const D = new Date(d);
+  return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`;
 }
 
 /* ========= EVENTOS (calendario) ========= */
@@ -311,8 +337,13 @@ function drawMonthGrid(start,end){
     head.querySelector('.day-add').onclick=()=>openModal({ date: day });
     cell.appendChild(head);
 
-    const dayStr = day.toISOString().slice(0,10); // YYYY-MM-DD
-    const events = cachedEvents.filter(e=> new Date(e.datetime).toISOString().slice(0,10)===dayStr);
+    // ---- cambio importante: comparar por FECHA LOCAL (YYYY-MM-DD)
+    const dayStrLocal = localDateYMD(day);
+    const events = cachedEvents.filter(e => {
+      const ed = new Date(e.datetime);
+      return localDateYMD(ed) === dayStrLocal;
+    });
+
     for(const e of events){
       const ev = document.createElement('div');
       ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
@@ -347,7 +378,7 @@ function openModal(opts={}){
     editingId = e.id;
     f_title.value = e.title||'';
     f_type.value  = e.type||'Entrenamiento';
-    f_dt.value    = isoToLocalInput(e.datetime); // 👈 muestra hora local correcta
+    f_dt.value    = isoToLocalInput(e.datetime); // muestra hora local correcta en el input
     f_team.value  = e.team||'Golden Moms';
     f_opponent.value = e.opponent||'';
     f_uniform.value  = e.uniform||'';
@@ -389,7 +420,7 @@ btnSave.onclick=async()=>{
 
   if(!title || !f_dt.value){ alert('Completa título y fecha/hora'); return; }
 
-  // ⬇️ Guardar con offset local para que NO cambie la hora
+  // ⬇️ Guardar con offset local para que NO cambie la hora al recuperar desde DB
   const datetime = localInputToISOWithOffset(f_dt.value);
 
   const payload = { title, type, team, opponent, uniform, location, datetime };
@@ -414,7 +445,9 @@ async function renderDash(){
     weekStart.setDate(weekStart.getDate() - ((weekStart.getDay()+6)%7)); // lunes
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate()+6);
-    const todayStr = now.toISOString().slice(0,10);
+
+    // --- cambio: comparar por fecha LOCAL, no por toISOString().slice(0,10) (que usa UTC)
+    const todayStrLocal = localDateYMD(now);
 
     const {data:events}=await supa.from("events").select("*").gte("datetime", weekStart.toISOString()).lte("datetime", weekEnd.toISOString()).order("datetime",{ascending:true});
     const {data:players}=await supa.from("players").select("*");
@@ -435,9 +468,9 @@ async function renderDash(){
       }
     });
 
-    // HOY
+    // HOY (usar fecha local para comparar)
     const todayEl=document.getElementById('todayEvents'); todayEl.innerHTML="";
-    (events||[]).filter(e=> new Date(e.datetime).toISOString().slice(0,10)===todayStr)
+    (events||[]).filter(e=> localDateYMD(new Date(e.datetime)) === todayStrLocal )
     .forEach(e=>{
       const d=new Date(e.datetime);
       todayEl.innerHTML+=`<li><strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}</li>`;
