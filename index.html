@@ -22,37 +22,36 @@ a{color:inherit;text-decoration:none}
 .top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
 .brand{display:flex;gap:10px;align-items:center}
 .brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
-.nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
+.nav{display:flex;gap:8px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding-bottom:4px}
+.nav::-webkit-scrollbar{height:6px}
+.nav::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:6px}
+.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer;white-space:nowrap;flex:0 0 auto}
 .nav .tab.active{background:var(--blue);color:#fff}
 .container{max-width:1200px;margin:14px auto;padding:0 12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
+.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px;overflow:hidden}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
-
-/* Top action buttons */
-.top-actions{display:flex;gap:8px;align-items:center}
 
 /* ====== EVENTOS (Calendario mensual) ====== */
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px}
 .month-title{font-weight:800;font-size:22px}
 .month-nav{display:flex;gap:6px}
-.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;grid-auto-rows:minmax(90px,auto)}
 .weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:8px}
 .weekdays div{font-weight:700;color:var(--blue);text-align:center}
 
-.day{min-height:140px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;position:relative;display:flex;flex-direction:column;gap:6px}
+.day{min-height:90px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;position:relative;display:flex;flex-direction:column;gap:6px}
 .day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .day-n{font-weight:700;color:var(--mut)}
 .day-add{border:none;background:#eef4ff;color:var(--blue);width:26px;height:26px;border-radius:999px;cursor:pointer}
-.ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2}
+.ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word;max-width:100%}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
 .ev .title{font-weight:600}
 
 /* Modal */
 .modal-bg{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:60}
-.modal{width:min(860px,calc(100vw - 24px));background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;box-shadow:0 20px 40px #00000022}
+.modal{width:min(860px,calc(100vw - 24px));background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;box-shadow:0 20px 40px #00000022;max-height:90vh;overflow:auto}
 .modal h3{margin:0 0 10px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:800px){.form-row{grid-template-columns:1fr}}
@@ -62,11 +61,11 @@ a{color:inherit;text-decoration:none}
 /* helper text */
 .section-note{font-size:13px;color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
 
-/* ====== MÓVIL: tarjetas dashboard apiladas y orden arrancando por "Hoy" ====== */
-@media (max-width: 900px){
+/* ====== MÓVIL: mejoras responsive ====== */
+@media (max-width:900px){
   .grid{grid-template-columns:1fr}
   .month-grid, .weekdays{gap:6px}
-  .day{min-height:120px}
+  .day{min-height:100px;padding:6px}
   .kpi { padding:12px 10px; }
   .card { padding:12px; }
   footer{font-size:13px}
@@ -79,7 +78,6 @@ a{color:inherit;text-decoration:none}
   }
   .cards-dashboard .card{ grid-column:auto !important; }
 
-  /* Orden específico en móvil */
   .card-hoy{ order:1; }
   .card-birth-today{ order:2; }
   .card-birth-next{ order:3; }
@@ -88,38 +86,43 @@ a{color:inherit;text-decoration:none}
   .cards-dashboard h4{ font-size:16px; line-height:1.25; margin:0 0 6px; }
   .section-note{ font-size:12px; }
 }
-@media (max-width:480px){
+
+/* Ajustes para teléfonos pequeños */
+@media (max-width:420px){
   .top{padding:8px}
   .brand img{width:28px;height:28px}
+  .nav .tab{padding:6px 8px;font-size:13px}
+  .month-grid{grid-auto-rows:minmax(70px,auto);gap:6px}
+  .day{min-height:80px;padding:6px}
+  .ev{padding:6px;font-size:13px}
+  .container{padding:0 8px}
+  .card{padding:10px}
+  .kpi .n{font-size:20px}
+  /* Roster: que las tarjetas ocupen ancho completo */
+  #rosterGrid .card{grid-column:1 / -1 !important}
+  /* Hacer que el calendario pueda desplazar verticalmente si queda largo */
+  .month-grid{overflow:visible}
 }
 
-/* Banner de estado Supabase */
-#supaStatus{
-  position:fixed;right:12px;bottom:12px;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid var(--b);box-shadow:0 6px 18px #00000011;font-size:13px;color:var(--mut);z-index:80;
-}
-#supaStatus.ok{border-color:var(--ok);background:linear-gradient(90deg,#f7fff0,#fff);color:#14532d}
-#supaStatus.err{border-color:var(--no);background:linear-gradient(90deg,#fff5f5,#fff);color:#7f1d1d}
+/* remove supa status banner (we intentionally don't render it) */
 </style>
 </head>
 <body>
 
-<!-- Top -->
+<!-- Top (se quitaron las acciones en la cabecera solicitadas) -->
 <div class="top">
   <div class="brand">
     <img src="Logo.webp" alt="GM"/>
     <div><strong>Golden</strong> <span style="color:var(--lime);font-weight:800">Moms</span></div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
-    <div class="nav">
+    <div class="nav" role="tablist" aria-label="Navegación">
       <button class="tab active" data-view="dash">Dashboard</button>
       <button class="tab" data-view="events">Eventos</button>
       <button class="tab" data-view="roster">Plantel</button>
       <button class="tab" data-view="matches">Partidos jugados</button>
     </div>
-    <div class="top-actions" style="margin-left:12px">
-      <button class="btn p" id="ctaNewEvent" title="Crear nuevo evento">+ Nuevo evento</button>
-      <button class="btn s" id="ctaRoster" title="Ir a administrar plantel">Administrar plantel</button>
-    </div>
+    <!-- header action buttons removed as requested -->
   </div>
 </div>
 
@@ -135,9 +138,7 @@ a{color:inherit;text-decoration:none}
           <div class="n" id="kRoster">0</div>
           <div style="font-size:12px;color:var(--mut)">Integrantes registrados</div>
         </div>
-        <div style="margin-top:8px;display:flex;justify-content:flex-end">
-          <button class="btn s" onclick="showView('roster')">Administrar plantel</button>
-        </div>
+        <!-- 'Administrar plantel' button removed per request -->
       </div>
 
       <div class="card kpi" style="grid-column:span 6;display:flex;flex-direction:column;justify-content:space-between">
@@ -190,6 +191,7 @@ a{color:inherit;text-decoration:none}
           <button class="btn s" id="btnNextMonth">▶</button>
         </div>
         <div class="month-title" id="monthTitle">Mes</div>
+        <!-- Keep 'Nuevo Evento' inside calendar (not header). Remove if you want. -->
         <button class="btn p" id="btnNewEventTop">Nuevo Evento</button>
       </div>
 
@@ -310,9 +312,6 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
-<!-- Banner estado supabase -->
-<div id="supaStatus" class="">Conectando a Supabase...</div>
-
 <script>
 /* ========= SUPABASE (segura + reintento de carga) ========= */
 const SUPA = {
@@ -323,19 +322,6 @@ const SUPA = {
 /* exposicion global del cliente */
 let supa = null;
 
-/* Actualiza el banner de estado */
-function setSupaStatus(ok, text){
-  const el = document.getElementById('supaStatus');
-  if(!el) return;
-  el.classList.remove('ok','err');
-  el.textContent = text || '';
-  if(ok){
-    el.classList.add('ok');
-  } else {
-    el.classList.add('err');
-  }
-}
-
 /* intenta inicializar Supabase de forma robusta:
    - Si createClient está disponible directamente lo usa
    - Si window.supabase.createClient existe lo usa
@@ -345,16 +331,13 @@ async function initSupabase(timeoutMs = 8000){
   try{
     if(typeof createClient === 'function'){
       supa = createClient(SUPA.url, SUPA.key);
-      setSupaStatus(true, 'Conectado a Supabase (createClient global)');
       return supa;
     }
     if(window.supabase && typeof window.supabase.createClient === 'function'){
       supa = window.supabase.createClient(SUPA.url, SUPA.key);
-      setSupaStatus(true, 'Conectado a Supabase (window.supabase)');
       return supa;
     }
-
-    // carga dinámica del script (fallback)
+    // fallback dynamic load
     await new Promise((resolve, reject)=>{
       const s = document.createElement('script');
       s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js';
@@ -365,24 +348,17 @@ async function initSupabase(timeoutMs = 8000){
       s.onerror = (e)=>{ if(done) return; done=true; clearTimeout(to); reject(new Error('error cargando supabase script')); };
       document.head.appendChild(s);
     });
-
-    // luego de cargar, intenta de nuevo
     if(typeof createClient === 'function'){
       supa = createClient(SUPA.url, SUPA.key);
-      setSupaStatus(true, 'Conectado a Supabase (cargado dinámicamente)');
       return supa;
     }
     if(window.supabase && typeof window.supabase.createClient === 'function'){
       supa = window.supabase.createClient(SUPA.url, SUPA.key);
-      setSupaStatus(true, 'Conectado a Supabase (cargado dinámicamente - window.supabase)');
       return supa;
     }
-
-    // si todo falla:
     throw new Error('SDK cargado pero no se encontró createClient/supabase.createClient');
   }catch(err){
     console.error('initSupabase error:', err);
-    setSupaStatus(false, 'No se pudo conectar a Supabase — revisa la consola o la red.');
     supa = null;
     return null;
   }
@@ -446,8 +422,6 @@ document.getElementById('btnPrevMonth')?.addEventListener('click', ()=>{ monthCu
 document.getElementById('btnNextMonth')?.addEventListener('click', ()=>{ monthCursor.setMonth(monthCursor.getMonth()+1); renderMonth(); });
 document.getElementById('btnToday')?.addEventListener('click', ()=>{ monthCursor = new Date(); renderMonth(); });
 document.getElementById('btnNewEventTop')?.addEventListener('click', ()=>openModal());
-document.getElementById('ctaNewEvent')?.addEventListener('click', ()=>openModal());
-document.getElementById('ctaRoster')?.addEventListener('click', ()=>showView('roster'));
 
 function getMonthRange(d){
   const first = new Date(d.getFullYear(), d.getMonth(), 1);
@@ -644,7 +618,7 @@ btnSave.onclick=async()=>{
   if(!title || !f_dt.value){ alert('Completa título y fecha/hora'); return; }
 
   if(!supa){
-    alert('No conectado a Supabase. Revisa la conexión y el estado en la esquina inferior.');
+    alert('No conectado a Supabase. Revisa la consola.');
     modalBg.style.display='none';
     return;
   }
@@ -737,7 +711,6 @@ async function renderDash(){
       evs = [];
     }
 
-    // CORRECCIÓN: evitar destructuring inválido en ternario (causaba SyntaxError)
     let players = [];
     if(supa){
       try{
@@ -863,7 +836,6 @@ async function renderMatches(){
   container.innerHTML = 'Cargando...';
   try{
     if(!supa){
-      // Fallback: intentar listar desde events si existe
       console.warn('renderMatches: Supabase no disponible');
       container.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pueden cargar partidos</div>';
       return;
@@ -913,17 +885,13 @@ async function renderMatches(){
 }
 
 /* ========= Inicial ========= */
-/* reemplaza tu handler DOMContentLoaded actual por este (líneas finales del script) */
-document.addEventListener('DOMContentLoaded', async () => {
-  // 1) Init Supabase primero (esperamos que termine)
+document.addEventListener('DOMContentLoaded', async ()=>{
+  // 1) Init Supabase primero
   await initSupabase();
 
-  // 2) Luego mostramos la vista inicial; showView('dash') llamará a renderDash() ahora con supa inicializado
+  // 2) Luego mostrar la vista inicial (renderDash será invocado desde showView)
   showView('dash');
-
-  // Nota: no hace falta llamar renderDash() de nuevo aquí porque showView('dash') ya lo invoca.
 });
-
 </script>
 </body>
 </html>
