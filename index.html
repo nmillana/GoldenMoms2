@@ -36,11 +36,11 @@ a{color:inherit;text-decoration:none}
 .container{max-width:1200px;margin:14px auto;padding:0 12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px; overflow:visible}
-.kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
+.kpi h3{margin:0;color:var(--mut);font-size:10px}.kpi .n{font-size:16px;font-weight:800}
 
 /* CALENDARIO */
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
-.month-title{font-weight:800;font-size:22px}
+.month-title{font-weight:800;font-size:16px}
 .month-nav{display:flex;gap:6px}
 .month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;grid-auto-rows:minmax(90px,auto)}
 .weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:8px}
@@ -87,7 +87,7 @@ a{color:inherit;text-decoration:none}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
 
 /* helper text */
-.section-note{font-size:13px;color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
+.section-note{font-size:10px;color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
 
 /* responsive */
 @media (max-width:900px){
@@ -96,12 +96,12 @@ a{color:inherit;text-decoration:none}
   .day{min-height:100px;padding:6px}
   .kpi { padding:12px 10px; }
   .card { padding:12px; }
-  footer{font-size:13px}
+  footer{font-size:10px}
   .cards-dashboard{display:flex;flex-direction:column;gap:12px}
   .cards-dashboard .card{ grid-column:auto !important; }
   .card-hoy{ order:1; } .card-birth-today{ order:2; } .card-birth-next{ order:3; } .card-week{ order:4; }
-  .cards-dashboard h4{ font-size:16px; line-height:1.25; margin:0 0 6px; }
-  .section-note{ font-size:12px; }
+  .cards-dashboard h4{ font-size:12px; line-height:1.25; margin:0 0 6px; }
+  .section-note{ font-size:10px; }
   .month-bar{flex-wrap:wrap;align-items:center}
 }
 
@@ -110,11 +110,11 @@ a{color:inherit;text-decoration:none}
   .month-grid{display:none}
   .weekdays{display:none}
   .month-list{display:flex}
-  .month-title{font-size:18px}
+  .month-title{font-size:12px}
   .day{padding:8px}
   .day-date{min-width:46px;padding:6px 6px}
-  .ev{font-size:13px;padding:6px}
-  .nav .tab{padding:6px 8px;font-size:13px}
+  .ev{font-size:11px;padding:6px}
+  .nav .tab{padding:6px 8px;font-size:10px}
   .container{padding:0 8px}
   #rosterGrid .card{grid-column:1 / -1 !important}
 }
@@ -146,7 +146,7 @@ a{color:inherit;text-decoration:none}
         <div>
           <h3 style="margin-bottom:6px">Plantel</h3>
           <div class="n" id="kRoster">0</div>
-          <div style="font-size:12px;color:var(--mut)">Integrantes registrados</div>
+          <div style="font-size:8px;color:var(--mut)">Integrantes registrados</div>
         </div>
       </div>
 
@@ -154,7 +154,7 @@ a{color:inherit;text-decoration:none}
         <div>
           <h3 style="margin-bottom:6px">Partidos jugados</h3>
           <div class="n" id="kGames">0</div>
-          <div id="lastMatchSummary" style="font-size:12px;color:var(--mut)"></div>
+          <div id="lastMatchSummary" style="font-size:10px;color:var(--mut)"></div>
         </div>
         <div style="margin-top:8px;display:flex;justify-content:flex-end">
           <button class="btn s" onclick="showView('matches')">Ir a partidos</button>
@@ -751,7 +751,7 @@ async function renderDash(){
             c.className = 'card';
             c.style.gridColumn = 'span 3';
             c.innerHTML = `<div style="font-weight:700">${p.apodo||p.nombre||'Sin nombre'}</div>
-                           <div style="font-size:13px;color:var(--mut)">${p.posicion||''} ${p.edad? '— '+p.edad+' años':''}</div>`;
+                           <div style="font-size:11px;color:var(--mut)">${p.posicion||''} ${p.edad? '— '+p.edad+' años':''}</div>`;
             rosterGrid.appendChild(c);
           });
         } else {
@@ -811,7 +811,7 @@ async function renderMatches(){
       const assists = (m.assists || []).join(', ') || '—';
       return `<div style="border:1px solid var(--b);padding:10px;border-radius:8px;margin-bottom:8px">
         <div style="font-weight:700">${ev.title || 'Partido'}</div>
-        <div style="font-size:13px;color:var(--mut)">${dateTxt}</div>
+        <div style="font-size:11px;color:var(--mut)">${dateTxt}</div>
         <div style="margin-top:6px">Resultado: <strong>${m.goals_for ?? '—'}</strong> — <strong>${m.goals_against ?? '—'}</strong> (Dif: ${m.goal_difference ?? '—'})</div>
         <div style="margin-top:6px"><strong>Goleadoras:</strong> ${scorers}</div>
         <div style="margin-top:4px"><strong>Asistencias:</strong> ${assists}</div>
