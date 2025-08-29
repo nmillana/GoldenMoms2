@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Golden Moms — Panel (Dashboard actualizado)</title>
 <link rel="icon" href="Logo.webp"/>
-<!-- Intentamos cargar desde CDN por defecto: UMD build (para compatibilidad). 
-     Si no carga, el propio script JS intentará cargar dinámicamente desde jsDelivr. -->
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -735,7 +733,19 @@ async function renderDash(){
       evs = [];
     }
 
-    const {data:players} = supa ? await supa.from("players").select("*") : {data:[]};
+    // CORRECCIÓN: evitar destructuring inválido en ternario (causaba SyntaxError)
+    let players = [];
+    if(supa){
+      try{
+        const resPlayers = await supa.from("players").select("*");
+        if(resPlayers && resPlayers.data) players = resPlayers.data;
+      }catch(err){
+        console.warn('Error cargando players', err);
+        players = [];
+      }
+    } else {
+      players = [];
+    }
     document.getElementById('kRoster').textContent = (players||[]).length || 0;
 
     const matchesPlayed = (evs||[]).filter(e=> e.type==='Partido' && new Date(e.datetime) < now);
