@@ -751,7 +751,7 @@ async function renderDash(){
             c.className = 'card';
             c.style.gridColumn = 'span 3';
             c.innerHTML = `<div style="font-weight:700">${p.apodo||p.nombre||'Sin nombre'}</div>
-                           <div style="font-size:11px;color:var(--mut)">${p.posicion||''} ${p.edad? '— '+p.edad+' años':''}</div>`;
+                           <div style="font-size:8px;color:var(--mut)">${p.posicion||''} ${p.edad? '— '+p.edad+' años':''}</div>`;
             rosterGrid.appendChild(c);
           });
         } else {
