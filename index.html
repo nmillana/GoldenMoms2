@@ -62,15 +62,31 @@ a{color:inherit;text-decoration:none}
 /* helper text */
 .section-note{font-size:13px;color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
 
-/* Responsiveness improvements */
+/* ====== MÓVIL: tarjetas dashboard apiladas y orden arrancando por "Hoy" ====== */
 @media (max-width: 900px){
   .grid{grid-template-columns:1fr}
   .month-grid, .weekdays{gap:6px}
   .day{min-height:120px}
-  /* KPI cards stack nicely */
   .kpi { padding:12px 10px; }
   .card { padding:12px; }
   footer{font-size:13px}
+
+  /* Apilar y ordenar las tarjetas del dashboard */
+  .cards-dashboard{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .cards-dashboard .card{ grid-column:auto !important; }
+
+  /* Orden específico en móvil */
+  .card-hoy{ order:1; }
+  .card-birth-today{ order:2; }
+  .card-birth-next{ order:3; }
+  .card-week{ order:4; }
+
+  .cards-dashboard h4{ font-size:16px; line-height:1.25; margin:0 0 6px; }
+  .section-note{ font-size:12px; }
 }
 @media (max-width:480px){
   .top{padding:8px}
@@ -91,11 +107,9 @@ a{color:inherit;text-decoration:none}
       <button class="tab active" data-view="dash">Dashboard</button>
       <button class="tab" data-view="events">Eventos</button>
       <button class="tab" data-view="roster">Plantel</button>
-      <!-- Renombrada -->
       <button class="tab" data-view="matches">Partidos jugados</button>
     </div>
     <div class="top-actions" style="margin-left:12px">
-      <!-- CTAs rápidos -->
       <button class="btn p" id="ctaNewEvent" title="Crear nuevo evento">+ Nuevo evento</button>
       <button class="btn s" id="ctaRoster" title="Ir a administrar plantel">Administrar plantel</button>
     </div>
@@ -106,7 +120,7 @@ a{color:inherit;text-decoration:none}
 
   <!-- DASHBOARD -->
   <section id="v-dash">
-    <!-- KPI row: Plantel / Partidos jugados (ahora solo estas dos) -->
+    <!-- KPI row: Plantel / Partidos jugados -->
     <div class="grid" style="align-items:stretch">
       <div class="card kpi" style="grid-column:span 6;display:flex;flex-direction:column;justify-content:space-between">
         <div>
@@ -131,27 +145,27 @@ a{color:inherit;text-decoration:none}
       </div>
     </div>
 
-    <!-- Row: Cumpleaños hoy + Próximos cumpleaños + Hoy (detalles) -->
-    <div class="grid" style="margin-top:12px;grid-template-columns:repeat(12,1fr);gap:12px">
-      <div class="card" style="grid-column:span 4">
+    <!-- Row: Cumpleaños hoy + Próximos cumpleaños + Hoy + Semana -->
+    <div class="grid cards-dashboard" style="margin-top:12px;grid-template-columns:repeat(12,1fr);gap:12px">
+      <div class="card card-birth-today" style="grid-column:span 4">
         <h4>🎂 Cumpleaños — Hoy</h4>
         <div class="section-note">Personas del plantel que cumplen hoy</div>
         <div id="birthToday" style="margin-top:8px">—</div>
       </div>
 
-      <div class="card" style="grid-column:span 4">
+      <div class="card card-birth-next" style="grid-column:span 4">
         <h4>🎉 Próximos cumpleaños</h4>
         <div class="section-note">Lista con los próximos 5 cumpleaños.</div>
         <ul id="upBirth" style="margin:8px 0 0 16px"></ul>
       </div>
 
-      <div class="card" style="grid-column:span 4">
+      <div class="card card-hoy" style="grid-column:span 4">
         <h4>📅 Hoy</h4>
         <div class="section-note">Eventos que ocurren hoy (comparación por fecha local).</div>
         <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
       </div>
 
-      <div class="card" style="grid-column:span 12;margin-top:12px">
+      <div class="card card-week" style="grid-column:span 12;margin-top:12px">
         <h4>📅 Eventos de la semana</h4>
         <div class="section-note">Eventos de la semana actual (lunes a domingo).</div>
         <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
@@ -190,23 +204,20 @@ a{color:inherit;text-decoration:none}
     </div>
   </section>
 
-  <!-- PARTIDOS JUGADOS (antes 'Seguimiento') -->
+  <!-- PARTIDOS JUGADOS -->
   <section id="v-matches" style="display:none">
     <div class="card">
       <h4>Partidos jugados</h4>
       <div class="section-note">Registro de partidos: goles, diferencia y goleadoras/asistencias.</div>
 
-      <!-- Tabla simple de partidos -->
-      <div id="matchesList" style="margin-top:12px">
-        <!-- será llenado por JS -->
-      </div>
+      <div id="matchesList" style="margin-top:12px"></div>
     </div>
   </section>
 </div>
 
 <footer style="text-align:center;padding:16px;color:var(--mut);font-size:14px">Golden Moms · hecho con 💚 lima & azul</footer>
 
-<!-- MODAL EVENTO (ahora muestra campos extra si es Partido) -->
+<!-- MODAL EVENTO (campos extra si es Partido) -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <h3 id="modalTitle">Nuevo evento</h3>
@@ -257,7 +268,6 @@ a{color:inherit;text-decoration:none}
         <input id="f_location" class="input" placeholder="Colegio / Cancha / Dirección">
       </div>
       <div>
-        <!-- Campos extra para PARTIDO -->
         <div id="matchExtra" style="display:none">
           <label>Goles a favor</label>
           <input id="f_goals_for" class="input" type="number" min="0" placeholder="Goles a favor (ej: 2)">
@@ -294,7 +304,7 @@ a{color:inherit;text-decoration:none}
 </div>
 
 <script>
-/* ========= SUPABASE ========= */
+/* ========= SUPABASE (igual que antes) ========= */
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
@@ -310,9 +320,8 @@ document.querySelectorAll('.nav .tab').forEach(btn=>{
   };
 });
 function showView(v){
-  // updated to include 'matches' (partidos jugados)
   ['dash','events','roster','matches'].forEach(id=>{
-    const el = document.getElementById('v-'+id) || document.getElementById('v-'+id.replace('matches','matches')); // safe reference
+    const el = document.getElementById('v-'+id);
     if(el) el.style.display='none';
   });
   const target = document.getElementById('v-'+v) || document.getElementById('v-matches');
@@ -351,7 +360,7 @@ function localDateYMD(d){
   return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`;
 }
 
-/* ========= EVENTOS / CALENDARIO (sin cambios relevantes) ========= */
+/* ========= EVENTOS / CALENDARIO ========= */
 let monthCursor = new Date();
 let cachedEvents = [];
 const monthTitle = document.getElementById('monthTitle');
@@ -360,8 +369,8 @@ document.getElementById('btnPrevMonth')?.addEventListener('click', ()=>{ monthCu
 document.getElementById('btnNextMonth')?.addEventListener('click', ()=>{ monthCursor.setMonth(monthCursor.getMonth()+1); renderMonth(); });
 document.getElementById('btnToday')?.addEventListener('click', ()=>{ monthCursor = new Date(); renderMonth(); });
 document.getElementById('btnNewEventTop')?.addEventListener('click', ()=>openModal());
-document.getElementById('ctaNewEvent').addEventListener('click', ()=>openModal());
-document.getElementById('ctaRoster').addEventListener('click', ()=>showView('roster'));
+document.getElementById('ctaNewEvent')?.addEventListener('click', ()=>openModal());
+document.getElementById('ctaRoster')?.addEventListener('click', ()=>showView('roster'));
 
 function getMonthRange(d){
   const first = new Date(d.getFullYear(), d.getMonth(), 1);
@@ -476,7 +485,6 @@ function openModal(opts={}){
     f_opponent.value = e.opponent||'';
     f_uniform.value  = e.uniform||'';
     f_location.value = e.location||'';
-    // If this event has match data, try to fetch it and fill fields (best-effort)
     (async ()=>{
       try{
         const { data } = await supa.from('matches').select('*').eq('event_id', editingId).limit(1);
@@ -504,7 +512,7 @@ function openModal(opts={}){
     f_opponent.value = '';
     f_uniform.value  = '';
     f_location.value = '';
-    f_goals_for.value = ''; f_goals_against.value=''; f_scorers.value=''; f_assists.value='';
+    f_goals_for?.value = ''; f_goals_against?.value=''; f_scorers?.value=''; f_assists?.value='';
     btnDelete.style.display='none';
   }
   toggleMatchFields();
@@ -517,7 +525,6 @@ btnDelete.onclick=async()=>{
   if(!confirm('¿Eliminar este evento?')) return;
   try{
     await supa.from('events').delete().eq('id', editingId);
-    // Also try delete matches record
     await supa.from('matches').delete().eq('event_id', editingId);
   }catch(err){
     console.warn('Error eliminando (ignorado)', err);
@@ -536,16 +543,13 @@ btnSave.onclick=async()=>{
   const location = f_location.value.trim();
   if(!title || !f_dt.value){ alert('Completa título y fecha/hora'); return; }
 
-  // Guardar evento (datetime con offset local)
   const datetime = localInputToISOWithOffset(f_dt.value);
   const payloadEvent = { title, type, team, opponent, uniform, location, datetime };
 
   try{
     if(editingId){
-      // update event
       const { error } = await supa.from('events').update(payloadEvent).eq('id', editingId);
       if(error) throw error;
-      // if match data present, update matches
       if(type === 'Partido'){
         const goalsFor = f_goals_for.value ? parseInt(f_goals_for.value) : null;
         const goalsAgainst = f_goals_against.value ? parseInt(f_goals_against.value) : null;
@@ -559,7 +563,6 @@ btnSave.onclick=async()=>{
           assists: f_assists.value ? f_assists.value.split(',').map(s=>s.trim()).filter(Boolean) : []
         };
         try{
-          // Try update existing match record; if none, insert
           const { data:existing } = await supa.from('matches').select('id').eq('event_id', editingId).limit(1);
           if(existing && existing.length){
             await supa.from('matches').update(matchPayload).eq('event_id', editingId);
@@ -569,11 +572,8 @@ btnSave.onclick=async()=>{
         }catch(err){
           console.warn('Error guardando match (posible tabla matches inexistente):', err.message || err);
         }
-      } else {
-        // if changed from Partido to other, optionally delete match record
       }
     }else{
-      // insert event and get returned id (use select to return)
       const { data:inserted, error } = await supa.from('events').insert([payloadEvent]).select();
       if(error) throw error;
       const newEvent = inserted && inserted[0];
@@ -616,7 +616,6 @@ async function renderDash(){
     weekEnd.setDate(weekEnd.getDate()+6);
     const todayStrLocal = localDateYMD(now);
 
-    // Fetch events in week
     const {data:events} = await supa.from("events")
       .select("*")
       .gte("datetime", weekStart.toISOString())
@@ -624,11 +623,9 @@ async function renderDash(){
       .order("datetime",{ascending:true});
     const evs = events || [];
 
-    // players
     const {data:players} = await supa.from("players").select("*");
     document.getElementById('kRoster').textContent = (players||[]).length || 0;
 
-    // Matches played (count Partido with date < now)
     const matchesPlayed = evs.filter(e=> e.type==='Partido' && new Date(e.datetime) < now);
     document.getElementById('kGames').textContent = matchesPlayed.length;
     if(matchesPlayed.length>0){
@@ -639,14 +636,11 @@ async function renderDash(){
       document.getElementById('lastMatchSummary').textContent = 'Sin partidos jugados aún';
     }
 
-    // Próximos cumpleaños — mostrar SOLO 5 próximos
     const upB = document.getElementById("upBirth"); upB.innerHTML = '';
     const birthTodayEl = document.getElementById('birthToday'); birthTodayEl.innerHTML = '—';
     try{
-      // try view first, limited 5
       const { data:vw } = await supa.from("vw_upcoming_birthdays").select("*").order("proximo_cumple",{ascending:true}).limit(5);
       if(vw && vw.length){
-        // dedupe by id if necessary and slice 5
         const seen = new Set();
         const uniq = [];
         for(const p of vw){
@@ -659,10 +653,10 @@ async function renderDash(){
         uniq.forEach(p=>{
           if(p.proximo_cumple){
             const bd = new Date(p.proximo_cumple);
-            upB.innerHTML += `<li>${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+            upBirthHtml = `<li>${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+            upB.innerHTML += upBirthHtml;
           }
         });
-        // today
         const todayList = uniq.filter(p => p.proximo_cumple && localDateYMD(new Date(p.proximo_cumple)) === todayStrLocal);
         if(todayList.length>0){
           birthTodayEl.innerHTML = '<ul style="margin:6px 0 0 16px">' + todayList.map(p=>`<li><strong>${p.apodo||p.nombre}</strong> ${p.edad? '— '+p.edad+' años':''}</li>`).join('') + '</ul>';
@@ -679,7 +673,6 @@ async function renderDash(){
       birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>';
     }
 
-    // HOY 
     const todayEl = document.getElementById('todayEvents'); todayEl.innerHTML = '';
     evs.filter(e => localDateYMD(new Date(e.datetime)) === todayStrLocal)
       .forEach(e=>{
@@ -688,7 +681,6 @@ async function renderDash(){
       });
     if(todayEl.innerHTML.trim()==='') todayEl.innerHTML = '<div style="color:var(--mut)">No hay eventos hoy</div>';
 
-    // SEMANA
     const wEl = document.getElementById('weekEvents'); wEl.innerHTML = '';
     evs.forEach(e=>{
       const d = new Date(e.datetime);
@@ -704,17 +696,14 @@ async function renderDash(){
 
 /* ========= Partidos jugados view (lista de matches) ========= */
 async function renderMatches(){
-  // Try to read matches table joined with events (best-effort)
   const container = document.getElementById('matchesList');
   container.innerHTML = 'Cargando...';
   try{
-    // prefer joined query if possible
     const { data, error } = await supa
       .from('matches')
       .select(`*, events:event_id ( id, title, datetime, team, opponent )`)
       .order('created_at', {ascending:false});
     if(error){
-      // fallback: try to compute from events (if matches table missing)
       console.warn('Error cargando matches table:', error.message || error);
       const { data:events } = await supa.from('events').select('*').order('datetime',{ascending:false});
       const matchesFromEvents = (events||[]).filter(e=> e.type==='Partido');
@@ -732,7 +721,6 @@ async function renderMatches(){
       container.innerHTML = '<div style="color:var(--mut)">No hay registros de partidos.</div>';
       return;
     }
-    // render detailed cards
     const html = data.map(m=>{
       const ev = m.events || {};
       const d = ev.datetime ? new Date(ev.datetime) : null;
