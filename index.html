@@ -22,13 +22,16 @@ a{color:inherit;text-decoration:none}
 .top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
 .brand{display:flex;gap:10px;align-items:center}
 .brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
-.nav{display:flex;gap:8px;flex-wrap:wrap}
+.nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
 .nav .tab.active{background:var(--blue);color:#fff}
 .container{max-width:1200px;margin:14px auto;padding:0 12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px}
 .kpi h3{margin:0;color:var(--mut);font-size:14px}.kpi .n{font-size:22px;font-weight:800}
+
+/* Top action buttons */
+.top-actions{display:flex;gap:8px;align-items:center}
 
 /* ====== EVENTOS (Calendario mensual) ====== */
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px}
@@ -74,42 +77,86 @@ a{color:inherit;text-decoration:none}
     <img src="Logo.webp" alt="GM"/>
     <div><strong>Golden</strong> <span style="color:var(--lime);font-weight:800">Moms</span></div>
   </div>
-  <div class="nav">
-    <button class="tab active" data-view="dash">Dashboard</button>
-    <button class="tab" data-view="events">Eventos</button>
-    <button class="tab" data-view="roster">Plantel</button>
-    <button class="tab" data-view="track">Seguimiento</button>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="nav">
+      <button class="tab active" data-view="dash">Dashboard</button>
+      <button class="tab" data-view="events">Eventos</button>
+      <button class="tab" data-view="roster">Plantel</button>
+      <button class="tab" data-view="track">Seguimiento</button>
+    </div>
+    <div class="top-actions" style="margin-left:12px">
+      <!-- CTAs rápidos -->
+      <button class="btn p" id="ctaNewEvent" title="Crear nuevo evento">+ Nuevo evento</button>
+      <button class="btn s" id="ctaRoster" title="Ir a administrar plantel">Administrar plantel</button>
+    </div>
   </div>
 </div>
 
 <div class="container">
 
   <!-- ====== SECCIÓN: DASHBOARD ====== -->
-  <!-- Nota visible para que entiendas qué hace: muestra KPIs, cumpleaños, eventos de hoy y de la semana.
-       (Código que usa Supabase para traer eventos y jugadores está más abajo en <script>) -->
   <section id="v-dash">
-    <div class="grid">
-      <div class="card kpi" style="grid-column:span 4"><h3>Próximos eventos</h3><div class="n" id="kEvents">0</div></div>
-      <div class="card kpi" style="grid-column:span 4"><h3>Plantel</h3><div class="n" id="kRoster">0</div></div>
-      <div class="card kpi" style="grid-column:span 4"><h3>Partidos jugados</h3><div class="n" id="kGames">0</div></div>
+    <!-- KPI row: Próximo evento / Plantel / Partidos jugados -->
+    <div class="grid" style="align-items:stretch">
+      <div class="card kpi" style="grid-column:span 4;display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <h3 style="margin-bottom:6px">Próximo evento</h3>
+          <div id="nextEvent" style="font-weight:700">—</div>
+          <div id="nextEventCount" style="font-size:12px;color:var(--mut)"></div>
+        </div>
+        <div style="margin-top:8px;display:flex;justify-content:flex-end">
+          <button class="btn s" onclick="showView('events')">Ver calendario</button>
+        </div>
+      </div>
+
+      <div class="card kpi" style="grid-column:span 4;display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <h3 style="margin-bottom:6px">Plantel</h3>
+          <div class="n" id="kRoster">0</div>
+          <div style="font-size:12px;color:var(--mut)">Integrantes registrados</div>
+        </div>
+        <div style="margin-top:8px;display:flex;justify-content:flex-end">
+          <button class="btn s" onclick="showView('roster')">Administrar plantel</button>
+        </div>
+      </div>
+
+      <div class="card kpi" style="grid-column:span 4;display:flex;flex-direction:column;justify-content:space-between">
+        <div>
+          <h3 style="margin-bottom:6px">Partidos jugados</h3>
+          <div class="n" id="kGames">0</div>
+          <div id="lastMatchSummary" style="font-size:12px;color:var(--mut)"></div>
+        </div>
+        <div style="margin-top:8px;display:flex;justify-content:flex-end">
+          <button class="btn s" onclick="showView('events')">Ver partidos</button>
+        </div>
+      </div>
     </div>
 
-    <div class="card" style="margin-top:12px">
-      <h4>🎂 Próximos cumpleaños</h4>
-      <div class="section-note">Lista con los próximos 5 cumpleaños.</div>
-      <ul id="upBirth" style="margin:8px 0 0 16px"></ul>
-    </div>
+    <!-- Row: Cumpleaños hoy + Próximos cumpleaños + Hoy (detalles) -->
+    <div class="grid" style="margin-top:12px;grid-template-columns:repeat(12,1fr);gap:12px">
+      <div class="card" style="grid-column:span 4">
+        <h4>🎂 Cumpleaños — Hoy</h4>
+        <div class="section-note">Personas del plantel que cumplen hoy</div>
+        <div id="birthToday" style="margin-top:8px">—</div>
+      </div>
 
-    <div class="card" style="margin-top:12px">
-      <h4>📅 Hoy</h4>
-      <div class="section-note">Eventos que ocurren hoy.</div>
-      <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
-    </div>
+      <div class="card" style="grid-column:span 4">
+        <h4>🎉 Próximos cumpleaños</h4>
+        <div class="section-note">Lista con los próximos 5 cumpleaños.</div>
+        <ul id="upBirth" style="margin:8px 0 0 16px"></ul>
+      </div>
 
-    <div class="card" style="margin-top:12px">
-      <h4>📅 Eventos de la semana</h4>
-      <div class="section-note">Eventos de la semana actual (lunes a domingo).</div>
-      <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
+      <div class="card" style="grid-column:span 4">
+        <h4>📅 Hoy</h4>
+        <div class="section-note">Eventos que ocurren hoy (comparación por fecha local).</div>
+        <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
+      </div>
+
+      <div class="card" style="grid-column:span 12;margin-top:12px">
+        <h4>📅 Eventos de la semana</h4>
+        <div class="section-note">Eventos de la semana actual (lunes a domingo).</div>
+        <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
+      </div>
     </div>
   </section>
 
@@ -126,7 +173,7 @@ a{color:inherit;text-decoration:none}
         <button class="btn p" id="btnNewEventTop">Nuevo Evento</button>
       </div>
 
-      <div class="section-note">El calendario muestra eventos del mes.</div>
+      <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD) para evitar el desplazamiento de día causado por la conversión UTC.</div>
 
       <div class="weekdays">
         <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
@@ -282,6 +329,8 @@ document.getElementById('btnPrevMonth').onclick=()=>{ monthCursor.setMonth(month
 document.getElementById('btnNextMonth').onclick=()=>{ monthCursor.setMonth(monthCursor.getMonth()+1); renderMonth(); };
 document.getElementById('btnToday').onclick=()=>{ monthCursor = new Date(); renderMonth(); };
 document.getElementById('btnNewEventTop').onclick=()=>openModal();
+document.getElementById('ctaNewEvent').onclick=()=>openModal();
+document.getElementById('ctaRoster').onclick=()=>showView('roster');
 
 /* Rango del mes (lunes a domingo “cuadrado”) */
 function getMonthRange(d){
@@ -446,27 +495,77 @@ async function renderDash(){
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate()+6);
 
-    // --- cambio: comparar por fecha LOCAL, no por toISOString().slice(0,10) (que usa UTC)
+    // fecha local comparators
     const todayStrLocal = localDateYMD(now);
 
-    const {data:events}=await supa.from("events").select("*").gte("datetime", weekStart.toISOString()).lte("datetime", weekEnd.toISOString()).order("datetime",{ascending:true});
-    const {data:players}=await supa.from("players").select("*");
+    // traer eventos de la semana (para mostrar hoy/semana y calcular próximo evento)
+    const {data:events} = await supa.from("events")
+      .select("*")
+      .gte("datetime", weekStart.toISOString())
+      .lte("datetime", weekEnd.toISOString())
+      .order("datetime",{ascending:true});
 
-    document.getElementById('kEvents').textContent = events?.length||0;
-    document.getElementById('kRoster').textContent = players?.length||0;
-    document.getElementById('kGames').textContent = (events||[]).filter(e=>e.type==='Partido' && new Date(e.datetime)<now).length;
+    // traer jugadores
+    const {data:players} = await supa.from("players").select("*");
 
-    // cumpleaños próximos (usando tu vista si existe, si no, calcula simple)
+    // KPI: Plantel
+    document.getElementById('kRoster').textContent = (players||[]).length || 0;
+
+    // KPI: Partidos jugados (contar partidos con fecha < now)
+    const matchesPlayed = (events||[]).filter(e => e.type === 'Partido' && new Date(e.datetime) < now);
+    document.getElementById('kGames').textContent = matchesPlayed.length;
+    // último partido jugado (más reciente)
+    if(matchesPlayed.length>0){
+      const last = matchesPlayed.sort((a,b)=> new Date(b.datetime) - new Date(a.datetime))[0];
+      const d = new Date(last.datetime);
+      document.getElementById('lastMatchSummary').textContent = `${last.title} — ${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})}`;
+    }else{
+      document.getElementById('lastMatchSummary').textContent = 'Sin partidos jugados aún';
+    }
+
+    // Próximo evento + conteo próximos (filtrar por >= now)
+    const upcomingEvents = (events||[]).filter(e => new Date(e.datetime) >= now).sort((a,b)=> new Date(a.datetime) - new Date(b.datetime));
+    const upcomingCount = upcomingEvents.length;
+    if(upcomingCount>0){
+      const n = upcomingEvents[0];
+      const nd = new Date(n.datetime);
+      document.getElementById('nextEvent').innerHTML = `<div>${n.title}</div><div style="font-size:13px;color:var(--mut)">${nd.toLocaleString('es-CL',{weekday:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>`;
+      document.getElementById('nextEventCount').textContent = `${upcomingCount} evento(s) en la semana`;
+    }else{
+      document.getElementById('nextEvent').textContent = 'No hay eventos próximos esta semana';
+      document.getElementById('nextEventCount').textContent = '';
+    }
+
+    // cumpleaños: usamos vista vw_upcoming_birthdays si existe
     const upB = document.getElementById("upBirth"); upB.innerHTML="";
-    let bdata=[];
-    const { data:vw } = await supa.from("vw_upcoming_birthdays").select("*").order("proximo_cumple",{ascending:true}).limit(5);
-    if(vw) bdata=vw;
-    (bdata||[]).forEach(p=>{
-      if(p.proximo_cumple){
-        const bd=new Date(p.proximo_cumple);
-        upB.innerHTML += `<li>${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+    const birthTodayEl = document.getElementById('birthToday'); birthTodayEl.innerHTML = '—';
+    try{
+      const { data:vw } = await supa.from("vw_upcoming_birthdays").select("*").order("proximo_cumple",{ascending:true}).limit(10);
+      if(vw && vw.length>0){
+        // list upcoming
+        vw.forEach(p=>{
+          if(p.proximo_cumple){
+            const bd=new Date(p.proximo_cumple);
+            upB.innerHTML += `<li>${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}</li>`;
+          }
+        });
+        // today birthdays
+        const todayList = vw.filter(p => p.proximo_cumple && localDateYMD(new Date(p.proximo_cumple)) === todayStrLocal);
+        if(todayList.length>0){
+          birthTodayEl.innerHTML = '<ul style="margin:6px 0 0 16px">' + todayList.map(p=>`<li><strong>${p.apodo||p.nombre}</strong> — ${p.edad? p.edad+' años':''}</li>`).join('') + '</ul>';
+        }else{
+          birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>';
+        }
+      }else{
+        // fallback: si no hay vista, mostrar mensaje
+        upB.innerHTML = '<li style="color:var(--mut)">No hay datos de cumpleaños</li>';
+        birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>';
       }
-    });
+    }catch(e){
+      console.warn('Error trayendo cumpleaños', e);
+      upB.innerHTML = '<li style="color:var(--mut)">Error cargando datos</li>';
+      birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>';
+    }
 
     // HOY (usar fecha local para comparar)
     const todayEl=document.getElementById('todayEvents'); todayEl.innerHTML="";
@@ -482,8 +581,13 @@ async function renderDash(){
       const d=new Date(e.datetime);
       wEl.innerHTML+=`<li><strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</li>`;
     });
+
   }catch(err){
     console.error(err);
+    // Mostrar mensajes amigables si algo falla
+    document.getElementById('nextEvent').textContent = 'Error cargando eventos';
+    document.getElementById('nextEventCount').textContent = '';
+    document.getElementById('birthToday').innerHTML = '<div style="color:var(--mut)">Error cargando cumpleaños</div>';
   }
 }
 
