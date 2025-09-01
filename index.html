@@ -13,16 +13,13 @@
   --lime-strong:#7fd410; --blue-strong:#0a2a58;
   --title-size:12px; --content-size:10px; --sub-size:8px; --kpi-number-size:22px;
 
-  /* controla tamaño del número del día (desktop y móvil) */
-  --day-bold-size: 16px;        /* tamaño en desktop */
-  --day-bold-size-mobile: 14px; /* tamaño en móvil */
+  --day-bold-size: 16px;
+  --day-bold-size-mobile: 14px;
 
-  /* separación de semanas */
   --week-sep-height: 8px;
-  --week-sep-color: #000; /* línea negra */
+  --week-sep-color: #000;
   --today-border-color: #ff3b3b;
-  --today-outline-width: 3px; /* ajustar para hacer el anillo más/fino gordo */
-  --month-grid-gap: 18px; /* aumentado para que el outline no se superponga */
+  --month-grid-gap: 14px;
   --month-list-gap: 12px;
 }
 
@@ -65,13 +62,13 @@ a{color:inherit;text-decoration:none}
   grid-auto-rows:minmax(90px,auto);
 }
 
-/* week separator row in grid: full-width black thick line */
+/* week separator row in grid */
 .month-grid .week-sep{
   grid-column: 1 / -1;
   height: var(--week-sep-height);
   background: var(--week-sep-color);
   border-radius: 4px;
-  margin: 12px 0; /* más separación para que el outline no lo toque */
+  margin: 10px 0;
   z-index:0;
 }
 
@@ -107,13 +104,10 @@ a{color:inherit;text-decoration:none}
   font-size: var(--day-bold-size);
 }
 
-/* RESUELTO: usar outline con offset + asegurar gap y z-index para que no se sobreponga */
+/* === CORRECCIÓN: colorear el borde de la tarjeta del día actual ===
+   No se añade ningún borde extra; se reutiliza el borde existente cambiando su color. */
 .day.today{
-  position:relative; /* necesario para z-index */
-  z-index:2; /* elevar la tarjeta actual sobre elementos vecinos */
-  outline: var(--today-outline-width) solid var(--today-border-color);
-  outline-offset: 6px; /* separa el outline de la tarjeta para que no tape el borde interior */
-  border-radius:12px;
+  border-color: var(--today-border-color);
 }
 
 /* small add button and event chips */
@@ -144,19 +138,15 @@ a{color:inherit;text-decoration:none}
 .day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
 .day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
 
-/* list view: hoy — usar outline también y dejar separación */
-.month-list .day.today{
-  outline: var(--today-outline-width) solid var(--today-border-color);
-  outline-offset: 6px;
-  border-radius:12px;
-}
+/* en lista usar mismo enfoque: colorear borde (no agregar) */
+.month-list .day.today{ border-color: var(--today-border-color); }
 
 /* week separator in list view */
 .month-list .week-sep{
   height: var(--week-sep-height);
   background: var(--week-sep-color);
   border-radius: 4px;
-  margin: 12px 0;
+  margin: 10px 0;
   z-index:0;
 }
 
@@ -181,7 +171,7 @@ a{color:inherit;text-decoration:none}
 ul{ margin:6px 0 6px 18px; padding:0; font-size:var(--content-size) }
 li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
 
-/* ===== CORRECCIÓN: estructura del dashboard ===== */
+/* Dashboard layout tweaks */
 .cards-dashboard{
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -600,6 +590,10 @@ const monthTitle = document.getElementById('monthTitle');
 const monthGrid = document.getElementById('monthGrid');
 const monthList = document.getElementById('monthList');
 
+/* helper to persist current view so reload keeps the same tab */
+function persistView(view){ try{ localStorage.setItem('gm_view', view); }catch(e){} }
+function getPersistedView(){ try{ return localStorage.getItem('gm_view'); }catch(e){ return null; } }
+
 document.getElementById('btnPrevMonth')?.addEventListener('click', ()=>{ monthCursor.setMonth(monthCursor.getMonth()-1); renderMonth(); });
 document.getElementById('btnNextMonth')?.addEventListener('click', ()=>{ monthCursor.setMonth(monthCursor.getMonth()+1); renderMonth(); });
 document.getElementById('btnToday')?.addEventListener('click', ()=>{ monthCursor = new Date(); renderMonth(); });
@@ -676,7 +670,7 @@ function drawMonthGrid(start,end){
     head.querySelector('.day-add').onclick=()=>openModal({ date: day });
     cell.appendChild(head);
 
-    // marcar la tarjeta completa como 'today' (esto aplicará el outline externo)
+    // marcar la tarjeta completa como 'today' (solo cambia el color del borde)
     if(isToday){
       cell.classList.add('today');
       cell.setAttribute('aria-current','date');
@@ -925,14 +919,35 @@ async function renderMatches(){
 /* ---------- init ---------- */
 document.addEventListener('DOMContentLoaded', async () => {
   await initSupabase();
+
+  // Nav buttons wiring + persist view on click
   document.querySelectorAll('.nav .tab').forEach(btn=>{
-    btn.onclick=()=>{ document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); showView(btn.dataset.view); };
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const view = btn.dataset.view;
+      persistView(view);
+      showView(view);
+    });
   });
-  showView('events'); // abre en Eventos por defecto
+
+  // Decide initial view:
+  // 1) if user has a persisted view (localStorage) use it
+  // 2) else use the tab that has .active in HTML
+  // 3) else default to 'dash'
+  const persisted = getPersistedView();
+  const activeTab = document.querySelector('.nav .tab.active');
+  const initialView = persisted || (activeTab ? activeTab.dataset.view : 'dash');
+  // ensure nav reflects it
+  document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
+  const btnToActivate = document.querySelector(`.nav .tab[data-view="${initialView}"]`);
+  if(btnToActivate) btnToActivate.classList.add('active');
+
+  showView(initialView);
   closeModal();
 });
 
-/* showView */
+/* showView: only render content for the visible view */
 function showView(v){
   ['dash','events','roster','matches'].forEach(id=>{
     const el = document.getElementById('v-'+id);
