@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel (corregido)</title>
+<title>Golden Moms — Panel (orden tarjetas modificado)</title>
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -71,7 +71,7 @@ a{color:inherit;text-decoration:none}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
 
 /* Lists */
-ul{ margin:6px 0 6px 12px; padding:0; font-size:var(--content-size) }
+ul{ margin:6px 0 6px 18px; padding:0; font-size:var(--content-size) }
 li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
 
 /* ===== CORRECCIÓN: estructura del dashboard ===== */
@@ -84,9 +84,9 @@ li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
 .cards-dashboard .card{ grid-column: auto; }
 
 /* Asignar spans para las 3 tarjetas principales en desktop */
+.card-hoy { grid-column: span 4; }
 .card-birth-today { grid-column: span 4; }
 .card-birth-next  { grid-column: span 4; }
-.card-hoy         { grid-column: span 4; }
 .card-week        { grid-column: span 12; }
 
 /* Responsive: en pantallas pequeñas apilar */
@@ -94,9 +94,9 @@ li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
   .cards-dashboard{
     grid-template-columns: 1fr;
   }
+  .card-hoy,
   .card-birth-today,
   .card-birth-next,
-  .card-hoy,
   .card-week {
     grid-column: 1 / -1 !important;
   }
@@ -170,29 +170,34 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
       </div>
     </div>
 
+    <!-- REORDEN: Hoy -> Cumpleaños Hoy -> Eventos de la semana -> Próximos cumpleaños -->
     <div class="grid cards-dashboard" style="margin-top:12px;grid-template-columns:repeat(12,1fr);gap:12px">
-      <div class="card card-birth-today" style="grid-column:span 4">
-        <h4>🎂 Cumpleaños — Hoy</h4>
-        <div class="section-note">Personas del plantel que cumplen hoy</div>
-        <div id="birthToday" style="margin-top:8px">—</div>
-      </div>
-
-      <div class="card card-birth-next" style="grid-column:span 4">
-        <h4>🎉 Próximos cumpleaños</h4>
-        <div class="section-note">Lista con los próximos 5 cumpleaños.</div>
-        <ul id="upBirth" style="margin:8px 0 0 16px"></ul>
-      </div>
-
+      <!-- 1) Hoy -->
       <div class="card card-hoy" style="grid-column:span 4">
         <h4>📅 Hoy</h4>
         <div class="section-note">Eventos que ocurren hoy (fecha local).</div>
         <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
       </div>
 
+      <!-- 2) Cumpleaños — Hoy -->
+      <div class="card card-birth-today" style="grid-column:span 4">
+        <h4>🎂 Cumpleaños — Hoy</h4>
+        <div class="section-note">Personas del plantel que cumplen hoy</div>
+        <div id="birthToday" style="margin-top:8px">—</div>
+      </div>
+
+      <!-- 3) Eventos de la semana (ocupa toda la fila) -->
       <div class="card card-week" style="grid-column:span 12;margin-top:12px">
         <h4>📅 Eventos de la semana</h4>
         <div class="section-note">Eventos de la semana actual (lunes a domingo).</div>
         <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
+      </div>
+
+      <!-- 4) Próximos cumpleaños -->
+      <div class="card card-birth-next" style="grid-column:span 4;margin-top:0">
+        <h4>🎉 Próximos cumpleaños</h4>
+        <div class="section-note">Lista con los próximos 5 cumpleaños.</div>
+        <ul id="upBirth" style="margin:8px 0 0 16px"></ul>
       </div>
     </div>
   </section>
