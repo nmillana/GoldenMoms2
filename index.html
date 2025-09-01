@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel (calendario restaurado)</title>
+<title>Golden Moms — Panel (corregido)</title>
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -11,24 +11,27 @@
   --blue:#0f3a78; --lime:#9be22d; --ink:#0f172a; --mut:#64748b;
   --b:#e2e8f0; --bg:#f7f8fa;
   --lime-strong:#7fd410; --blue-strong:#0a2a58;
-  --title-size: 12px;
-  --content-size: 10px;
-  --sub-size: 8px;
-  --kpi-number-size: 22px;
+  --title-size:12px; --content-size:10px; --sub-size:8px; --kpi-number-size:22px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
 a{color:inherit;text-decoration:none}
+
+/* Buttons */
 .btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer;font-size:var(--content-size)}
 .btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
 .btn.s{background:#f8fafc}
+
+/* Top bar */
 .top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;overflow:visible}
 .brand{display:flex;gap:10px;align-items:center}
 .brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
 .brand div{font-size:var(--content-size)}
-.nav{display:flex;gap:8px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding-bottom:4px;padding-right:16px}
-.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer;white-space:nowrap;flex:0 0 auto;font-size:var(--content-size)}
+.nav{display:flex;gap:8px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding-bottom:4px}
+.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer;white-space:nowrap;font-size:var(--content-size)}
 .nav .tab.active{background:var(--blue);color:#fff}
+
+/* Layout */
 .container{max-width:1200px;margin:14px auto;padding:0 12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px; overflow:visible}
@@ -36,6 +39,8 @@ a{color:inherit;text-decoration:none}
 .kpi h3{margin:0;color:var(--mut);font-size:var(--sub-size)}
 .kpi .n{font-size:var(--kpi-number-size);font-weight:800}
 .section-note{font-size:var(--sub-size);color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
+
+/* Calendar */
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
 .month-title{font-weight:800;font-size:var(--title-size)}
 .month-nav{display:flex;gap:6px}
@@ -50,14 +55,14 @@ a{color:inherit;text-decoration:none}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
 
-/* mobile list fallback */
+/* Month list fallback (mobile) */
 .month-list{display:none;flex-direction:column;gap:8px}
 .month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto}
 .day-date{min-width:52px;border-radius:8px;background:#f1f5f9;padding:6px 8px;text-align:center;font-weight:700;color:var(--mut);font-size:var(--content-size)}
 .events-column{flex:1;display:flex;flex-direction:column;gap:6px}
 
-/* Modal */
-.modal-bg{position:fixed;inset:0;background:#0006;display:none;z-index:1000;display:flex;justify-content:center;align-items:flex-start;padding-top:6vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* Modal (hidden by default) */
+.modal-bg{position:fixed;inset:0;background:#0006;display:none;z-index:1000;justify-content:center;align-items:flex-start;padding-top:6vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal{width: min(860px, calc(100% - 24px));margin: 0 auto;background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;box-shadow:0 20px 40px #00000022;max-height:90vh; overflow:auto; box-sizing:border-box;}
 .modal h3{margin:0 0 10px;font-size:var(--title-size)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -66,10 +71,38 @@ a{color:inherit;text-decoration:none}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
 
 /* Lists */
-ul { margin: 6px 0 6px 18px; padding:0; font-size:var(--content-size); }
-li { margin-bottom:6px; font-size:var(--content-size); line-height:1.2; }
+ul{ margin:6px 0 6px 18px; padding:0; font-size:var(--content-size) }
+li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
 
-/* Responsive tweaks */
+/* ===== CORRECCIÓN: estructura del dashboard ===== */
+/* Mostrar en grid de 12 columnas por defecto (desktop) */
+.cards-dashboard{
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+}
+.cards-dashboard .card{ grid-column: auto; }
+
+/* Asignar spans para las 3 tarjetas principales en desktop */
+.card-birth-today { grid-column: span 4; }
+.card-birth-next  { grid-column: span 4; }
+.card-hoy         { grid-column: span 4; }
+.card-week        { grid-column: span 12; }
+
+/* Responsive: en pantallas pequeñas apilar */
+@media (max-width: 900px) {
+  .cards-dashboard{
+    grid-template-columns: 1fr;
+  }
+  .card-birth-today,
+  .card-birth-next,
+  .card-hoy,
+  .card-week {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* Responsive generales */
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}
   .month-grid, .weekdays{gap:6px}
@@ -79,7 +112,6 @@ li { margin-bottom:6px; font-size:var(--content-size); line-height:1.2; }
   .month-bar{flex-wrap:wrap;align-items:center}
 }
 @media (max-width:420px){
-  /* en móvil ocultamos la grid y mostramos la lista (fallback) */
   .month-grid{display:none}
   .weekdays{display:none}
   .month-list{display:flex}
@@ -91,6 +123,7 @@ li { margin-bottom:6px; font-size:var(--content-size); line-height:1.2; }
   .container{padding:0 8px}
   #rosterGrid .card{grid-column:1 / -1 !important}
 }
+
 footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:16px}
 </style>
 </head>
@@ -113,6 +146,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 </div>
 
 <div class="container">
+
   <!-- DASHBOARD -->
   <section id="v-dash">
     <div class="grid" style="align-items:stretch">
@@ -123,6 +157,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
           <div style="font-size:var(--sub-size);color:var(--mut)">Integrantes registrados</div>
         </div>
       </div>
+
       <div class="card kpi" style="grid-column:span 6;display:flex;flex-direction:column;justify-content:space-between">
         <div>
           <h3 style="margin-bottom:6px">Partidos jugados</h3>
@@ -162,7 +197,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
     </div>
   </section>
 
-  <!-- EVENTOS (restaurado boton + fallback movil) -->
+  <!-- EVENTOS -->
   <section id="v-events" style="display:none">
     <div class="card">
       <div class="month-bar">
@@ -173,7 +208,6 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="month-title" id="monthTitle">Mes</div>
-          <!-- vuelvo a poner el botón "Nuevo Evento" -->
           <button class="btn p" id="btnNewEventTop">Nuevo Evento</button>
         </div>
       </div>
@@ -185,7 +219,6 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
       </div>
 
       <div id="monthGrid" class="month-grid"></div>
-      <!-- fallback móvil: lista con días -->
       <div id="monthList" class="month-list"></div>
     </div>
   </section>
@@ -211,8 +244,8 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 
 <footer style="text-align:center;padding:16px;color:var(--mut);font-size:var(--content-size)">Golden Moms · hecho con 💚 lima & azul</footer>
 
-<!-- MODAL (igual que antes) -->
-<div class="modal-bg" id="modalBg">
+<!-- MODAL (oculto por defecto) -->
+<div class="modal-bg" id="modalBg" style="display:none;">
   <div class="modal" role="dialog" aria-modal="true">
     <h3 id="modalTitle">Nuevo evento</h3>
 
@@ -223,7 +256,10 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
       </div>
       <div>
         <label>Tipo</label>
-        <select id="f_type" class="input"><option>Entrenamiento</option><option>Partido</option></select>
+        <select id="f_type" class="input">
+          <option>Entrenamiento</option>
+          <option>Partido</option>
+        </select>
       </div>
     </div>
 
@@ -245,7 +281,11 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
       </div>
       <div>
         <label>Uniforme</label>
-        <select id="f_uniform" class="input"><option value="">(definir)</option><option>Polera azul — * medias verde lima</option><option>Polera verde lima — * medias verde lima</option></select>
+        <select id="f_uniform" class="input">
+          <option value="">(definir)</option>
+          <option>Polera azul — * medias verde lima</option>
+          <option>Polera verde lima — * medias verde lima</option>
+        </select>
       </div>
     </div>
 
@@ -322,7 +362,7 @@ function localInputToISOWithOffset(inp){ if(!inp) return null; const [d,t]=inp.s
 function isoToLocalInput(iso){ if(!iso) return ''; const d=new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
 function localDateYMD(d){ const D=new Date(d); return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`; }
 
-/* ---------- DOM refs & modal ---------- */
+/* ---------- DOM refs & modal handlers ---------- */
 const modalBg = document.getElementById('modalBg');
 const f_title = document.getElementById('f_title');
 const f_type = document.getElementById('f_type');
@@ -343,7 +383,6 @@ const btnSave   = document.getElementById('btnSave');
 
 let editingId = null;
 
-/* modal open/close */
 function openModal(opts={}) {
   document.getElementById('modalTitle').textContent = opts.existing ? 'Editar evento' : 'Nuevo evento';
   editingId = null;
@@ -376,19 +415,33 @@ function openModal(opts={}) {
     btnDelete.style.display='none';
     if(f_goals_for) f_goals_for.value=''; if(f_goals_against) f_goals_against.value=''; if(f_scorers) f_scorers.value=''; if(f_assists) f_assists.value='';
   }
-  modalBg.style.display='flex'; modalBg.setAttribute('aria-hidden','false');
+  modalBg.style.display = 'flex';
+  modalBg.setAttribute('aria-hidden','false');
 }
-function closeModal(){ modalBg.style.display='none'; modalBg.setAttribute('aria-hidden','true'); editingId=null; }
-modalBg.addEventListener('click',(e)=>{ if(e.target===modalBg) closeModal(); });
-document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeModal(); });
-btnCancel.addEventListener('click',()=>closeModal());
+
+function closeModal(){
+  modalBg.style.display = 'none';
+  modalBg.setAttribute('aria-hidden','true');
+  editingId = null;
+}
+modalBg.addEventListener('click', (e) => { if (e.target === modalBg) closeModal(); });
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
+btnCancel.addEventListener('click', ()=> closeModal());
 
 btnDelete.addEventListener('click', async ()=>{
   if(!editingId) return;
   if(!confirm('¿Eliminar este evento?')) return;
   if(!supa){ alert('No conectado a Supabase.'); closeModal(); return; }
-  try{ await supa.from('events').delete().eq('id', editingId); await supa.from('matches').delete().eq('event_id', editingId); }catch(err){ console.warn(err); alert('Error eliminando. Revisa consola.'); }
-  closeModal(); renderMonth(); renderDash();
+  try{
+    await supa.from('events').delete().eq('id', editingId);
+    await supa.from('matches').delete().eq('event_id', editingId);
+  }catch(err){
+    console.warn('Error eliminando', err);
+    alert('Error eliminado. Revisa consola.');
+  }
+  closeModal();
+  renderMonth();
+  renderDash();
 });
 
 btnSave.addEventListener('click', async ()=>{
@@ -427,12 +480,18 @@ btnSave.addEventListener('click', async ()=>{
         try{ await supa.from('matches').insert([matchPayload]); }catch(err){ console.warn('Error guardando match', err); }
       }
     }
-  }catch(err){ alert('Error al guardar: '+(err.message||err)); console.error(err); return; }
+  }catch(err){
+    alert('Error al guardar: '+(err.message||err));
+    console.error(err);
+    return;
+  }
 
-  closeModal(); renderMonth(); renderDash();
+  closeModal();
+  renderMonth();
+  renderDash();
 });
 
-/* ---------- calendar + rendering ---------- */
+/* ---------- calendar & rendering ---------- */
 let monthCursor = new Date();
 let cachedEvents = [];
 const monthTitle = document.getElementById('monthTitle');
@@ -474,7 +533,6 @@ async function renderMonth(){
   renderMonthTitle();
   const {start,end} = getMonthRange(monthCursor);
   cachedEvents = await fetchEventsRange(start,end);
-  // mostrar grid en desktop y lista en móvil
   if(window.matchMedia('(max-width:420px)').matches){
     if(monthGrid) monthGrid.style.display = 'none';
     if(monthList) monthList.style.display = 'block';
@@ -496,19 +554,23 @@ function drawMonthGrid(start,end){
     d.setDate(d.getDate()+1);
   }
   for(const day of days){
-    const cell = document.createElement('div'); cell.className='day';
-    const head = document.createElement('div'); head.className='day-head';
-    head.innerHTML = `<div class="day-n">${pad(day.getDate())}</div><button class="day-add" title="Nuevo evento">+</button>`;
-    head.querySelector('.day-add').onclick=()=> openModal({ date: day });
+    const cell = document.createElement('div');
+    cell.className='day';
+    const head = document.createElement('div');
+    head.className='day-head';
+    head.innerHTML = `<div class="day-n">${pad(day.getDate())}</div>
+      <button class="day-add" title="Nuevo evento">+</button>`;
+    head.querySelector('.day-add').onclick=()=>openModal({ date: day });
     cell.appendChild(head);
 
     const dayStrLocal = localDateYMD(day);
     const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
 
     for(const e of events){
-      const ev = document.createElement('div'); ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
+      const ev = document.createElement('div');
+      ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
       ev.innerHTML = `<div class="title">${e.title}</div>`;
-      ev.onclick=()=> openModal({ existing:e });
+      ev.onclick=()=>openModal({ existing:e });
       cell.appendChild(ev);
     }
     monthGrid.appendChild(cell);
@@ -548,12 +610,14 @@ function drawMonthList(start,end){
   }
 }
 
-/* ---------- dashboard & roster & matches ---------- */
+/* ---------- dashboard & matches & roster ---------- */
 async function renderDash(){
   try{
     const now = new Date();
-    const weekStart = new Date(now); weekStart.setDate(weekStart.getDate() - ((weekStart.getDay()+6)%7));
-    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
+    const weekStart = new Date(now);
+    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay()+6)%7));
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate()+6);
     const todayStrLocal = localDateYMD(now);
 
     let evs = [];
@@ -584,9 +648,23 @@ async function renderDash(){
       if(supa){
         const { data:vw, error:vwErr } = await supa.from("vw_upcoming_birthdays").select("*").order("proximo_cumple",{ascending:true}).limit(5);
         if(vw && vw.length){
-          const seen = new Set(); const uniq = [];
-          for(const p of vw){ if(!seen.has(p.id)){ seen.add(p.id); uniq.push(p); if(uniq.length>=5) break; } }
-          uniq.forEach(p=>{ if(p.proximo_cumple){ const bd = new Date(p.proximo_cumple); const li = document.createElement('li'); li.innerHTML = `${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}`; upB.appendChild(li); } });
+          const seen = new Set();
+          const uniq = [];
+          for(const p of vw){
+            if(!seen.has(p.id)){
+              seen.add(p.id);
+              uniq.push(p);
+              if(uniq.length>=5) break;
+            }
+          }
+          uniq.forEach(p=>{
+            if(p.proximo_cumple){
+              const bd = new Date(p.proximo_cumple);
+              const li = document.createElement('li');
+              li.innerHTML = `${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}`;
+              upB.appendChild(li);
+            }
+          });
           const todayList = uniq.filter(p => p.proximo_cumple && localDateYMD(new Date(p.proximo_cumple)) === todayStrLocal);
           if(todayList.length>0){
             birthTodayEl.innerHTML = '<ul style="margin:6px 0 0 16px">' + todayList.map(p=>`<li><strong>${p.apodo||p.nombre}</strong> ${p.edad? '— '+p.edad+' años':''}</li>`).join('') + '</ul>';
@@ -601,17 +679,29 @@ async function renderDash(){
         upB.innerHTML = '<li style="color:var(--mut)">Sin conexión — no se pudieron cargar cumpleaños</li>';
         birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños (offline)</div>';
       }
-    }catch(err){ console.warn('Error trayendo cumpleaños', err); upB.innerHTML = '<li style="color:var(--mut)">Error cargando datos</li>'; birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>'; }
+    }catch(err){
+      console.warn('Error trayendo cumpleaños', err);
+      upB.innerHTML = '<li style="color:var(--mut)">Error cargando datos</li>';
+      birthTodayEl.innerHTML = '<div style="color:var(--mut)">Hoy no hay cumpleaños</div>';
+    }
 
     const todayEl = document.getElementById('todayEvents'); todayEl.innerHTML = '';
-    evs.filter(e => localDateYMD(new Date(e.datetime)) === todayStrLocal).forEach(e=>{
-      const d = new Date(e.datetime); const li = document.createElement('li');
-      li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}`; todayEl.appendChild(li);
-    });
+    evs.filter(e => localDateYMD(new Date(e.datetime)) === todayStrLocal)
+      .forEach(e=>{
+        const d = new Date(e.datetime);
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}`;
+        todayEl.appendChild(li);
+      });
     if(todayEl.innerHTML.trim()==='') todayEl.innerHTML = '<div style="color:var(--mut)">No hay eventos hoy</div>';
 
     const wEl = document.getElementById('weekEvents'); wEl.innerHTML = '';
-    evs.forEach(e=>{ const d = new Date(e.datetime); const li = document.createElement('li'); li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}`; wEl.appendChild(li); });
+    evs.forEach(e=>{
+      const d = new Date(e.datetime);
+      const li = document.createElement('li');
+      li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}`;
+      wEl.appendChild(li);
+    });
     if(wEl.innerHTML.trim()==='') wEl.innerHTML = '<div style="color:var(--mut)">No hay eventos esta semana</div>';
 
     const rosterGrid = document.getElementById('rosterGrid'); rosterGrid.innerHTML = '';
@@ -619,12 +709,24 @@ async function renderDash(){
       if(supa){
         const { data:playersList } = await supa.from('players').select('*').order('nombre',{ascending:true});
         if(playersList && playersList.length){
-          playersList.forEach(p=>{ const c = document.createElement('div'); c.className = 'card'; c.style.gridColumn = 'span 3'; c.innerHTML = `<div style="font-weight:700">${p.apodo||p.nombre||'Sin nombre'}</div><div style="font-size:13px;color:var(--mut)">${p.posicion||''} ${p.edad? '— '+p.edad+' años':''}</div>`; rosterGrid.appendChild(c); });
+          playersList.forEach(p=>{
+            const c = document.createElement('div');
+            c.className = 'card';
+            c.style.gridColumn = 'span 3';
+            c.innerHTML = `<div style="font-weight:700">${p.apodo||p.nombre||'Sin nombre'}</div><div style="font-size:13px;color:var(--mut)">${p.posicion||''} ${p.edad? '— '+p.edad+' años':''}</div>`;
+            rosterGrid.appendChild(c);
+          });
         } else rosterGrid.innerHTML = '<div style="color:var(--mut)">No hay jugadores registrados</div>';
       } else rosterGrid.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pudo cargar plantel</div>';
-    }catch(err){ console.warn('Error cargando roster', err); rosterGrid.innerHTML = '<div style="color:var(--mut)">Error cargando plantel</div>'; }
+    }catch(err){
+      console.warn('Error cargando roster', err);
+      rosterGrid.innerHTML = '<div style="color:var(--mut)">Error cargando plantel</div>';
+    }
 
-  }catch(err){ console.error(err); document.getElementById('birthToday').innerHTML = '<div style="color:var(--mut)">Error cargando cumpleaños</div>'; }
+  }catch(err){
+    console.error(err);
+    document.getElementById('birthToday').innerHTML = '<div style="color:var(--mut)">Error cargando cumpleaños</div>';
+  }
 }
 
 async function renderMatches(){
@@ -641,33 +743,53 @@ async function renderMatches(){
         container.innerHTML = '<div style="color:var(--mut)">No hay registros de partidos.</div>';
         return;
       }
-      container.innerHTML = '<ul>' + matchesFromEvents.map(ev=>{ const d = new Date(ev.datetime); return `<li><strong>${ev.title}</strong> — ${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})} (${d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})})</li>`; }).join('') + '</ul>';
+      container.innerHTML = '<ul>' + matchesFromEvents.map(ev=>{
+        const d = new Date(ev.datetime);
+        return `<li><strong>${ev.title}</strong> — ${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})} (${d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})})</li>`;
+      }).join('') + '</ul>';
       return;
     }
     if(!data || data.length===0){
       container.innerHTML = '<div style="color:var(--mut)">No hay registros de partidos.</div>';
       return;
     }
-    const html = data.map(m=>{ const ev = m.events || {}; const d = ev.datetime ? new Date(ev.datetime) : null; const dateTxt = d ? `${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}` : ''; const scorers = (m.scorers || []).join(', ') || '—'; const assists = (m.assists || []).join(', ') || '—'; return `<div style="border:1px solid var(--b);padding:10px;border-radius:8px;margin-bottom:8px"><div style="font-weight:700">${ev.title || 'Partido'}</div><div style="font-size:13px;color:var(--mut)">${dateTxt}</div><div style="margin-top:6px">Resultado: <strong>${m.goals_for ?? '—'}</strong> — <strong>${m.goals_against ?? '—'}</strong> (Dif: ${m.goal_difference ?? '—'})</div><div style="margin-top:6px"><strong>Goleadoras:</strong> ${scorers}</div><div style="margin-top:4px"><strong>Asistencias:</strong> ${assists}</div></div>`; }).join('');
+    const html = data.map(m=>{
+      const ev = m.events || {};
+      const d = ev.datetime ? new Date(ev.datetime) : null;
+      const dateTxt = d ? `${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}` : '';
+      const scorers = (m.scorers || []).join(', ') || '—';
+      const assists = (m.assists || []).join(', ') || '—';
+      return `<div style="border:1px solid var(--b);padding:10px;border-radius:8px;margin-bottom:8px">
+        <div style="font-weight:700">${ev.title || 'Partido'}</div>
+        <div style="font-size:13px;color:var(--mut)">${dateTxt}</div>
+        <div style="margin-top:6px">Resultado: <strong>${m.goals_for ?? '—'}</strong> — <strong>${m.goals_against ?? '—'}</strong> (Dif: ${m.goal_difference ?? '—'})</div>
+        <div style="margin-top:6px"><strong>Goleadoras:</strong> ${scorers}</div>
+        <div style="margin-top:4px"><strong>Asistencias:</strong> ${assists}</div>
+      </div>`;
+    }).join('');
     container.innerHTML = html;
-  }catch(err){ console.error('renderMatches error', err); container.innerHTML = '<div style="color:var(--mut)">Error cargando partidos</div>'; }
+  }catch(err){
+    console.error('renderMatches error', err);
+    container.innerHTML = '<div style="color:var(--mut)">Error cargando partidos</div>';
+  }
 }
 
 /* ---------- init ---------- */
 document.addEventListener('DOMContentLoaded', async () => {
   await initSupabase();
-  // tabs
   document.querySelectorAll('.nav .tab').forEach(btn=>{
     btn.onclick=()=>{ document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); showView(btn.dataset.view); };
   });
-  // inicial
   showView('dash');
   closeModal();
 });
 
 /* showView */
 function showView(v){
-  ['dash','events','roster','matches'].forEach(id=>{ const el=document.getElementById('v-'+id); if(el) el.style.display='none'; });
+  ['dash','events','roster','matches'].forEach(id=>{
+    const el = document.getElementById('v-'+id);
+    if(el) el.style.display='none';
+  });
   const target = document.getElementById('v-'+v) || document.getElementById('v-matches');
   if(target) target.style.display='block';
   if(v==='dash') renderDash();
