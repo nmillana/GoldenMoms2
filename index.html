@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel (orden tarjetas modificado)</title>
+<title>Golden Moms — Panel (corregido)</title>
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -12,7 +12,13 @@
   --b:#e2e8f0; --bg:#f7f8fa;
   --lime-strong:#7fd410; --blue-strong:#0a2a58;
   --title-size:12px; --content-size:10px; --sub-size:8px; --kpi-number-size:22px;
+
+  /* controla tamaño del número del día (desktop y móvil) */
+  --day-bold-size: 16px;        /* tamaño en desktop — cámbialo aquí si quieres */
+  --day-bold-size-mobile: 14px; /* tamaño en móvil */
 }
+
+/* base */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
 a{color:inherit;text-decoration:none}
@@ -40,12 +46,6 @@ a{color:inherit;text-decoration:none}
 .kpi .n{font-size:var(--kpi-number-size);font-weight:800}
 .section-note{font-size:var(--sub-size);color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
 
-  /* variables para controlar tamaño de días */
-:root{
-  --day-bold-size: 14px;        /* tamaño desktop — cámbialo aquí */
-  --day-bold-size-mobile: 13px; /* tamaño móvil */
-}
-
 /* Calendar */
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
 .month-title{font-weight:800;font-size:var(--title-size)}
@@ -61,13 +61,13 @@ a{color:inherit;text-decoration:none}
   font-size: var(--day-bold-size); /* usa la variable */
   line-height:1;
 }
-
 .day-add{border:none;background:#eef4ff;color:var(--blue);width:26px;height:26px;border-radius:999px;cursor:pointer;font-size:var(--content-size)}
 .ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word;font-size:var(--content-size)}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
 
 /* Month list fallback (mobile) */
+/* el .day-date ahora muestra: fila 1 = abreviatura día (lun/mar/...), fila 2 = número */
 .month-list{display:none;flex-direction:column;gap:8px}
 .month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto}
 .day-date{
@@ -78,8 +78,16 @@ a{color:inherit;text-decoration:none}
   text-align:center;
   font-weight:700;
   color:var(--mut);
-  font-size: var(--day-bold-size);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  line-height:1;
+  font-size:var(--day-bold-size);
 }
+.day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
+.day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
 
 .events-column{flex:1;display:flex;flex-direction:column;gap:6px}
 
@@ -91,9 +99,13 @@ a{color:inherit;text-decoration:none}
 @media(max-width:800px){.form-row{grid-template-columns:1fr}}
 .input, select, textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:10px;background:#fff;font-size:var(--content-size)}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+
+/* Responsive tweaks */
 @media (max-width:420px){
   .day-n{ font-size: var(--day-bold-size-mobile); }
-  .day-date{ font-size: calc(var(--day-bold-size-mobile) - 1px); }
+  .day-date{ font-size: var(--day-bold-size-mobile); }
+  .day-date .day-wk{ font-size: calc(var(--day-bold-size-mobile) - 6px); }
+  .day-date .day-num{ font-size: calc(var(--day-bold-size-mobile)); }
 }
 
 /* Lists */
@@ -101,34 +113,24 @@ ul{ margin:6px 0 6px 18px; padding:0; font-size:var(--content-size) }
 li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
 
 /* ===== CORRECCIÓN: estructura del dashboard ===== */
-/* Mostrar en grid de 12 columnas por defecto (desktop) */
 .cards-dashboard{
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: 12px;
 }
 .cards-dashboard .card{ grid-column: auto; }
-
-/* Asignar spans para las 3 tarjetas principales en desktop */
 .card-hoy { grid-column: span 4; }
 .card-birth-today { grid-column: span 4; }
 .card-birth-next  { grid-column: span 4; }
 .card-week        { grid-column: span 12; }
 
-/* Responsive: en pantallas pequeñas apilar */
 @media (max-width: 900px) {
-  .cards-dashboard{
-    grid-template-columns: 1fr;
-  }
-  .card-hoy,
-  .card-birth-today,
-  .card-birth-next,
-  .card-week {
+  .cards-dashboard{ grid-template-columns: 1fr; }
+  .card-hoy, .card-birth-today, .card-birth-next, .card-week {
     grid-column: 1 / -1 !important;
   }
 }
 
-/* Responsive generales */
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}
   .month-grid, .weekdays{gap:6px}
@@ -618,14 +620,22 @@ function drawMonthList(start,end){
     const dayStrLocal = localDateYMD(day);
     const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
     const row = document.createElement('div'); row.className='day';
-    const dateBox = document.createElement('div'); dateBox.className='day-date'; dateBox.innerText = `${pad(day.getDate())}\n${day.toLocaleString('es-CL',{month:'short'})}`;
+
+    // dateBox ahora con abreviatura del día + número (mini cuadrado)
+    const dateBox = document.createElement('div'); dateBox.className='day-date';
+    const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,''); // "lun", "mar", etc.
+    dateBox.innerHTML = `<div class="day-wk">${wk}</div><div class="day-num">${pad(day.getDate())}</div>`;
+
     const col = document.createElement('div'); col.className='events-column';
-    const headRow = document.createElement('div'); headRow.style.display='flex'; headRow.style.justifyContent='space-between'; headRow.style.alignItems='center';
-    const title = document.createElement('div'); title.style.fontWeight='700'; title.innerText = day.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
+
+    // botón + (añadir evento) arriba a la derecha dentro de la columna de eventos
+    const headRow = document.createElement('div'); headRow.style.display='flex'; headRow.style.justifyContent='flex-end'; headRow.style.alignItems='center';
     const plus = document.createElement('button'); plus.className='day-add'; plus.title='Nuevo evento'; plus.innerText='+';
     plus.onclick=()=> openModal({ date: day });
-    headRow.appendChild(title); headRow.appendChild(plus);
+    headRow.appendChild(plus);
     col.appendChild(headRow);
+
+    // lista de eventos para el día (si hay)
     if(events.length){
       for(const e of events){
         const ev = document.createElement('div'); ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
