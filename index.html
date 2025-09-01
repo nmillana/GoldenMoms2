@@ -19,8 +19,8 @@
   --week-sep-height: 8px;
   --week-sep-color: #000;
   --today-border-color: #ff3b3b;
-  --month-grid-gap: 14px;
-  --month-list-gap: 12px;
+  --month-grid-gap: 20px;   /* aumentado para separación con bordes más gruesos */
+  --month-list-gap: 16px;
 }
 
 /* base */
@@ -77,7 +77,18 @@ a{color:inherit;text-decoration:none}
 .weekdays div{font-weight:700;color:var(--blue);text-align:center;font-size:var(--content-size)}
 
 /* day cell */
-.day{min-height:90px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;position:relative;display:flex;flex-direction:column;gap:6px; z-index:0}
+.day{
+  min-height:90px;
+  background:#fff;
+  border:1px solid var(--b);
+  border-radius:12px;
+  padding:12px 12px 10px 12px; /* más padding top para que + no tape contenido */
+  position:relative; /* para posicionar + en esquina */
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  z-index:0;
+}
 .day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 
 /* mini square for day (grid) */
@@ -104,21 +115,38 @@ a{color:inherit;text-decoration:none}
   font-size: var(--day-bold-size);
 }
 
-/* === CORRECCIÓN: colorear el borde de la tarjeta del día actual ===
-   No se añade ningún borde extra; se reutiliza el borde existente cambiando su color. */
-.day.today{
-  border-color: var(--today-border-color);
+/* === MOVIMIENTO DEL +: ponerlo en la esquina superior derecha absoluta dentro de la tarjeta === */
+.day-add{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:36px;
+  height:36px;
+  border-radius:999px;
+  border:1px solid var(--b);
+  background:#eef4ff;
+  color:var(--blue);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:18px;
+  line-height:1;
+  box-shadow: 0 4px 8px #00000011;
+  z-index:3;
 }
 
-/* small add button and event chips */
-.day-add{border:none;background:#eef4ff;color:var(--blue);width:26px;height:26px;border-radius:999px;cursor:pointer;font-size:var(--content-size)}
+/* small add button in compact contexts (keep accessibility) */
+.day-add:active{transform:translateY(1px)}
+
+/* evento chips */
 .ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word;font-size:var(--content-size)}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
 
 /* Month list fallback (mobile) */
 .month-list{display:none;flex-direction:column;gap:var(--month-list-gap)}
-.month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto}
+.month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:12px;min-height:auto;position:relative}
 .day-date{
   min-width:52px;
   border-radius:8px;
@@ -138,8 +166,15 @@ a{color:inherit;text-decoration:none}
 .day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
 .day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
 
-/* en lista usar mismo enfoque: colorear borde (no agregar) */
-.month-list .day.today{ border-color: var(--today-border-color); }
+/* en lista usar mismo enfoque: + en esquina superior derecha (absolute funciona igual aquí) */
+.month-list .day .day-add{ top:10px; right:10px; }
+
+/* === GROSOR DEL BORDE ROJO: colorear y engrosar el borde del .day actual ===
+   Se usa el mismo borde de la tarjeta (sin agregar otro borde externo). */
+.day.today{
+  border: 3px solid var(--today-border-color); /* borde más grueso y rojo */
+  border-radius:12px;
+}
 
 /* week separator in list view */
 .month-list .week-sep{
@@ -165,6 +200,11 @@ a{color:inherit;text-decoration:none}
   .day-date{ font-size: var(--day-bold-size-mobile); }
   .day-date .day-wk{ font-size: calc(var(--day-bold-size-mobile) - 6px); }
   .day-date .day-num{ font-size: calc(var(--day-bold-size-mobile)); }
+  .month-grid{display:none}
+  .weekdays{display:none}
+  .month-list{display:flex}
+  .day{padding:12px}
+  .day-add{ width:34px; height:34px; font-size:16px; top:8px; right:8px; }
 }
 
 /* Lists */
@@ -193,18 +233,13 @@ li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}
   .month-grid, .weekdays{gap:6px}
-  .day{min-height:100px;padding:6px}
+  .day{min-height:100px;padding:12px}
   .kpi { padding:12px 10px; }
   .card { padding:12px; }
   .month-bar{flex-wrap:wrap;align-items:center}
 }
 @media (max-width:420px){
-  .month-grid{display:none}
-  .weekdays{display:none}
-  .month-list{display:flex}
   .month-title{font-size:var(--title-size)}
-  .day{padding:8px}
-  .day-date{min-width:46px;padding:6px 6px}
   .ev{font-size:var(--content-size);padding:6px}
   .nav .tab{padding:6px 8px;font-size:var(--content-size)}
   .container{padding:0 8px}
@@ -667,10 +702,11 @@ function drawMonthGrid(start,end){
         <div class="day-n">${pad(day.getDate())}</div>
       </div>
       <button class="day-add" title="Nuevo evento">+</button>`;
+    // attach add button handler (the button is absolute positioned by CSS)
     head.querySelector('.day-add').onclick=()=>openModal({ date: day });
     cell.appendChild(head);
 
-    // marcar la tarjeta completa como 'today' (solo cambia el color del borde)
+    // marcar la tarjeta completa como 'today' (solo cambia el color y grosor del borde)
     if(isToday){
       cell.classList.add('today');
       cell.setAttribute('aria-current','date');
@@ -721,14 +757,19 @@ function drawMonthList(start,end){
     const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,''); // "lun", "mar", etc.
     dateBox.innerHTML = `<div class="day-wk">${wk}</div><div class="day-num">${pad(day.getDate())}</div>`;
 
+    // add a + button (it will be absolutely positioned inside .day)
+    const plus = document.createElement('button');
+    plus.className = 'day-add';
+    plus.title = 'Nuevo evento';
+    plus.innerText = '+';
+    plus.onclick = ()=> openModal({ date: day });
+
     const col = document.createElement('div'); col.className='events-column';
 
-    // add button at top-right of column
-    const headRow = document.createElement('div'); headRow.style.display='flex'; headRow.style.justifyContent='flex-end'; headRow.style.alignItems='center';
-    const plus = document.createElement('button'); plus.className='day-add'; plus.title='Nuevo evento'; plus.innerText='+';
-    plus.onclick=()=> openModal({ date: day });
-    headRow.appendChild(plus);
-    col.appendChild(headRow);
+    // add plus and events into the row
+    row.appendChild(dateBox);
+    row.appendChild(col);
+    row.appendChild(plus); // appended to the row so absolute positioning places it top-right
 
     if(events.length){
       for(const e of events){
@@ -741,7 +782,7 @@ function drawMonthList(start,end){
       const n = document.createElement('div'); n.style.color='var(--mut)'; n.style.fontSize='var(--content-size)'; n.innerText='—';
       col.appendChild(n);
     }
-    row.appendChild(dateBox); row.appendChild(col); monthList.appendChild(row);
+    monthList.appendChild(row);
 
     // if this day is Sunday insert a week separator element (list)
     if(day.getDay() === 0){
@@ -932,13 +973,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Decide initial view:
-  // 1) if user has a persisted view (localStorage) use it
-  // 2) else use the tab that has .active in HTML
-  // 3) else default to 'dash'
   const persisted = getPersistedView();
   const activeTab = document.querySelector('.nav .tab.active');
   const initialView = persisted || (activeTab ? activeTab.dataset.view : 'dash');
-  // ensure nav reflects it
   document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
   const btnToActivate = document.querySelector(`.nav .tab[data-view="${initialView}"]`);
   if(btnToActivate) btnToActivate.classList.add('active');
