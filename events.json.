@@ -36,7 +36,8 @@ html,body{margin:0;background:var(--bg);color:#0f172a;font-family:Inter,system-u
 @media(max-width:800px){.form-row{grid-template-columns:1fr}}
 .input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:8px}
 .teams-list{display:flex;flex-wrap:wrap;gap:8px}
-.team-chip{padding:6px 8px;border-radius:999px;border:1px solid var(--b);cursor:pointer;background:#fff}
+.team-chip{padding:6px 8px;border-radius:999px;border:1px solid var(--b);cursor:pointer;background:#fff;display:flex;align-items:center;gap:6px}
+.team-chip input{margin:0}
 .no-data{padding:16px;color:var(--mut);text-align:center}
 .footer{padding:16px;text-align:center;color:var(--mut);font-size:12px}
 .small-muted{font-size:12px;color:var(--mut)}
@@ -85,39 +86,39 @@ html,body{margin:0;background:var(--bg);color:#0f172a;font-family:Inter,system-u
     <h3 id="playerModalTitle">Ficha</h3>
 
     <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap">
-      <div style="width:120px;height:120px;border-radius:8px;overflow:hidden;background:#f7f9fb;border:1px dashed var(--b);display:flex;align-items:center;justify-content:center" id="playerPhotoPreview"></div>
+      <div style="width:120px;height:120px;border-radius:8px;overflow:hidden;background:#f7f9fb;border:1px dashed var(--b);display:flex;align-items:center;justify-content:center" id="playerPhotoPreview" aria-hidden="true"></div>
       <div style="flex:1;min-width:200px">
         <div style="margin-bottom:8px">
-          <label>Foto (URL)</label>
-          <input id="p_foto" class="input" placeholder="https://...">
+          <label for="p_foto">Foto (URL)</label>
+          <input id="p_foto" name="foto" class="input" placeholder="https://...">
         </div>
         <div style="margin-bottom:8px">
-          <label>Foto (archivo)</label>
-          <input id="p_file" type="file" accept="image/*" class="input">
+          <label for="p_file">Foto (archivo)</label>
+          <input id="p_file" name="file" type="file" accept="image/*" class="input">
         </div>
       </div>
     </div>
 
     <div class="form-row">
-      <div><label>Nombre completo</label><input id="p_nombre" class="input"></div>
-      <div><label>Apodo</label><input id="p_apodo" class="input"></div>
+      <div><label for="p_nombre">Nombre completo</label><input id="p_nombre" name="nombre" class="input" autocomplete="name"></div>
+      <div><label for="p_apodo">Apodo</label><input id="p_apodo" name="apodo" class="input" autocomplete="nickname"></div>
     </div>
 
     <div class="form-row">
-      <div><label>Número camiseta</label><input id="p_numero" class="input" placeholder="ej: 11"></div>
-      <div><label>Rol</label><input id="p_rol" class="input" placeholder="ej: jugadora"></div>
+      <div><label for="p_numero">Número camiseta</label><input id="p_numero" name="numero_camiseta" type="number" min="0" step="1" class="input" placeholder="ej: 11"></div>
+      <div><label for="p_rol">Rol</label><input id="p_rol" name="rol" class="input" placeholder="ej: jugadora"></div>
     </div>
 
     <div class="form-row">
-      <div><label>Fecha de nacimiento</label><input id="p_nacimiento" type="date" class="input"></div>
-      <div><label>Teléfono emergencia</label><input id="p_emergencia" class="input" placeholder="+56 9 ..."></div>
+      <div><label for="p_nacimiento">Fecha de nacimiento</label><input id="p_nacimiento" name="fecha_nacimiento" type="date" class="input"></div>
+      <div><label for="p_emergencia">Teléfono emergencia</label><input id="p_emergencia" name="Telefono_emergencia" class="input" placeholder="+56 9 ..."></div>
     </div>
 
     <div class="form-row">
-      <div><label>Seguro médico</label><input id="p_seguro" class="input"></div>
+      <div><label for="p_seguro">Seguro médico</label><input id="p_seguro" name="Seguro_Medico" class="input"></div>
       <div>
         <label>Equipos (selecciona 1 o más)</label>
-        <div class="teams-list" id="teamsList"></div>
+        <div class="teams-list" id="teamsList" role="group" aria-label="Equipos disponibles"></div>
       </div>
     </div>
 
@@ -142,11 +143,9 @@ const BUCKET_NAME = 'player-photos'; // revisa que este bucket exista
 let supa = null;
 async function initSupabase(timeoutMs = 8000){
   try{
-    // si ya hay createClient global
     if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
     if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
 
-    // else intenta cargar desde CDN
     await new Promise((resolve,reject)=>{
       const s = document.createElement('script');
       s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js';
@@ -234,6 +233,7 @@ async function uploadFileToStorage(file){
 async function detectPlayerColumns(){
   try{
     if(!supa) { console.warn('detectPlayerColumns: supabase no inicializado'); return null; }
+    // Intentamos leer una fila para inferir columnas
     const { data, error } = await supa.from('players').select().limit(1);
     if(error){
       console.warn('detectPlayerColumns supabase error', error);
@@ -294,16 +294,17 @@ function renderTeamsUI(selected=[]){
   teamsList.innerHTML = '';
   for(const t of TEAM_OPTIONS){
     const label = document.createElement('label'); label.className='team-chip';
-    const cb = document.createElement('input'); cb.type='checkbox'; cb.value=t; cb.style.display='none';
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.value=t; cb.name = 'equipos'; // <-- name agregado
+    cb.style.display='none';
     cb.checked = selected.includes(t);
     label.appendChild(cb);
     const span = document.createElement('span'); span.textContent = t; label.appendChild(span);
     label.style.background = cb.checked ? '#eaffd6' : '#fff';
-    label.addEventListener('click', ()=>{ cb.checked = !cb.checked; label.style.background = cb.checked ? '#eaffd6' : '#fff'; });
+    label.addEventListener('click', (ev)=>{ ev.preventDefault(); cb.checked = !cb.checked; label.style.background = cb.checked ? '#eaffd6' : '#fff'; });
     teamsList.appendChild(label);
   }
 }
-function getSelectedTeamsFromUI(){ return Array.from(teamsList.querySelectorAll('input[type=checkbox]')).filter(i=>i.checked).map(i=>i.value); }
+function getSelectedTeamsFromUI(){ return Array.from(teamsList.querySelectorAll('input[type=checkbox][name="equipos"]')).filter(i=>i.checked).map(i=>i.value); }
 
 /* ---------- modal ---------- */
 function setPhotoPreview(url){
@@ -319,10 +320,11 @@ function openPlayerModal(player){
   btnDeletePlayer.style.display = player && player.id ? '' : 'none';
 
   p_foto.value = player?.foto || player?.photo || '';
-  p_file.value = '';
+  // reset file input safely
+  try{ p_file.value = ''; }catch(e){ /* algunos navegadores controlan file inputs */ }
   p_nombre.value = player?.nombre || '';
   p_apodo.value = player?.apodo || '';
-  p_numero.value = player?.numero_camiseta ?? player?.numero ?? player?.number ?? '';
+  p_numero.value = (player?.numero_camiseta ?? player?.numero ?? player?.number ?? '') + '';
   p_rol.value = player?.rol || player?.gm_role || '';
   p_nacimiento.value = player?.fecha_nacimiento ? (player.fecha_nacimiento.split ? player.fecha_nacimiento.split('T')[0] : player.fecha_nacimiento) : '';
   p_emergencia.value = player?.Telefono_emergencia || player?.telefono_emergencia || player?.telefono || '';
@@ -336,7 +338,7 @@ function openPlayerModal(player){
 
 function closePlayerModal(){ playerModalBg.style.display = 'none'; playerModalBg.setAttribute('aria-hidden','true'); currentEditing = null; }
 
-/* ---------- save (filtrado por columnas reales) ---------- */
+/* ---------- save (filtrado por columnas reales + retry inteligente) ---------- */
 async function savePlayer(){
   try{
     let fotoUrl = (p_foto.value || '').trim() || null;
@@ -358,16 +360,46 @@ async function savePlayer(){
 
     if(!playerTableCols) await detectPlayerColumns();
     const colSet = new Set(playerTableCols || []);
+    // Intenta mapear variantes comunes de nombre de columna
+    const altNames = {
+      'numero_camiseta': ['numero_camiseta','numero','number','nro'],
+      'Telefono_emergencia': ['Telefono_emergencia','telefono_emergencia','telefono','phone','celular'],
+      'Seguro_Medico': ['Seguro_Medico','seguro_medico','seguro']
+    };
+    // Build payload preferring an existing column name if present
     const payload = {};
     for(const [k,v] of Object.entries(raw)){
+      if(k === 'equipos'){
+        // equipos normalmente array -> si hay columna 'equipos' o 'teams' usa la que exista
+        if(colSet.has('equipos')) payload['equipos'] = Array.isArray(v) ? v : parseTeamsField(v);
+        else if(colSet.has('teams')) payload['teams'] = Array.isArray(v) ? v : parseTeamsField(v);
+        else {
+          // tentativa: if table has any alt column like 'equipo' use that
+          if(colSet.has('equipo')) payload['equipo'] = Array.isArray(v) ? v : parseTeamsField(v);
+        }
+        continue;
+      }
+      // Si el nombre directo existe en el schema, lo usamos
       if(colSet.has(k)){
         if(k === 'numero_camiseta') payload[k] = (v === null ? null : (isNaN(Number(v)) ? null : Number(v)));
-        else if(k === 'equipos') payload[k] = Array.isArray(v) ? v : parseTeamsField(v);
         else payload[k] = v;
+        continue;
+      }
+      // si no existe, buscamos alternativas conocidas
+      let found = false;
+      for(const alt of (altNames[k]||[])){
+        if(colSet.has(alt)){
+          if(alt === 'numero_camiseta') payload[alt] = (v === null ? null : (isNaN(Number(v)) ? null : Number(v)));
+          else payload[alt] = v;
+          found = true; break;
+        }
+      }
+      if(!found){
+        // No hay columna conocida -> omitimos (será manejado por retry inteligente si supabase reclama)
       }
     }
 
-    console.log('Payload final (filtrado):', payload);
+    console.log('Payload inicial (filtrado):', payload);
 
     if(!payload.nombre || !payload.apodo){
       alert('Completa Nombre y Apodo');
@@ -375,18 +407,61 @@ async function savePlayer(){
     }
     if(!supa){ alert('No conectado a Supabase. Revisa consola.'); return; }
 
-    if(currentEditing && currentEditing.id){
-      const { data, error } = await supa.from('players').update(payload).eq('id', currentEditing.id).select();
-      if(error){ console.error('Update error', error); alert('Error actualizando. Revisa consola.'); return; }
-      console.log('Update OK', data);
-    } else {
-      const { data, error } = await supa.from('players').insert([payload]).select();
-      if(error){ console.error('Insert error', error); alert('Error creando. Revisa consola.'); return; }
-      console.log('Insert OK', data);
+    // Intento de guardar con manejo de error por columnas desconocidas: si supabase responde "Could not find the 'X' column"
+    async function trySaveOnce(payloadObj){
+      try{
+        if(currentEditing && currentEditing.id){
+          const { data, error } = await supa.from('players').update(payloadObj).eq('id', currentEditing.id).select();
+          if(error) return { error, data:null };
+          return { data, error:null };
+        } else {
+          const { data, error } = await supa.from('players').insert([payloadObj]).select();
+          if(error) return { error, data:null };
+          return { data, error:null };
+        }
+      }catch(e){
+        return { error: e, data:null };
+      }
     }
 
-    await fetchPlayers();
-    closePlayerModal();
+    // retry loop: hasta 3 intentos, eliminando la columna que supabase reporte como inexistente
+    let attempt = 0;
+    let currentPayload = {...payload};
+    while(attempt < 3){
+      attempt++;
+      console.log('Intento guardado', attempt, currentPayload);
+      const res = await trySaveOnce(currentPayload);
+      if(!res.error){
+        console.log('Save OK', res.data);
+        await fetchPlayers();
+        closePlayerModal();
+        return;
+      }
+      // si error es de supabase con hint indicando columna faltante, parseamos y retry sin esa columna
+      const err = res.error;
+      console.error('Save intento error', err);
+      const msg = (err.message || err.error || '').toString();
+      const details = (err.details || '').toString();
+      // ejemplo de texto: "Could not find the 'numero' column of 'players' in the schema cache"
+      const rx = /Could not find the '([^']+)' column/i;
+      const m = rx.exec(details) || rx.exec(msg);
+      if(m && m[1]){
+        const badCol = m[1];
+        console.warn('Supabase reclama columna inexistente:', badCol, '-> la eliminamos y reintentamos');
+        if(badCol in currentPayload) delete currentPayload[badCol];
+        // también eliminar variantes similares por si la columna venía en diferentes key
+        const altToRemove = Object.keys(currentPayload).filter(k=>k.toLowerCase() === badCol.toLowerCase());
+        for(const a of altToRemove) delete currentPayload[a];
+        // continue loop para reintentar
+        continue;
+      } else {
+        // si no podemos detectar la columna problemática, informar y abortar
+        alert('Error al guardar: ' + (err.message || JSON.stringify(err)));
+        return;
+      }
+    }
+
+    alert('No se pudo guardar después de varios intentos. Revisa consola para más detalles.');
   }catch(err){
     console.error('savePlayer err', err);
     alert('Error guardando. Revisa consola.');
@@ -418,20 +493,7 @@ p_foto.addEventListener('input', ()=> setPhotoPreview(p_foto.value || ''));
 function persistView(view){ try{ localStorage.setItem('gm_view', view); }catch(e){} }
 function getPersistedView(){ try{ return localStorage.getItem('gm_view'); }catch(e){ return null; } }
 
-document.querySelectorAll('.nav .tab').forEach(btn=>{
-  btn.addEventListener('click', async ()=>{
-    document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const view = btn.dataset.view;
-    persistView(view);
-    document.querySelectorAll('section[id^="v-"]').forEach(s => s.style.display = 'none');
-    const sec = document.getElementById('v-'+view);
-    if(sec) sec.style.display = 'block';
-    if(view === 'roster') await fetchPlayers();
-    if(view === 'dash') renderDash();
-    if(view === 'events') renderEvents(); // placeholder if quieres usar
-  });
-});
+document.querySelectorAll('.nav .tab').forEach(btn=>{ btn.addEventListener('click', async ()=>{ document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); const view = btn.dataset.view; persistView(view); document.querySelectorAll('section[id^="v-"]').forEach(s => s.style.display = 'none'); const sec = document.getElementById('v-'+view); if(sec) sec.style.display = 'block'; if(view === 'roster') await fetchPlayers(); if(view === 'dash') renderDash(); if(view === 'events') renderEvents(); }); });
 
 /* ---------- small dashboard placeholders ---------- */
 async function renderDash(){ /* Puedes completar si quieres contenido dinámico en dashboard */ }
@@ -439,8 +501,9 @@ async function renderDash(){ /* Puedes completar si quieres contenido dinámico 
 /* ---------- bootstrapping ---------- */
 document.addEventListener('DOMContentLoaded', async ()=>{
   await initSupabase();
-  if(supa) console.log('Supabase inicializado correctamente.');
-  else console.warn('Supabase no inicializado. Revisa CDN/CSP/adblock.');
+  if(supa) {
+    try{ supa = supabase.createClient(SUPA.url, SUPA.key); console.log('Supabase inicializado correctamente.'); }catch(e){ console.warn('SDK ya cargado o conflicto', e); }
+  } else console.warn('Supabase no inicializado. Revisa CDN/CSP/adblock.');
 
   // preparar UI equipos
   renderTeamsUI([]);
@@ -458,7 +521,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   const sec = document.getElementById('v-'+initialView);
   if(sec) sec.style.display = 'block';
 
-  // detect columns and fetch roster only for roster view to avoid extra calls
+  // detect columns y fetch roster solo si corresponde
   if(initialView === 'roster') {
     await detectPlayerColumns();
     await fetchPlayers();
