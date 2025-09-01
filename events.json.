@@ -3,23 +3,29 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Plantel (sync)</title>
+<title>Golden Moms — Plantel (sincronizado)</title>
 <link rel="icon" href="Logo.webp"/>
+<!-- intento normal de cargar SDK (si está bloqueado se mostrará mensaje en UI) -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
-:root{--blue:#0f3a78;--lime:#9be22d;--mut:#64748b;--b:#e2e8f0;--bg:#f7f8fa}
-*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:#0f172a;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+:root{
+  --blue:#0f3a78; --lime:#9be22d; --mut:#64748b; --b:#e2e8f0; --bg:#f7f8fa;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:#0f172a;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
 .top{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:12px;z-index:50}
-.brand{display:flex;gap:10px;align-items:center}
-.brand img{width:36px;height:36px;border-radius:50%;border:2px solid var(--blue)}
-.team-name{font-size:12px;color:var(--lime);font-weight:800}
-.nav{display:flex;gap:8px;align-items:center}
-.tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
-.tab.active{background:var(--blue);color:#fff}
+.logo-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 56px}
+.logo-wrap img{width:44px;height:44px;border-radius:50%;border:2px solid var(--blue)}
+.team-name{font-size:11px;color:var(--lime);font-weight:800;text-align:center}
+.nav{display:flex;gap:8px;align-items:center;flex:1;justify-content:flex-end}
+.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
+.nav .tab.active{background:var(--blue);color:#fff}
 .container{max-width:1100px;margin:14px auto;padding:0 12px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;padding:12px}
-.grid{display:grid;gap:12px}
+.section-note{font-size:12px;color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
 #rosterGrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin-top:12px}
-.player-card{padding:10px;border-radius:10px;border:1px solid var(--b);background:#fff;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:110px}
+.player-card{padding:12px;border-radius:10px;border:1px solid var(--b);background:#fff;text-align:center;cursor:pointer;min-height:110px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.player-card:hover{transform: translateY(-4px); box-shadow:0 12px 24px rgba(0,0,0,0.06)}
 .player-avatar{width:64px;height:64px;border-radius:50%;overflow:hidden;background:#f1f5f9;display:flex;align-items:center;justify-content:center}
 .player-avatar img{width:100%;height:100%;object-fit:cover}
 .player-apodo{font-weight:800;color:var(--blue)}
@@ -27,23 +33,24 @@
 .btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer}
 .btn.p{background:var(--lime);border-color:#a3e635}
 .modal-bg{position:fixed;inset:0;background:#0006;display:none;z-index:1200;justify-content:center;align-items:flex-start;padding-top:6vh}
-.modal{width:min(920px,calc(100% - 24px));background:#fff;border-radius:12px;padding:16px;border:1px solid var(--b);max-height:90vh;overflow:auto}
+.modal{width:min(880px,calc(100% - 24px));background:#fff;border-radius:12px;padding:16px;border:1px solid var(--b);box-shadow:0 20px 40px rgba(0,0,0,.12);max-height:90vh;overflow:auto}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 @media(max-width:800px){.form-row{grid-template-columns:1fr}}
 .input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:8px}
 .teams-list{display:flex;flex-wrap:wrap;gap:8px}
-.team-chip{padding:6px 8px;border-radius:999px;border:1px solid var(--b);cursor:pointer;background:#fff;display:inline-flex;align-items:center;gap:6px}
-.warn{background:#fff4f4;border:1px solid #f3c2c2;color:#9b1b1b;padding:10px;border-radius:8px;margin-bottom:10px}
+.team-chip{padding:6px 8px;border-radius:999px;border:1px solid var(--b);cursor:pointer;background:#fff}
 .no-data{padding:16px;color:var(--mut);text-align:center}
+.alert{background:#ffecec;border:1px solid #f5b5b5;padding:10px;border-radius:8px;color:#a33;margin-bottom:10px}
 .footer{padding:16px;text-align:center;color:var(--mut);font-size:12px}
-.table-row{display:flex;gap:12px;align-items:center}
 .small{font-size:12px;color:var(--mut)}
 </style>
 </head>
 <body>
 
 <div class="top">
-  <div class="brand"><img src="Logo.webp" alt="GM"><div class="team-name">Golden <span style="color:var(--lime)">Moms</span></div></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="logo-wrap"><img src="Logo.webp" alt="GM"><div class="team-name">Golden <span style="color:var(--lime)">Moms</span></div></div>
+  </div>
   <div class="nav" role="tablist">
     <button class="tab" data-view="dash">Dashboard</button>
     <button class="tab" data-view="events">Eventos</button>
@@ -53,59 +60,36 @@
 </div>
 
 <div class="container">
-  <div id="warnSdk" class="warn" style="display:none"></div>
+  <section id="v-dash" style="display:none"><div class="card"><h4>Dashboard</h4><div class="no-data">(Sección dashboard)</div></div></section>
+  <section id="v-events" style="display:none"><div class="card"><h4>Eventos</h4><div class="no-data">(Sección eventos)</div></div></section>
 
-  <!-- DASHBOARD -->
-  <section id="v-dash" style="display:none" class="card">
-    <h4>Dashboard</h4>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
-      <div style="min-width:220px" class="card">
-        <h4>Plantel</h4>
-        <div id="kRoster" style="font-size:20px;font-weight:800">0</div>
-        <div class="small">Integrantes registrados</div>
+  <section id="v-roster">
+    <div class="card">
+      <h4>Plantel</h4>
+      <div class="section-note">Listado sincronizado con Supabase (tabla <code>players</code>) — ordenado por <strong>apodo</strong>.</div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <div class="small">Puedes agregar o editar jugadoras (guardado en Supabase si está configurado).</div>
+        <div><button id="btnAddPlayer" class="btn">Agregar jugadora</button></div>
       </div>
-      <div style="min-width:220px" class="card">
-        <h4>Partidos</h4>
-        <div id="kGames" style="font-size:20px;font-weight:800">0</div>
-        <div class="small">Partidos registrados</div>
-      </div>
+
+      <div id="rosterGrid"></div>
     </div>
   </section>
 
-  <!-- EVENTS -->
-  <section id="v-events" style="display:none" class="card">
-    <h4>Eventos</h4>
-    <div class="small">Sección de eventos (no modificada aquí)</div>
-  </section>
-
-  <!-- ROSTER -->
-  <section id="v-roster" style="display:none" class="card">
-    <h4>Plantel</h4>
-    <div style="font-size:13px;color:var(--mut);margin-top:6px">Listado sincronizado con Supabase (tabla <code>players</code>) — ordenado por <strong>apodo</strong>.</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-      <div class="small">Haz clic en una jugadora para ver/editar. Puedes subir foto (se guardará en Storage).</div>
-      <div><button id="btnAddPlayer" class="btn p">Agregar jugadora</button></div>
-    </div>
-    <div id="rosterGrid"></div>
-  </section>
-
-  <!-- MATCHES -->
-  <section id="v-matches" style="display:none" class="card">
-    <h4>Partidos</h4>
-    <div class="small">Sección partidos (no modificada aquí)</div>
-  </section>
+  <section id="v-matches" style="display:none"><div class="card"><h4>Partidos</h4><div class="no-data">(Sección partidos)</div></div></section>
 </div>
 
 <div class="footer">Golden Moms · hecho con 💚 lima & azul</div>
 
-<!-- Player modal -->
+<!-- Modal -->
 <div class="modal-bg" id="playerModalBg" aria-hidden="true">
-  <div class="modal" role="dialog" aria-modal="true">
+  <div class="modal" role="dialog" id="playerModal">
     <h3 id="playerModalTitle">Ficha</h3>
 
     <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap">
-      <div style="width:140px;height:140px;border-radius:8px;overflow:hidden;background:#f7f9fb;border:1px dashed var(--b);display:flex;align-items:center;justify-content:center" id="playerPhotoPreview"></div>
-      <div style="flex:1;min-width:260px">
+      <div style="width:120px;height:120px;border-radius:8px;overflow:hidden;background:#f7f9fb;border:1px dashed var(--b);display:flex;align-items:center;justify-content:center" id="playerPhotoPreview"></div>
+      <div style="flex:1;min-width:240px">
         <div style="margin-bottom:8px">
           <label>Foto (URL)</label>
           <input id="p_foto" class="input" placeholder="https://...">
@@ -129,23 +113,13 @@
 
     <div class="form-row">
       <div><label>Fecha de nacimiento</label><input id="p_nacimiento" type="date" class="input"></div>
-      <div><label>Celular</label><input id="p_celular" class="input" placeholder="+56 9 ..."></div>
-    </div>
-
-    <div class="form-row">
       <div><label>Teléfono emergencia</label><input id="p_emergencia" class="input" placeholder="+56 9 ..."></div>
-      <div><label>Seguro médico</label><input id="p_seguro" class="input" placeholder="Nombre seguro"></div>
     </div>
 
     <div class="form-row">
-      <div><label>Rut</label><input id="p_rut" class="input" placeholder="12.345.678-9"></div>
-      <div><label>Email</label><input id="p_email" class="input" placeholder="nombre@dominio"></div>
-    </div>
-
-    <div class="form-row">
-      <div><label>Curso / Hijos</label><input id="p_curso_hijos" class="input" placeholder=""></div>
+      <div><label>Seguro médico</label><input id="p_seguro" class="input"></div>
       <div>
-        <label>Equipos (selecciona 1 o más)</label>
+        <label>Equipos (selecciona)</label>
         <div class="teams-list" id="teamsList"></div>
       </div>
     </div>
@@ -158,52 +132,46 @@
   </div>
 </div>
 
+<!-- script -->
 <script>
-/* ---------- CONFIG (tus datos) ---------- */
+/* ---------- CONFIG (reemplaza si cambias algo en Supabase) ---------- */
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
 };
-const BUCKET_NAME = 'player-photos'; // ajusta si es otro
+const BUCKET_NAME = 'player-photos'; // ajusta si tu bucket tiene otro nombre
+
+/* columnas permitidas (ajusta si tus nombres difieren exactamente) */
+const ALLOWED_PLAYER_COLS = [
+  'nombre','apodo','numero_camiseta','fecha_nacimiento','equipos','rol',
+  'Telefono_emergencia','Seguro_Medico','foto','celular','Curso_hijos','Rut','email'
+];
+
+/* teams */
+const TEAM_OPTIONS = ["Golden Moms","Golden Power","Golden Dream"];
+
+/* estado */
 let supa = null;
+let playersCache = [];
+let currentEditing = null;
 
-/* intenta cargar SDK si no existe */
-async function initSupabase(timeoutMs = 7000){
-  try{
-    if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
-    if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
-
-    await new Promise((resolve,reject)=>{
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js';
-      s.async = true;
-      let done=false;
-      const to=setTimeout(()=>{ if(!done){ done=true; reject(new Error('timeout cargando supabase')); }}, timeoutMs);
-      s.onload = ()=>{ if(done) return; done=true; clearTimeout(to); resolve(); };
-      s.onerror = ()=>{ if(done) return; done=true; clearTimeout(to); reject(new Error('error cargando supabase')); };
-      document.head.appendChild(s);
-    });
-
-    if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
-    if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
-    throw new Error('SDK cargado pero createClient no disponible');
-  }catch(err){
-    console.warn('initSupabase error:', err);
-    document.getElementById('warnSdk').style.display = 'block';
-    document.getElementById('warnSdk').textContent = 'Error cargando SDK de Supabase (CDN bloqueado). Si usas adblock/CSP descarga supabase.min.js y sírvelo localmente.';
-    supa = null;
-    return null;
-  }
+/* ---------- utilidades seguras ---------- */
+function getVal(id){
+  const el = document.getElementById(id);
+  if(!el) return '';
+  try { return (typeof el.value === 'string') ? el.value.trim() : (el.value ?? ''); }
+  catch(e){ return ''; }
 }
-
-/* ---------- helpers ---------- */
-function pad(n){return String(n).padStart(2,'0')}
-function localDateYMD(d){ if(!d) return ''; const D=new Date(d); return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}` }
-function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) }
+function pad(n){return n.toString().padStart(2,'0');}
+function localDateYMD(d){ if(!d) return ''; const D=new Date(d); return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`; }
+function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function parseTeamsField(v){
   if(!v) return [];
   if(Array.isArray(v)) return v;
-  if(typeof v==='string'){ try{ const j = JSON.parse(v); if(Array.isArray(j)) return j; }catch(e){} return v.split(',').map(x=>x.trim()).filter(Boolean); }
+  if(typeof v === 'string'){
+    try{ const p = JSON.parse(v); if(Array.isArray(p)) return p; } catch(e){}
+    return v.split(',').map(x=>x.trim()).filter(Boolean);
+  }
   return [];
 }
 function avatarOrPlaceholder(url, name){
@@ -213,25 +181,52 @@ function avatarOrPlaceholder(url, name){
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
-/* upload to storage */
+/* ---------- init supabase (robusto) ---------- */
+async function initSupabase(timeoutMs = 8000){
+  try{
+    // si createClient ya está disponible globalmente
+    if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); console.log('Supabase: createClient global'); return supa; }
+    if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); console.log('Supabase: window.supabase'); return supa; }
+
+    // si no, cargamos CDN (ya lo insertamos en HEAD con script tag), pero verificamos
+    const start = Date.now();
+    while(Date.now() - start < timeoutMs){
+      if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); console.log('Supabase loaded after wait'); return supa; }
+      if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); console.log('Supabase loaded window.supabase after wait'); return supa; }
+      await new Promise(r=>setTimeout(r,200));
+    }
+    console.warn('SDK de Supabase no disponible (timeout).');
+    showSdkError('SDK de Supabase no se cargó (CDN bloqueado). Si el SDK está bloqueado por extensiones/CSP, descarga supabase.min.js y sírvelo localmente o permite la CDN.');
+    return null;
+  }catch(err){ console.error('initSupabase err', err); showSdkError('Error inicializando Supabase: ' + (err.message||err)); return null; }
+}
+
+/* muestra mensaje rojo si sdk faltante */
+function showSdkError(msg){
+  const cont = document.querySelector('.container');
+  if(!cont) return;
+  const box = document.createElement('div');
+  box.className = 'alert';
+  box.textContent = msg;
+  cont.prepend(box);
+}
+
+/* ---------- Storage upload ---------- */
 async function uploadFileToStorage(file){
   if(!supa) throw new Error('Supabase no inicializado');
   if(!file) return null;
   const ext = file.name.split('.').pop();
   const key = `players/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
   const { data, error } = await supa.storage.from(BUCKET_NAME).upload(key, file, { upsert: true });
-  if(error){ console.error('Upload error', error); throw error; }
-  // getPublicUrl
-  const { data: urlData } = await supa.storage.from(BUCKET_NAME).getPublicUrl(key);
-  return urlData?.publicUrl || null;
+  if(error){ console.error('Storage upload error', error); throw error; }
+  const { publicUrl, error: urlErr } = supa.storage.from(BUCKET_NAME).getPublicUrl(key);
+  if(urlErr){ console.warn('getPublicUrl error', urlErr); return null; }
+  return publicUrl.publicUrl || publicUrl;
 }
 
-/* ---------- UI refs ---------- */
-const tabs = document.querySelectorAll('.nav .tab');
-const sections = { dash: document.getElementById('v-dash'), events: document.getElementById('v-events'), roster: document.getElementById('v-roster'), matches: document.getElementById('v-matches') };
+/* ---------- ROSTER: fetch & render ---------- */
 const rosterGrid = document.getElementById('rosterGrid');
 const btnAddPlayer = document.getElementById('btnAddPlayer');
-
 const playerModalBg = document.getElementById('playerModalBg');
 const playerPhotoPreview = document.getElementById('playerPhotoPreview');
 const p_foto = document.getElementById('p_foto');
@@ -241,99 +236,65 @@ const p_apodo = document.getElementById('p_apodo');
 const p_numero = document.getElementById('p_numero');
 const p_rol = document.getElementById('p_rol');
 const p_nacimiento = document.getElementById('p_nacimiento');
-const p_celular = document.getElementById('p_celular');
 const p_emergencia = document.getElementById('p_emergencia');
 const p_seguro = document.getElementById('p_seguro');
-const p_rut = document.getElementById('p_rut');
-const p_email = document.getElementById('p_email');
-const p_curso_hijos = document.getElementById('p_curso_hijos');
 const teamsList = document.getElementById('teamsList');
-
 const btnClosePlayer = document.getElementById('btnClosePlayer');
 const btnSavePlayer = document.getElementById('btnSavePlayer');
 const btnDeletePlayer = document.getElementById('btnDeletePlayer');
 const playerModalTitle = document.getElementById('playerModalTitle');
 
-const TEAM_OPTIONS = ["Golden Moms","Golden Power","Golden Dream"];
-
-let playersCache = [];
-let currentEditing = null;
-
-/* ---------- nav / views ---------- */
-function persistView(v){ try{ localStorage.setItem('gm_view', v); }catch(e){} }
-function getPersistedView(){ try{ return localStorage.getItem('gm_view'); }catch(e){ return null } }
-
-function showView(v){
-  Object.values(sections).forEach(s=> s.style.display='none');
-  const sec = sections[v] || sections.roster;
-  sec.style.display = 'block';
-  tabs.forEach(t=> t.classList.toggle('active', t.dataset.view===v));
-  persistView(v);
-  // render only visible view
-  if(v==='dash') renderDash();
-  if(v==='events') renderMonth(); // placeholder - safe if not implemented
-  if(v==='roster') fetchPlayers();
-  if(v==='matches') renderMatches();
-}
-
-/* attach nav listeners */
-tabs.forEach(t=> t.addEventListener('click', ()=> showView(t.dataset.view || 'roster')));
-
-/* fallback simple placeholders for events/matches rendering */
-function renderMonth(){ /* placeholder - no-op safe */ }
-async function renderMatches(){ /* placeholder - no-op safe */ }
-
-/* ---------- roster: fetch & render ---------- */
-function renderTeamsUI(selected=[]){
+function renderTeamsUI(selected = []){
   teamsList.innerHTML = '';
   for(const t of TEAM_OPTIONS){
     const label = document.createElement('label'); label.className='team-chip';
-    const cb = document.createElement('input'); cb.type='checkbox'; cb.value=t; cb.style.display='none'; cb.checked = selected.includes(t);
-    const span = document.createElement('span'); span.textContent = t;
-    label.appendChild(cb); label.appendChild(span);
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.value=t; cb.style.display='none';
+    cb.checked = selected.includes(t);
+    label.appendChild(cb);
+    const span = document.createElement('span'); span.textContent = t; label.appendChild(span);
     label.style.background = cb.checked ? '#eaffd6' : '#fff';
-    label.addEventListener('click', ()=> { cb.checked = !cb.checked; label.style.background = cb.checked ? '#eaffd6' : '#fff'; });
+    label.addEventListener('click', ()=>{ cb.checked = !cb.checked; label.style.background = cb.checked ? '#eaffd6' : '#fff'; });
     teamsList.appendChild(label);
   }
 }
-function getSelectedTeams(){ return Array.from(teamsList.querySelectorAll('input[type=checkbox]')).filter(i=>i.checked).map(i=>i.value); }
+function getSelectedTeamsFromUI(){ return Array.from(teamsList.querySelectorAll('input[type=checkbox]')).filter(i=>i.checked).map(i=>i.value); }
 
 async function fetchPlayers(){
   rosterGrid.innerHTML = '<div class="no-data">Cargando jugadoras…</div>';
+  if(!supa){
+    // fallback: si no existe supabase, dejamos cache local (vacío)
+    playersCache = playersCache || [];
+    renderRoster(playersCache);
+    return playersCache;
+  }
   try{
-    if(!supa){ rosterGrid.innerHTML = '<div class="no-data">SDK Supabase no inicializado.</div>'; return []; }
-    const { data, error } = await supa.from('players').select('*').order('apodo', { ascending: true });
-    if(error){ console.error('fetchPlayers err', error); rosterGrid.innerHTML = '<div class="no-data">Error cargando jugadoras — revisa consola.</div>'; return []; }
+    const { data, error } = await supa.from('players').select('*').order('apodo',{ascending:true});
+    if(error){ console.error('fetchPlayers supabase error', error); rosterGrid.innerHTML = '<div class="no-data">Error cargando jugadoras (revisa consola).</div>'; return []; }
     playersCache = (data || []).map(p => ({ ...p, equipos: parseTeamsField(p.equipos || p.teams || p.equipo) }));
     renderRoster(playersCache);
-    // update small stats
-    document.getElementById('kRoster').textContent = (playersCache||[]).length;
     return playersCache;
-  }catch(err){
-    console.error(err);
-    rosterGrid.innerHTML = '<div class="no-data">Error cargando jugadoras — revisa consola.</div>';
-    return [];
-  }
+  }catch(err){ console.error('fetchPlayers err', err); rosterGrid.innerHTML = '<div class="no-data">No se pudieron cargar jugadoras. Revisa consola.</div>'; return []; }
 }
 
 function renderRoster(list){
   rosterGrid.innerHTML = '';
-  const sorted = (list||[]).slice().sort((a,b)=> (a.apodo||'').toString().toLowerCase().localeCompare((b.apodo||'').toString().toLowerCase()));
-  if(sorted.length===0){ rosterGrid.innerHTML = '<div class="no-data">No hay jugadoras registradas.</div>'; return; }
+  if(!list || list.length === 0){ rosterGrid.innerHTML = '<div class="no-data">No hay jugadoras registradas.</div>'; return; }
+  const sorted = (list||[]).slice().sort((a,b)=> (a.apodo||'').toLowerCase().localeCompare((b.apodo||'').toLowerCase()));
   for(const p of sorted){
-    const card = document.createElement('div'); card.className='player-card'; card.dataset.id = p.id || '';
+    const card = document.createElement('div'); card.className='player-card';
+    card.dataset.id = p.id || '';
     const av = document.createElement('div'); av.className='player-avatar';
     const img = document.createElement('img'); img.src = avatarOrPlaceholder(p.foto || p.photo || '', p.apodo || p.nombre); img.alt = p.apodo || p.nombre || '';
     av.appendChild(img);
     const ap = document.createElement('div'); ap.className='player-apodo'; ap.textContent = p.apodo || (p.nombre||'').split(' ')[0] || 'Sin apodo';
     const nm = document.createElement('div'); nm.className='player-nombre'; nm.textContent = p.nombre || '';
     card.appendChild(av); card.appendChild(ap); card.appendChild(nm);
-    card.addEventListener('click', ()=> openPlayerModal(p));
+    card.onclick = ()=> openPlayerModal(p);
     rosterGrid.appendChild(card);
   }
 }
 
-/* ---------- modal ---------- */
+/* PLAYER MODAL */
 function setPhotoPreview(url){
   playerPhotoPreview.innerHTML = '';
   const img = document.createElement('img'); img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
@@ -341,7 +302,7 @@ function setPhotoPreview(url){
   playerPhotoPreview.appendChild(img);
 }
 
-function openPlayerModal(player=null){
+function openPlayerModal(player){
   currentEditing = player ? {...player} : null;
   playerModalTitle.textContent = player ? `Ficha — ${player.apodo || player.nombre || ''}` : 'Agregar jugadora';
   btnDeletePlayer.style.display = player && player.id ? '' : 'none';
@@ -350,15 +311,11 @@ function openPlayerModal(player=null){
   p_file.value = '';
   p_nombre.value = player?.nombre || '';
   p_apodo.value = player?.apodo || '';
-  p_numero.value = player?.numero_camiseta ?? player?.numero ?? '';
+  p_numero.value = (player?.numero_camiseta != null) ? String(player.numero_camiseta) : (player?.numero ? String(player.numero) : '');
   p_rol.value = player?.rol || '';
   p_nacimiento.value = player?.fecha_nacimiento ? localDateYMD(player.fecha_nacimiento) : '';
-  p_celular.value = player?.celular || '';
   p_emergencia.value = player?.Telefono_emergencia || player?.telefono_emergencia || '';
   p_seguro.value = player?.Seguro_Medico || player?.seguro_medico || '';
-  p_rut.value = player?.Rut || '';
-  p_email.value = player?.email || '';
-  p_curso_hijos.value = player?.Curso_hijos || '';
   renderTeamsUI(parseTeamsField(player?.equipos || player?.teams || player?.equipo || []));
   setPhotoPreview(p_foto.value || '');
   playerModalBg.style.display = 'flex';
@@ -367,62 +324,76 @@ function openPlayerModal(player=null){
 
 function closePlayerModal(){ playerModalBg.style.display = 'none'; playerModalBg.setAttribute('aria-hidden','true'); currentEditing = null; }
 
-/* save */
+/* SAVE with filtering of allowed columns */
 async function savePlayer(){
   try{
+    // uploader
     let fotoUrl = (p_foto.value || '').trim() || null;
     if(p_file.files && p_file.files[0]){
       try{ fotoUrl = await uploadFileToStorage(p_file.files[0]); p_foto.value = fotoUrl || ''; }catch(e){ alert('Error subiendo la foto. Revisa consola.'); console.error(e); }
     }
 
-    const payload = {
+    const raw = {
       nombre: p_nombre.value.trim(),
       apodo: p_apodo.value.trim(),
       numero_camiseta: p_numero.value.trim() ? (isNaN(Number(p_numero.value.trim())) ? null : Number(p_numero.value.trim())) : null,
       fecha_nacimiento: p_nacimiento.value || null,
-      celular: p_celular.value.trim() || null,
       Telefono_emergencia: p_emergencia.value.trim() || null,
       Seguro_Medico: p_seguro.value.trim() || null,
       foto: fotoUrl || null,
       rol: p_rol.value.trim() || null,
-      Curso_hijos: p_curso_hijos.value.trim() || null,
-      Rut: p_rut.value.trim() || null,
-      email: p_email.value.trim() || null,
-      equipos: getSelectedTeams()
+      equipos: getSelectedTeamsFromUI()
     };
 
-    if(!payload.nombre || !payload.apodo){ alert('Completa Nombre y Apodo'); return; }
-    if(!supa){ alert('Supabase no inicializado. Revisa consola.'); return; }
+    // filtrar keys por ALLOWED_PLAYER_COLS
+    const payload = {};
+    for(const [k,v] of Object.entries(raw)){
+      if(ALLOWED_PLAYER_COLS.includes(k)){
+        // special handling for numeric
+        if(k === 'numero_camiseta') payload[k] = (v === null ? null : (isNaN(Number(v)) ? null : Number(v)));
+        else if(k === 'equipos') payload[k] = Array.isArray(v) ? v : parseTeamsField(v);
+        else payload[k] = v;
+      }
+    }
+
+    console.log('Payload a enviar:', payload);
+
+    if(!payload.nombre || !payload.apodo){
+      alert('Completa Nombre y Apodo');
+      return;
+    }
+    if(!supa){ alert('No conectado a Supabase. Revisa la consola.'); return; }
 
     if(currentEditing && currentEditing.id){
-      const { error } = await supa.from('players').update(payload).eq('id', currentEditing.id);
-      if(error) throw error;
+      const { data, error } = await supa.from('players').update(payload).eq('id', currentEditing.id).select();
+      if(error){ console.error('Update error', error); alert('Error actualizando. Revisa consola.'); return; }
+      console.log('Update OK', data);
     } else {
       const { data, error } = await supa.from('players').insert([payload]).select();
-      if(error) throw error;
+      if(error){ console.error('Insert error', error); alert('Error creando. Revisa consola.'); return; }
+      console.log('Insert OK', data);
     }
 
     await fetchPlayers();
     closePlayerModal();
-  }catch(err){
-    console.error('savePlayer err', err);
-    alert('Error guardando. Revisa consola.');
-  }
+
+  }catch(err){ console.error('savePlayer err', err); alert('Error guardando. Revisa consola.'); }
 }
 
-/* delete */
+/* DELETE */
 async function deletePlayer(){
   if(!currentEditing || !currentEditing.id) return;
   if(!confirm('Eliminar jugadora?')) return;
+  if(!supa){ alert('No conectado a Supabase.'); return; }
   try{
     const { error } = await supa.from('players').delete().eq('id', currentEditing.id);
-    if(error) throw error;
+    if(error){ console.error('delete error', error); alert('Error eliminando. Revisa consola.'); return; }
     await fetchPlayers();
     closePlayerModal();
   }catch(err){ console.error('delete err', err); alert('Error eliminando. Revisa consola.'); }
 }
 
-/* wiring */
+/* ---------- UI wiring ---------- */
 btnAddPlayer.addEventListener('click', ()=> openPlayerModal(null));
 btnClosePlayer.addEventListener('click', closePlayerModal);
 btnSavePlayer.addEventListener('click', savePlayer);
@@ -430,37 +401,41 @@ btnDeletePlayer.addEventListener('click', deletePlayer);
 playerModalBg.addEventListener('click',(e)=>{ if(e.target === playerModalBg) closePlayerModal(); });
 p_foto.addEventListener('input', ()=> setPhotoPreview(p_foto.value || ''));
 
-/* ---------- small dashboard render ---------- */
-async function renderDash(){
-  try{
-    if(!supa){ document.getElementById('kRoster').textContent = '—'; document.getElementById('kGames').textContent = '—'; return; }
-    const [{ data:players }, { data:matches }] = await Promise.all([
-      supa.from('players').select('id'),
-      supa.from('matches').select('id')
-    ]);
-    document.getElementById('kRoster').textContent = (players||[]).length;
-    document.getElementById('kGames').textContent = (matches||[]).length;
-  }catch(e){ console.warn(e); }
+/* tabs */
+function persistView(view){ try{ localStorage.setItem('gm_view', view); }catch(e){} }
+function getPersistedView(){ try{ return localStorage.getItem('gm_view'); }catch(e){ return null; } }
+function showView(v){
+  ['dash','events','roster','matches'].forEach(id=>{ const el = document.getElementById('v-'+id); if(el) el.style.display='none'; });
+  const target = document.getElementById('v-'+v);
+  if(target) target.style.display = 'block';
+  if(v === 'roster') fetchPlayers();
 }
+document.querySelectorAll('.nav .tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    console.log('TAB CLICK', btn.dataset.view);
+    document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    persistView(btn.dataset.view);
+    showView(btn.dataset.view);
+  });
+});
 
 /* ---------- init ---------- */
-document.addEventListener('DOMContentLoaded', async ()=>{
+async function initApp(){
   await initSupabase();
-  // set initial view (persisted)
-  const persisted = getPersistedView();
-  const initial = persisted || 'dash';
-  // activate correct tab button
-  document.querySelectorAll('.nav .tab').forEach(b=> b.classList.remove('active'));
-  const btnToActivate = document.querySelector(`.nav .tab[data-view="${initial}"]`);
-  if(btnToActivate) btnToActivate.classList.add('active');
-  showView(initial);
-
-  // render the teams UI template (in modal) so chips exist when modal opens
+  // render teams UI initially
   renderTeamsUI([]);
+  // activate initial tab (persisted or roster)
+  const persisted = getPersistedView() || 'roster';
+  const btnToActivate = document.querySelector(`.nav .tab[data-view="${persisted}"]`);
+  if(btnToActivate) btnToActivate.classList.add('active');
+  showView(persisted);
 
-  // safety load players if roster visible
-  if(initial === 'roster') await fetchPlayers();
-});
+  // initial fetch of roster if needed
+  if(persisted === 'roster') await fetchPlayers();
+}
+
+document.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
 </html>
