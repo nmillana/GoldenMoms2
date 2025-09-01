@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Plantel (corregido)</title>
+<title>Golden Moms — Plantel (corregido final)</title>
 <link rel="icon" href="Logo.webp"/>
 <style>
 :root{
@@ -215,14 +215,13 @@ async function fetchPlayers(){
   }
 }
 
-/* render (fixed sort implementation) */
+/* render (safe sort) */
 function renderRoster(list){
   rosterGrid.innerHTML = '';
   if(!list || list.length === 0){
     rosterGrid.innerHTML = '<div class="no-data">No hay jugadoras registradas.</div>';
     return;
   }
-  // sort safely by apodo
   const sorted = (list || []).slice().sort((a,b) => {
     const A = (a.apodo || '').toString().toLowerCase();
     const B = (b.apodo || '').toString().toLowerCase();
@@ -269,7 +268,8 @@ function openPlayerModal(player){
   p_file.value = '';
   p_nombre.value = player?.nombre || '';
   p_apodo.value = player?.apodo || '';
-  p_numero.value = player?.numero_camiseta ?? player?.numero ?? player?.number || '';
+  /* ===== CORRECCIÓN: evitar mezclar ?? y || sin paréntesis ===== */
+  p_numero.value = ( (player?.numero_camiseta ?? player?.numero ?? player?.number) ) || '';
   p_rol.value = player?.rol || player?.gm_role || '';
   p_nacimiento.value = player?.fecha_nacimiento ? (player.fecha_nacimiento.split('T')[0] || player.fecha_nacimiento) : '';
   p_emergencia.value = player?.telefono_emergencia || player?.telefono || '';
