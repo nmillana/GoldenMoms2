@@ -103,10 +103,19 @@ a{color:inherit;text-decoration:none}
   font-size: var(--day-bold-size);
 }
 
-/* today mark: only the mini square (grid) */
-.day-num-box.today-box{
-  border: 3px solid var(--today-border-color);
-  background: transparent;
+/* === NUEVO: borde externo para el día actual (grid view) === */
+.day.today{
+  box-shadow: 0 0 0 3px var(--today-border-color);
+  border-radius:12px;
+}
+.month-list .day.today{
+  box-shadow: 0 0 0 3px var(--today-border-color);
+  border-radius: 12px;
+}
+/* evitar doble borde en la mini-caja en vista lista */
+.month-list .day.today .day-date{
+  border: none;
+  background: #f1f5f9;
 }
 
 /* small add button and event chips */
@@ -136,12 +145,6 @@ a{color:inherit;text-decoration:none}
 }
 .day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
 .day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
-
-/* today in list view: only mini square border */
-.month-list .day.today .day-date{
-  border: 3px solid var(--today-border-color);
-  background: transparent;
-}
 
 /* week separator in list view */
 .month-list .week-sep{
@@ -657,15 +660,22 @@ function drawMonthGrid(start,end){
 
     const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,''); // "lun", "mar", etc.
     const dayStrLocal = localDateYMD(day);
-    const isToday = dayStrLocal === todayYMD ? true : false;
+    const isToday = dayStrLocal === todayYMD;
 
-    head.innerHTML = `<div class="day-num-box${isToday ? ' today-box' : ''}">
+    // NOTE: ahora no ponemos la clase en el mini-cuadro sino en todo el `cell`
+    head.innerHTML = `<div class="day-num-box">
         <div class="day-wk-grid">${wk}</div>
         <div class="day-n">${pad(day.getDate())}</div>
       </div>
       <button class="day-add" title="Nuevo evento">+</button>`;
     head.querySelector('.day-add').onclick=()=>openModal({ date: day });
     cell.appendChild(head);
+
+    // marcar la tarjeta completa como 'today' (esto aplicará el borde externo CSS)
+    if(isToday){
+      cell.classList.add('today');
+      cell.setAttribute('aria-current','date');
+    }
 
     const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
 
