@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel (evento + esquina)</title>
+<title>Golden Moms — Panel (evento + en tarjeta)</title>
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -77,7 +77,18 @@ a{color:inherit;text-decoration:none}
 .weekdays div{font-weight:700;color:var(--blue);text-align:center;font-size:var(--content-size)}
 
 /* day cell */
-.day{min-height:90px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;position:relative;display:flex;flex-direction:column;gap:6px; z-index:0}
+.day{
+  min-height:90px;
+  background:#fff;
+  border:1px solid var(--b);
+  border-radius:12px;
+  padding:12px;
+  position:relative; /* important: relative to place + inside */
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  z-index:0;
+}
 .day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 
 /* mini square for day (grid) */
@@ -110,15 +121,35 @@ a{color:inherit;text-decoration:none}
   border-radius:12px;
 }
 
-/* small add button and event chips */
-.day-add{border:none;background:#eef4ff;color:var(--blue);width:26px;height:26px;border-radius:999px;cursor:pointer;font-size:var(--content-size)}
+/* + button positioned inside each day in top-right */
+.day-add{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:36px;
+  height:36px;
+  border-radius:999px;
+  border:1px solid var(--b);
+  background:#eef4ff;
+  color:var(--blue);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:18px;
+  line-height:1;
+  box-shadow: 0 4px 8px #00000011;
+  z-index:3;
+}
+
+/* evento chips */
 .ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word;font-size:var(--content-size)}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
 
 /* Month list fallback (mobile) */
 .month-list{display:none;flex-direction:column;gap:var(--month-list-gap)}
-.month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto}
+.month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto;position:relative}
 .day-date{
   min-width:52px;
   border-radius:8px;
@@ -168,13 +199,14 @@ a{color:inherit;text-decoration:none}
   .day-date{ font-size: var(--day-bold-size-mobile); }
   .day-date .day-wk{ font-size: calc(var(--day-bold-size-mobile) - 6px); }
   .day-date .day-num{ font-size: calc(var(--day-bold-size-mobile)); }
+  .day-add{ width:34px; height:34px; font-size:16px; top:8px; right:8px; }
 }
 
 /* Lists */
 ul{ margin:6px 0 6px 18px; padding:0; font-size:var(--content-size) }
 li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
 
-/* ===== CORRECCIÓN: estructura del dashboard ===== */
+/* Dashboard layout */
 .cards-dashboard{
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -212,36 +244,6 @@ li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
   .nav .tab{padding:6px 8px;font-size:var(--content-size)}
   .container{padding:0 8px}
   #rosterGrid .card{grid-column:1 / -1 !important}
-}
-
-/* ========== CAMBIO SOLICITADO: botón "+" en esquina superior derecha del panel de eventos ========== */
-/* hace relativo el contenedor para posicionar el botón */
-#v-events .card { position: relative; }
-/* posiciona el botón en la esquina superior derecha, estilo circular, solo signo + */
-#btnNewEventTop {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 18px;
-  line-height: 1;
-  box-shadow: 0 6px 14px #00000011;
-  border: 1px solid #a3e635;
-  background: var(--lime);
-  color: #08300b;
-  cursor: pointer;
-  z-index: 40;
-}
-/* en pantallas pequeñas reducir un poco */
-@media (max-width:420px){
-  #btnNewEventTop { width:36px; height:36px; top:10px; right:10px; font-size:16px; }
 }
 
 footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:16px}
@@ -333,9 +335,8 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="month-title" id="monthTitle">Mes</div>
-          <!-- Nota: el botón se muestra ahora como '+' y está posicionado en la esquina superior derecha.
-               Tiene title para accesibilidad y mantiene la misma id para que el JS existente lo use. -->
-          <button id="btnNewEventTop" class="btn p" title="Nuevo Evento">+</button>
+          <!-- Botón "Nuevo Evento" en su lugar original (píldora verde) -->
+          <button class="btn p" id="btnNewEventTop">Nuevo Evento</button>
         </div>
       </div>
 
@@ -701,9 +702,18 @@ function drawMonthGrid(start,end){
         <div class="day-wk-grid">${wk}</div>
         <div class="day-n">${pad(day.getDate())}</div>
       </div>
-      <button class="day-add" title="Nuevo evento">+</button>`;
-    head.querySelector('.day-add').onclick=()=>openModal({ date: day });
+      `;
+
+    // add the + as an absolutely positioned button inside the .day
+    const plusBtn = document.createElement('button');
+    plusBtn.className = 'day-add';
+    plusBtn.title = 'Nuevo evento';
+    plusBtn.innerText = '+';
+    plusBtn.onclick = ()=> openModal({ date: day });
+
+    head.querySelectorAll && cell.appendChild(head);
     cell.appendChild(head);
+    cell.appendChild(plusBtn);
 
     // marcar la tarjeta completa como 'today' (solo cambia el color y grosor del borde)
     if(isToday){
@@ -758,12 +768,12 @@ function drawMonthList(start,end){
 
     const col = document.createElement('div'); col.className='events-column';
 
-    // add button at top-right of column
-    const headRow = document.createElement('div'); headRow.style.display='flex'; headRow.style.justifyContent='flex-end'; headRow.style.alignItems='center';
-    const plus = document.createElement('button'); plus.className='day-add'; plus.title='Nuevo evento'; plus.innerText='+';
-    plus.onclick=()=> openModal({ date: day });
-    headRow.appendChild(plus);
-    col.appendChild(headRow);
+    // add the + as absolute inside the row (works because .day is position:relative)
+    const plus = document.createElement('button');
+    plus.className = 'day-add';
+    plus.title = 'Nuevo evento';
+    plus.innerText = '+';
+    plus.onclick = ()=> openModal({ date: day });
 
     if(events.length){
       for(const e of events){
@@ -776,7 +786,11 @@ function drawMonthList(start,end){
       const n = document.createElement('div'); n.style.color='var(--mut)'; n.style.fontSize='var(--content-size)'; n.innerText='—';
       col.appendChild(n);
     }
-    row.appendChild(dateBox); row.appendChild(col); monthList.appendChild(row);
+
+    row.appendChild(dateBox);
+    row.appendChild(col);
+    row.appendChild(plus); // plus appended so absolute top-right is inside the day
+    monthList.appendChild(row);
 
     // if this day is Sunday insert a week separator element (list)
     if(day.getDay() === 0){
