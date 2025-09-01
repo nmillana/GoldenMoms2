@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Plantel (diagnóstico)</title>
+<title>Golden Moms — Plantel (loader robusto)</title>
 <link rel="icon" href="Logo.webp"/>
 <style>
 :root{--blue:#0f3a78;--lime:#9be22d;--mut:#64748b;--b:#e2e8f0}
@@ -37,6 +37,7 @@
 .team-chip{padding:6px 8px;border-radius:999px;border:1px solid var(--b);cursor:pointer;background:#fff}
 .no-data{padding:16px;color:var(--mut);text-align:center}
 .footer{padding:16px;text-align:center;color:var(--mut);font-size:12px}
+.small-note{font-size:12px;color:#666;margin-top:8px}
 </style>
 </head>
 <body>
@@ -54,7 +55,7 @@
 </div>
 
 <div class="container">
-  <div id="status" class="status">Inicializando…</div>
+  <div id="status" class="status">Iniciando…</div>
 
   <section id="v-roster">
     <div class="card">
@@ -67,6 +68,7 @@
       </div>
 
       <div id="rosterGrid"></div>
+      <div class="small-note">Si el SDK no se carga, revisa extensiones (adblock) o política CSP. Si tu host no permite CDNs, descarga <code>supabase.min.js</code> y sirve localmente en la misma carpeta.</div>
     </div>
   </section>
 
@@ -127,44 +129,99 @@
   </div>
 </div>
 
-<!-- Supabase client -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 <script>
-/* ---------- CONFIG ---------- */
+/* ========== CONFIG ========== */
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
 };
 const BUCKET_NAME = 'player-photos';
+const CDNS = [
+  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js",
+  "https://unpkg.com/@supabase/supabase-js@2/dist/supabase.min.js"
+];
+const SDK_TIMEOUT_MS = 8000;
 
 const statusEl = document.getElementById('status');
-function setStatus(msg, isError = false){
+function setStatus(msg, isError=false){
   statusEl.textContent = msg;
   statusEl.className = isError ? 'status error' : 'status';
   console.log('[STATUS]', msg);
 }
 
-/* ensure SDK loaded */
-if(typeof supabase === 'undefined'){
-  setStatus('Error: SDK de Supabase no se cargó (window.supabase undefined). Revisa conexión CDN.', true);
-  console.error('Supabase SDK not available at window.supabase');
-}
-// create client safely
-let supa = null;
-try{
-  if(typeof supabase !== 'undefined' && typeof supabase.createClient === 'function'){
-    supa = supabase.createClient(SUPA.url, SUPA.key);
-    setStatus('Conectado a Supabase (cliente creado). Cargando jugadoras…');
-    console.log('Supabase client created:', supa);
-  } else {
-    setStatus('No se pudo inicializar cliente Supabase. Revisa SDK.', true);
-  }
-}catch(err){
-  setStatus('Error inicializando Supabase: ' + (err.message || err), true);
-  console.error(err);
+/* dynamic script loader with retries */
+function loadScriptUrl(url, timeoutMs = SDK_TIMEOUT_MS){
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = url;
+    s.async = true;
+    let done=false;
+    const to = setTimeout(()=>{ if(!done){ done=true; s.onerror = s.onload = null; reject(new Error('timeout')); }}, timeoutMs);
+    s.onload = ()=>{ if(done) return; done=true; clearTimeout(to); resolve(); };
+    s.onerror = (ev)=>{ if(done) return; done=true; clearTimeout(to); reject(new Error('error loading '+url)); };
+    document.head.appendChild(s);
+  });
 }
 
-/* DOM refs */
+async function ensureSupabaseSDK(){
+  // if already available, done
+  if(window.supabase && typeof window.supabase.createClient === 'function'){
+    return;
+  }
+  setStatus('Cargando SDK de Supabase desde CDN...');
+  // try each CDN in order
+  for(const url of CDNS){
+    try{
+      setStatus('Intentando cargar SDK desde: ' + url);
+      await loadScriptUrl(url);
+      if(window.supabase && typeof window.supabase.createClient === 'function'){
+        setStatus('SDK cargado desde ' + url);
+        return;
+      } else {
+        console.warn('Script cargado pero window.supabase no disponible tras cargar', url);
+      }
+    }catch(err){
+      console.warn('Fallo cargando SDK desde', url, err);
+    }
+  }
+  // si llegamos aquí, no se cargó
+  throw new Error('No se pudo cargar el SDK de Supabase desde los CDNs configurados.');
+}
+
+/* main app (se ejecuta después de cargar SDK) */
+let supa = null;
+async function initApp(){
+  try{
+    // try to ensure SDK
+    try{
+      await ensureSupabaseSDK();
+    }catch(err){
+      setStatus('Error: SDK de Supabase no se cargó (CDN bloqueado). Revisa consola. Puedes descargar supabase.min.js y servirlo localmente.', true);
+      console.error(err);
+      return;
+    }
+
+    // create client
+    try{
+      supa = supabase.createClient(SUPA.url, SUPA.key);
+      setStatus('Cliente Supabase inicializado. Cargando jugadoras…');
+    }catch(err){
+      setStatus('No se pudo crear cliente Supabase: ' + (err.message||err), true);
+      console.error(err);
+      return;
+    }
+
+    // bootstrap UI & data
+    wireUI();
+    showView('roster');
+    await fetchPlayers();
+  }catch(err){
+    console.error('initApp err', err);
+    setStatus('Error inicializando app: ' + (err.message||err), true);
+  }
+}
+
+/* ========== UI & DB logic (igual que antes) ========== */
 const rosterGrid = document.getElementById('rosterGrid');
 const btnAddPlayer = document.getElementById('btnAddPlayer');
 const playerModalBg = document.getElementById('playerModalBg');
@@ -185,13 +242,11 @@ const btnClosePlayer = document.getElementById('btnClosePlayer');
 const btnSavePlayer = document.getElementById('btnSavePlayer');
 const btnDeletePlayer = document.getElementById('btnDeletePlayer');
 
-/* state */
 let playersCache = [];
 let tableColumns = [];
 let currentEditing = null;
 const TEAM_OPTIONS = ["Golden Moms","Golden Power","Golden Dream"];
 
-/* small helpers */
 function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function avatarOrPlaceholder(url, name){
   if(url) return url;
@@ -209,7 +264,6 @@ function parseTeams(v){
   return [];
 }
 
-/* upload helper */
 async function uploadFileToStorage(file){
   try{
     if(!file) return null;
@@ -226,14 +280,13 @@ async function uploadFileToStorage(file){
   }
 }
 
-/* fetch players (safe) */
 async function fetchPlayers(){
   try{
     if(!supa){ setStatus('Cliente Supabase no disponible. No se puede cargar players.', true); return []; }
     setStatus('Cargando jugadoras desde Supabase...');
     console.log('fetchPlayers: fetching...');
     const { data, error } = await supa.from('players').select('*').order('apodo', { ascending:true });
-    if(error){ throw error; }
+    if(error) throw error;
     playersCache = (data || []).map(p => ({ ...p, equipos: parseTeams(p.equipos || p.teams || p.equipo) }));
     tableColumns = playersCache.length ? Object.keys(playersCache[0]) : [];
     renderRoster(playersCache);
@@ -247,7 +300,6 @@ async function fetchPlayers(){
   }
 }
 
-/* render roster */
 function renderRoster(list){
   try{
     rosterGrid.innerHTML = '';
@@ -272,7 +324,6 @@ function renderRoster(list){
   }
 }
 
-/* teams UI */
 function renderTeamsUI(selected=[]){
   teamsList.innerHTML = '';
   for(const t of TEAM_OPTIONS){
@@ -288,7 +339,6 @@ function renderTeamsUI(selected=[]){
 }
 function getSelectedTeams(){ return Array.from(teamsList.querySelectorAll('input[type=checkbox]')).filter(i=>i.checked).map(i=>i.value); }
 
-/* modal open/close */
 function openPlayerModal(player){
   currentEditing = player ? {...player} : null;
   document.getElementById('playerModalTitle').textContent = player ? `Ficha — ${player.apodo || player.nombre || ''}` : 'Agregar jugadora';
@@ -307,6 +357,7 @@ function openPlayerModal(player){
   setPhotoPreview(p_foto.value || '');
   playerModalBg.style.display = 'flex'; playerModalBg.setAttribute('aria-hidden','false');
 }
+
 function setPhotoPreview(url){
   playerPhotoPreview.innerHTML = '';
   const img = document.createElement('img'); img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
@@ -315,7 +366,6 @@ function setPhotoPreview(url){
 }
 function closePlayerModal(){ playerModalBg.style.display = 'none'; playerModalBg.setAttribute('aria-hidden','true'); currentEditing = null; }
 
-/* save/delete (dynamic payload) */
 async function savePlayer(){
   try{
     if(!supa){ setStatus('No hay conexión a Supabase para guardar.', true); return; }
@@ -398,7 +448,7 @@ btnDeletePlayer.addEventListener('click', deletePlayer);
 playerModalBg.addEventListener('click',(e)=>{ if(e.target === playerModalBg) closePlayerModal(); });
 p_foto.addEventListener('input', ()=> setPhotoPreview(p_foto.value || ''));
 
-/* tabs wiring + initial view */
+/* tabs wiring + show */
 function showView(name){
   document.querySelectorAll('.nav .tab').forEach(b=>b.classList.toggle('active', b.dataset.view === name));
   document.querySelectorAll('section[id^="v-"]').forEach(s => s.style.display = 'none');
@@ -406,19 +456,12 @@ function showView(name){
   if(sec) sec.style.display = 'block';
   if(name === 'roster') fetchPlayers();
 }
-document.querySelectorAll('.nav .tab').forEach(btn=> btn.addEventListener('click', ()=> showView(btn.dataset.view)));
+function wireUI(){ document.querySelectorAll('.nav .tab').forEach(btn=> btn.addEventListener('click', ()=> showView(btn.dataset.view))); }
 
-/* bootstrap */
-document.addEventListener('DOMContentLoaded', async ()=>{
-  try{
-    // check sdk + client
-    if(typeof supabase === 'undefined' || !supa){ setStatus('SDK o cliente Supabase no disponible (ver consola).', true); console.error('Supabase missing or client not initialized'); return; }
-    // initial show roster
-    showView('roster');
-  }catch(err){
-    console.error('bootstrap err', err);
-    setStatus('Error inicializando UI: ' + (err.message || err), true);
-  }
+/* start */
+document.addEventListener('DOMContentLoaded', ()=> {
+  setStatus('Iniciando carga del SDK y app...');
+  initApp();
 });
 </script>
 </body>
