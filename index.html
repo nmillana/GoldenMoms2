@@ -78,18 +78,35 @@ a{color:inherit;text-decoration:none}
 /* day cell */
 .day{min-height:90px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;position:relative;display:flex;flex-direction:column;gap:6px}
 .day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-.day-n{
-  font-weight:700;
-  color:var(--mut);
-  font-size: var(--day-bold-size);
+
+/* mini square for day (grid) */
+.day-num-box{
+  background:#f1f5f9;
+  border-radius:8px;
+  padding:6px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  min-width:48px;
   line-height:1;
 }
+.day-num-box .day-wk-grid{
+  font-size:10px;
+  text-transform:lowercase;
+  color:var(--mut);
+}
+.day-num-box .day-n{
+  font-weight:800;
+  color:var(--mut);
+  font-size: var(--day-bold-size);
+}
 
-/* today highlight: ONLY outer border (más grueso), no fondo ni sombra */
-.day.today{
+/* today mark: only the mini square (grid) */
+.day-num-box.today-box{
   border: 3px solid var(--today-border-color);
-  background: transparent !important;
-  box-shadow: none !important;
+  background: transparent;
 }
 
 /* small add button and event chips */
@@ -99,7 +116,6 @@ a{color:inherit;text-decoration:none}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
 
 /* Month list fallback (mobile) */
-/* the .day-date shows: row 1 = weekday abbrev, row 2 = number */
 .month-list{display:none;flex-direction:column;gap:8px}
 .month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto}
 .day-date{
@@ -121,7 +137,7 @@ a{color:inherit;text-decoration:none}
 .day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
 .day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
 
-/* today in list view: only outer border */
+/* today in list view: only mini square border */
 .month-list .day.today .day-date{
   border: 3px solid var(--today-border-color);
   background: transparent;
@@ -146,7 +162,7 @@ a{color:inherit;text-decoration:none}
 
 /* Responsive tweaks */
 @media (max-width:420px){
-  .day-n{ font-size: var(--day-bold-size-mobile); }
+  .day-num-box .day-n{ font-size: var(--day-bold-size-mobile); }
   .day-date{ font-size: var(--day-bold-size-mobile); }
   .day-date .day-wk{ font-size: calc(var(--day-bold-size-mobile) - 6px); }
   .day-date .day-num{ font-size: calc(var(--day-bold-size-mobile)); }
@@ -638,17 +654,18 @@ function drawMonthGrid(start,end){
     cell.className='day';
     const head = document.createElement('div');
     head.className='day-head';
-    head.innerHTML = `<div class="day-n">${pad(day.getDate())}</div>
+
+    const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,''); // "lun", "mar", etc.
+    const dayStrLocal = localDateYMD(day);
+    const isToday = dayStrLocal === todayYMD ? true : false;
+
+    head.innerHTML = `<div class="day-num-box${isToday ? ' today-box' : ''}">
+        <div class="day-wk-grid">${wk}</div>
+        <div class="day-n">${pad(day.getDate())}</div>
+      </div>
       <button class="day-add" title="Nuevo evento">+</button>`;
     head.querySelector('.day-add').onclick=()=>openModal({ date: day });
     cell.appendChild(head);
-
-    // mark today (only border)
-    const dayStrLocal = localDateYMD(day);
-    if(dayStrLocal === todayYMD){
-      cell.classList.add('today');
-      cell.setAttribute('aria-current','date');
-    }
 
     const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
 
@@ -896,7 +913,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.nav .tab').forEach(btn=>{
     btn.onclick=()=>{ document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); showView(btn.dataset.view); };
   });
-  showView('events'); // abrir en Events por defecto (cámbialo si prefieres Dashboard)
+  showView('events'); // abre en Eventos por defecto; cámbialo a 'dash' si prefieres
   closeModal();
 });
 
