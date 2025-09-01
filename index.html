@@ -1,252 +1,72 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel (evento + en tarjeta)</title>
+<title>Golden Moms — Panel (restaurado)</title>
 <link rel="icon" href="Logo.webp"/>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- Carga directa del SDK (si está bloqueado, ver consola) -->
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+
 <style>
 :root{
   --blue:#0f3a78; --lime:#9be22d; --ink:#0f172a; --mut:#64748b;
   --b:#e2e8f0; --bg:#f7f8fa;
-  --lime-strong:#7fd410; --blue-strong:#0a2a58;
-  --title-size:12px; --content-size:10px; --sub-size:8px; --kpi-number-size:22px;
-
-  --day-bold-size: 16px;
-  --day-bold-size-mobile: 14px;
-
-  --week-sep-height: 8px;
-  --week-sep-color: #000;
   --today-border-color: #ff3b3b;
-  --month-grid-gap: 18px;
-  --month-list-gap: 12px;
 }
-
-/* base */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
-a{color:inherit;text-decoration:none}
-
-/* Buttons */
-.btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer;font-size:var(--content-size)}
-.btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
-.btn.s{background:#f8fafc}
-
-/* Top bar */
-.top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;overflow:visible}
+.top{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
 .brand{display:flex;gap:10px;align-items:center}
 .brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
-.brand div{font-size:var(--content-size)}
-.nav{display:flex;gap:8px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding-bottom:4px}
-.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer;white-space:nowrap;font-size:var(--content-size)}
+.nav{display:flex;gap:8px;align-items:center}
+.nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
 .nav .tab.active{background:var(--blue);color:#fff}
-
-/* Layout */
 .container{max-width:1200px;margin:14px auto;padding:0 12px}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px; overflow:visible}
-.card h4{margin:0 0 8px;font-size:14px;font-weight:700}
-.kpi h3{margin:0;color:var(--mut);font-size:var(--sub-size)}
-.kpi .n{font-size:var(--kpi-number-size);font-weight:800}
-.section-note{font-size:var(--sub-size);color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
+.card{background:#fff;border:1px solid var(--b);border-radius:12px;padding:12px;box-shadow:0 8px 20px #0000000a}
+.section-note{font-size:12px;color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
 
 /* Calendar */
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
-.month-title{font-weight:800;font-size:var(--title-size)}
+.month-title{font-weight:800;font-size:12px}
 .month-nav{display:flex;gap:6px}
-.month-grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap: var(--month-grid-gap);
-  grid-auto-rows:minmax(90px,auto);
-}
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:18px;grid-auto-rows:minmax(90px,auto)}
+.week-sep{grid-column:1 / -1;height:8px;background:#000;margin:10px 0;border-radius:4px}
+.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:18px;margin-bottom:8px}
+.weekdays div{font-weight:700;color:var(--blue);text-align:center;font-size:10px}
 
-/* week separator row in grid */
-.month-grid .week-sep{
-  grid-column: 1 / -1;
-  height: var(--week-sep-height);
-  background: var(--week-sep-color);
-  border-radius: 4px;
-  margin: 10px 0;
-  z-index:0;
-}
-
-/* weekdays header */
-.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:var(--month-grid-gap);margin-bottom:8px}
-.weekdays div{font-weight:700;color:var(--blue);text-align:center;font-size:var(--content-size)}
-
-/* day cell */
+/* day */
 .day{
-  min-height:90px;
-  background:#fff;
-  border:1px solid var(--b);
-  border-radius:12px;
-  padding:12px;
-  position:relative; /* important: relative to place + inside */
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  z-index:0;
+  min-height:90px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:12px;position:relative;display:flex;flex-direction:column;gap:6px;
 }
-.day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.day-head{display:flex;align-items:center;justify-content:flex-start;gap:8px}
+.day-num-box{background:#f1f5f9;border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:48px}
+.day-n{font-weight:800;color:var(--mut);font-size:16px}
 
-/* mini square for day (grid) */
-.day-num-box{
-  background:#f1f5f9;
-  border-radius:8px;
-  padding:6px 8px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:2px;
-  min-width:48px;
-  line-height:1;
-}
-.day-num-box .day-wk-grid{
-  font-size:10px;
-  text-transform:lowercase;
-  color:var(--mut);
-}
-.day-num-box .day-n{
-  font-weight:800;
-  color:var(--mut);
-  font-size: var(--day-bold-size);
-}
+/* TODAY: solo bordear la tarjeta .day con rojo (más grueso) */
+.day.today{ border: 3px solid var(--today-border-color); border-radius:12px; }
 
-/* today card border (más grueso y rojo) */
-.day.today{
-  border: 3px solid var(--today-border-color);
-  border-radius:12px;
-}
-
-/* + button positioned inside each day in top-right */
+/* plus button top-right inside day */
 .day-add{
-  position:absolute;
-  top:10px;
-  right:10px;
-  width:36px;
-  height:36px;
-  border-radius:999px;
-  border:1px solid var(--b);
-  background:#eef4ff;
-  color:var(--blue);
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  font-size:18px;
-  line-height:1;
-  box-shadow: 0 4px 8px #00000011;
-  z-index:3;
+  position:absolute; top:10px; right:10px;
+  width:36px;height:36px;border-radius:999px;border:1px solid var(--b);
+  background:#eef4ff;color:var(--blue);display:inline-flex;align-items:center;justify-content:center;font-size:18px;
+  cursor:pointer; z-index:3; box-shadow:0 6px 12px rgba(0,0,0,0.06);
 }
 
-/* evento chips */
-.ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word;font-size:var(--content-size)}
-.ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
-.ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
+/* event chips */
+.ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word;font-size:10px}
+.ev-train{background:#9be22d;color:#0c3200;border-color:#8ed400}
+.ev-match{background:#dce9ff;color:#0a2a58;border-color:#b9d0ff}
 
-/* Month list fallback (mobile) */
-.month-list{display:none;flex-direction:column;gap:var(--month-list-gap)}
-.month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto;position:relative}
-.day-date{
-  min-width:52px;
-  border-radius:8px;
-  background:#f1f5f9;
-  padding:6px 8px;
-  text-align:center;
-  font-weight:700;
-  color:var(--mut);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:2px;
-  line-height:1;
-  font-size:var(--day-bold-size);
-}
-.day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
-.day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
-
-/* today in list view: color del borde (si aplica) */
-.month-list .day.today{ border-color: var(--today-border-color); }
-
-/* small text for "Hoy no hay cumpleaños" */
-.no-birth { font-size: var(--content-size); color: var(--mut); }
-
-/* week separator in list view */
-.month-list .week-sep{
-  height: var(--week-sep-height);
-  background: var(--week-sep-color);
-  border-radius: 4px;
-  margin: 10px 0;
-  z-index:0;
-}
-
-/* Modal (hidden by default) */
-.modal-bg{position:fixed;inset:0;background:#0006;display:none;z-index:1000;justify-content:center;align-items:flex-start;padding-top:6vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.modal{width: min(860px, calc(100% - 24px));margin: 0 auto;background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;box-shadow:0 20px 40px #00000022;max-height:90vh; overflow:auto; box-sizing:border-box;}
-.modal h3{margin:0 0 10px;font-size:var(--title-size)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:800px){.form-row{grid-template-columns:1fr}}
-.input, select, textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:10px;background:#fff;font-size:var(--content-size)}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
-
-/* Responsive tweaks */
-@media (max-width:420px){
-  .day-num-box .day-n{ font-size: var(--day-bold-size-mobile); }
-  .day-date{ font-size: var(--day-bold-size-mobile); }
-  .day-date .day-wk{ font-size: calc(var(--day-bold-size-mobile) - 6px); }
-  .day-date .day-num{ font-size: calc(var(--day-bold-size-mobile)); }
-  .day-add{ width:34px; height:34px; font-size:16px; top:8px; right:8px; }
-}
-
-/* Lists */
-ul{ margin:6px 0 6px 18px; padding:0; font-size:var(--content-size) }
-li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
-
-/* Dashboard layout */
-.cards-dashboard{
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 12px;
-}
-.cards-dashboard .card{ grid-column: auto; }
-.card-hoy { grid-column: span 4; }
-.card-birth-today { grid-column: span 4; }
-.card-birth-next  { grid-column: span 4; }
-.card-week        { grid-column: span 12; }
-
-@media (max-width: 900px) {
-  .cards-dashboard{ grid-template-columns: 1fr; }
-  .card-hoy, .card-birth-today, .card-birth-next, .card-week {
-    grid-column: 1 / -1 !important;
-  }
-}
-
-@media (max-width:900px){
-  .grid{grid-template-columns:1fr}
-  .month-grid, .weekdays{gap:6px}
-  .day{min-height:100px;padding:6px}
-  .kpi { padding:12px 10px; }
-  .card { padding:12px; }
-  .month-bar{flex-wrap:wrap;align-items:center}
-}
-@media (max-width:420px){
-  .month-grid{display:none}
-  .weekdays{display:none}
-  .month-list{display:flex}
-  .month-title{font-size:var(--title-size)}
-  .day{padding:8px}
-  .day-date{min-width:46px;padding:6px 6px}
-  .ev{font-size:var(--content-size);padding:6px}
-  .nav .tab{padding:6px 8px;font-size:var(--content-size)}
-  .container{padding:0 8px}
-  #rosterGrid .card{grid-column:1 / -1 !important}
-}
-
-footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:16px}
+/* list fallback mobile */
+.month-list{display:none;flex-direction:column;gap:12px}
+.month-list .day{display:flex;gap:8px;padding:8px;position:relative}
+.day-date{min-width:52px;border-radius:8px;background:#f1f5f9;padding:6px 8px;text-align:center}
+.modal-bg{position:fixed;inset:0;background:#0006;display:none;z-index:1000;justify-content:center;align-items:flex-start;padding-top:6vh}
+.modal{width:min(860px,calc(100% - 24px));background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px}
+.input,select{width:100%;padding:10px;border:1px solid var(--b);border-radius:10px}
+@media(max-width:420px){ .day-n{font-size:14px} .day-add{width:34px;height:34px;font-size:16px;top:8px;right:8px} .month-grid{gap:10px} }
 </style>
 </head>
 <body>
@@ -257,101 +77,64 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
     <img src="Logo.webp" alt="GM"/>
     <div><strong>Golden</strong> <span style="color:var(--lime);font-weight:800">Moms</span></div>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <div class="nav" role="tablist" aria-label="Navegación">
-      <button class="tab active" data-view="dash">Dashboard</button>
-      <button class="tab" data-view="events">Eventos</button>
-      <button class="tab" data-view="roster">Plantel</button>
-      <button class="tab" data-view="matches">Partidos</button>
-    </div>
+  <div class="nav" role="tablist" aria-label="Navegación">
+    <button class="tab active" data-view="dash">Dashboard</button>
+    <button class="tab" data-view="events">Eventos</button>
+    <button class="tab" data-view="roster">Plantel</button>
+    <button class="tab" data-view="matches">Partidos</button>
   </div>
 </div>
 
 <div class="container">
-
-  <!-- DASHBOARD -->
+  <!-- Dashboard -->
   <section id="v-dash">
-    <div class="grid" style="align-items:stretch">
-      <div class="card kpi" style="grid-column:span 6;display:flex;flex-direction:column;justify-content:space-between">
-        <div>
-          <h4>Plantel</h4>
-          <div class="n" id="kRoster">0</div>
-          <div style="font-size:var(--sub-size);color:var(--mut)">Integrantes registrados</div>
+    <div class="grid" style="display:block">
+      <div class="card" style="margin-bottom:12px">
+        <h4>Panel</h4>
+        <div id="statusMsg" style="font-size:12px;color:var(--mut)">Conectando a Supabase...</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <h4>Resumen</h4>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="flex:1"><strong>Plantel</strong><div id="kRoster" style="font-size:22px;font-weight:800">0</div></div>
+          <div style="flex:1"><strong>Partidos</strong><div id="kGames" style="font-size:22px;font-weight:800">0</div></div>
         </div>
       </div>
 
-      <div class="card kpi" style="grid-column:span 6;display:flex;flex-direction:column;justify-content:space-between">
-        <div>
-          <h4>Partidos jugados</h4>
-          <div class="n" id="kGames">0</div>
-          <div id="lastMatchSummary" style="font-size:var(--content-size);color:var(--mut)"></div>
-        </div>
-        <div style="margin-top:8px;display:flex;justify-content:flex-end">
-          <button class="btn s" onclick="showView('matches')">Ir a partidos</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- REORDEN: Hoy -> Cumpleaños Hoy -> Eventos de la semana -> Próximos cumpleaños -->
-    <div class="grid cards-dashboard" style="margin-top:12px;grid-template-columns:repeat(12,1fr);gap:12px">
-      <!-- 1) Hoy -->
-      <div class="card card-hoy" style="grid-column:span 4">
-        <h4>📅 Hoy</h4>
+      <div class="card" style="margin-bottom:12px">
+        <h4>Hoy</h4>
         <div class="section-note">Eventos que ocurren hoy (fecha local).</div>
         <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
-      </div>
-
-      <!-- 2) Cumpleaños — Hoy -->
-      <div class="card card-birth-today" style="grid-column:span 4">
-        <h4>🎂 Cumpleaños — Hoy</h4>
-        <div class="section-note">Personas del plantel que cumplen hoy</div>
-        <div id="birthToday" style="margin-top:8px">—</div>
-      </div>
-
-      <!-- 3) Eventos de la semana (ocupa toda la fila) -->
-      <div class="card card-week" style="grid-column:span 12;margin-top:12px">
-        <h4>📅 Eventos de la semana</h4>
-        <div class="section-note">Eventos de la semana actual (lunes a domingo).</div>
-        <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
-      </div>
-
-      <!-- 4) Próximos cumpleaños -->
-      <div class="card card-birth-next" style="grid-column:span 4;margin-top:0">
-        <h4>🎉 Próximos cumpleaños</h4>
-        <div class="section-note">Lista con los próximos 5 cumpleaños.</div>
-        <ul id="upBirth" style="margin:8px 0 0 16px"></ul>
       </div>
     </div>
   </section>
 
-  <!-- EVENTOS -->
+  <!-- Eventos -->
   <section id="v-events" style="display:none">
     <div class="card">
       <div class="month-bar">
         <div class="month-nav">
-          <button class="btn s" id="btnPrevMonth">◀</button>
-          <button class="btn s" id="btnToday">Hoy</button>
-          <button class="btn s" id="btnNextMonth">▶</button>
+          <button class="btn" id="btnPrevMonth">◀</button>
+          <button class="btn" id="btnToday">Hoy</button>
+          <button class="btn" id="btnNextMonth">▶</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="month-title" id="monthTitle">Mes</div>
-          <!-- Botón "Nuevo Evento" en su lugar original (píldora verde) -->
-          <button class="btn p" id="btnNewEventTop">Nuevo Evento</button>
+          <button class="btn" id="btnNewEventTop" style="background:#9be22d;border-color:#7fd410;font-weight:800">Nuevo Evento</button>
         </div>
       </div>
 
-      <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD).</div>
+      <div class="section-note">El calendario muestra eventos agrupados por fecha local (YYYY-MM-DD).</div>
 
-      <div class="weekdays">
-        <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
-      </div>
+      <div class="weekdays"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
 
       <div id="monthGrid" class="month-grid"></div>
       <div id="monthList" class="month-list"></div>
     </div>
   </section>
 
-  <!-- PLANTEL -->
+  <!-- Plantel -->
   <section id="v-roster" style="display:none">
     <div class="card">
       <h4>Plantel</h4>
@@ -360,275 +143,123 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
     </div>
   </section>
 
-  <!-- PARTIDOS -->
+  <!-- Partidos -->
   <section id="v-matches" style="display:none">
     <div class="card">
       <h4>Partidos jugados</h4>
-      <div class="section-note">Registro de partidos: goles, diferencia y goleadoras/asistencias.</div>
       <div id="matchesList" style="margin-top:12px"></div>
     </div>
   </section>
 </div>
 
-<footer style="text-align:center;padding:16px;color:var(--mut);font-size:var(--content-size)">Golden Moms · hecho con 💚 lima & azul</footer>
-
-<!-- MODAL (oculto por defecto) -->
+<!-- Modal -->
 <div class="modal-bg" id="modalBg" style="display:none;">
   <div class="modal" role="dialog" aria-modal="true">
-    <h3 id="modalTitle">Nuevo evento</h3>
-
-    <div class="form-row">
-      <div>
-        <label>Título</label>
-        <input id="f_title" class="input" placeholder="Ej: Entrenamiento Colegio">
-      </div>
-      <div>
-        <label>Tipo</label>
-        <select id="f_type" class="input">
-          <option>Entrenamiento</option>
-          <option>Partido</option>
-        </select>
-      </div>
+    <h3 id="modalTitle">Evento</h3>
+    <div style="margin-top:8px">
+      <label>Título</label>
+      <input id="f_title" class="input" placeholder="Título">
     </div>
-
-    <div class="form-row">
-      <div>
-        <label>Fecha y hora</label>
-        <input id="f_dt" type="datetime-local" class="input">
-      </div>
-      <div>
-        <label>Equipo</label>
-        <input id="f_team" class="input" value="Golden Moms">
-      </div>
+    <div style="margin-top:8px">
+      <label>Fecha y hora</label>
+      <input id="f_dt" type="datetime-local" class="input">
     </div>
-
-    <div class="form-row">
-      <div>
-        <label>Rival (si aplica)</label>
-        <input id="f_opponent" class="input" placeholder="Rivales / Liga">
-      </div>
-      <div>
-        <label>Uniforme</label>
-        <select id="f_uniform" class="input">
-          <option value="">(definir)</option>
-          <option>Polera azul — * medias verde lima</option>
-          <option>Polera verde lima — * medias verde lima</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div>
-        <label>Ubicación</label>
-        <input id="f_location" class="input" placeholder="Colegio / Cancha / Dirección">
-      </div>
-      <div>
-        <div id="matchExtra" style="display:none">
-          <label>Goles a favor</label>
-          <input id="f_goals_for" class="input" type="number" min="0" placeholder="Goles a favor">
-          <label style="margin-top:8px">Goles en contra</label>
-          <input id="f_goals_against" class="input" type="number" min="0" placeholder="Goles en contra">
-        </div>
-      </div>
-    </div>
-
-    <div class="form-row" id="matchPeopleRow" style="display:none">
-      <div>
-        <label>Goleadoras (coma-separadas)</label>
-        <input id="f_scorers" class="input" placeholder="Nombre1, Nombre2">
-      </div>
-      <div>
-        <label>Asistencias (coma-separadas)</label>
-        <input id="f_assists" class="input" placeholder="NombreA, NombreB">
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div>
-        <label>&nbsp;</label>
-        <div class="modal-actions">
-          <button class="btn s" id="btnDelete" style="margin-right:auto;display:none">Eliminar</button>
-          <button class="btn s" id="btnCancel">Cancelar</button>
-          <button class="btn p" id="btnSave">Guardar</button>
-        </div>
-      </div>
-      <div></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;gap:8px">
+      <button class="btn" id="btnCancel">Cancelar</button>
+      <button class="btn" id="btnSave">Guardar</button>
     </div>
   </div>
 </div>
 
 <script>
-/* ---------- Supabase config ---------- */
+/* ---------- CONFIG ---------- */
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
 };
+
 let supa = null;
-async function initSupabase(timeoutMs = 8000){
-  try{
-    if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
-    if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
-    await new Promise((resolve,reject)=>{
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js';
-      s.async = true;
-      let done=false;
-      const to=setTimeout(()=>{ if(!done){ done=true; reject(new Error('timeout cargando supabase')); }}, timeoutMs);
-      s.onload=()=>{ if(done) return; done=true; clearTimeout(to); resolve(); };
-      s.onerror=()=>{ if(done) return; done=true; clearTimeout(to); reject(new Error('error cargando supabase')); };
-      document.head.appendChild(s);
-    });
-    if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
-    if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
-    throw new Error('SDK cargado pero no se encontró createClient');
-  }catch(err){ console.error('initSupabase error:', err); supa = null; return null; }
+const statusEl = document.getElementById('statusMsg');
+
+function setStatus(msg, isError=false){
+  statusEl.textContent = msg;
+  statusEl.style.color = isError ? '#b91c1c' : 'var(--mut)';
+}
+
+/* Inicialización simple (vuelve al enfoque original) */
+try{
+  if(window.supabase && typeof window.supabase.createClient === 'function'){
+    supa = window.supabase.createClient(SUPA.url, SUPA.key);
+    setStatus('Cliente Supabase inicializado');
+  } else {
+    setStatus('SDK de Supabase no disponible (CDN bloqueado). Revisa consola.', true);
+    console.warn('Supabase SDK not available at window.supabase');
+  }
+}catch(err){
+  console.error('Error creando cliente supabase', err);
+  setStatus('Error inicializando Supabase. Revisa consola.', true);
 }
 
 /* ---------- Helpers ---------- */
-function pad(n){return n.toString().padStart(2,'0');}
-function localInputToISOWithOffset(inp){ if(!inp) return null; const [d,t]=inp.split('T'); const offMin = -new Date().getTimezoneOffset(); const sign = offMin>=0?'+':'-'; const abs=Math.abs(offMin); const oh=pad(Math.floor(abs/60)); const om=pad(abs%60); return `${d}T${t}:00${sign}${oh}:${om}`; }
-function isoToLocalInput(iso){ if(!iso) return ''; const d=new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function pad(n){ return n.toString().padStart(2,'0'); }
 function localDateYMD(d){ const D=new Date(d); return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`; }
+function isoToLocalInput(iso){ if(!iso) return ''; const d=new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function localInputToISOWithOffset(inp){ if(!inp) return null; const [d,t] = inp.split('T'); const offMin = -new Date().getTimezoneOffset(); const sign = offMin>=0?'+':'-'; const abs=Math.abs(offMin); const oh=pad(Math.floor(abs/60)); const om=pad(abs%60); return `${d}T${t}:00${sign}${oh}:${om}`; }
 
-/* ---------- DOM refs & modal handlers ---------- */
+/* ---------- Modal handlers ---------- */
 const modalBg = document.getElementById('modalBg');
 const f_title = document.getElementById('f_title');
-const f_type = document.getElementById('f_type');
-const f_dt   = document.getElementById('f_dt');
-const f_team = document.getElementById('f_team');
-const f_opponent = document.getElementById('f_opponent');
-const f_uniform  = document.getElementById('f_uniform');
-const f_location = document.getElementById('f_location');
-const f_goals_for = document.getElementById('f_goals_for');
-const f_goals_against = document.getElementById('f_goals_against');
-const f_scorers = document.getElementById('f_scorers');
-const f_assists = document.getElementById('f_assists');
-const matchExtra = document.getElementById('matchExtra');
-const matchPeopleRow = document.getElementById('matchPeopleRow');
-const btnDelete = document.getElementById('btnDelete');
+const f_dt = document.getElementById('f_dt');
 const btnCancel = document.getElementById('btnCancel');
-const btnSave   = document.getElementById('btnSave');
-
+const btnSave = document.getElementById('btnSave');
 let editingId = null;
 
 function openModal(opts={}) {
-  document.getElementById('modalTitle').textContent = opts.existing ? 'Editar evento' : 'Nuevo evento';
   editingId = null;
+  document.getElementById('modalTitle').textContent = opts.existing ? 'Editar evento' : 'Nuevo evento';
   if(opts.existing){
     const e = opts.existing;
     editingId = e.id;
-    f_title.value = e.title||'';
-    f_type.value  = e.type||'Entrenamiento';
-    f_dt.value    = isoToLocalInput(e.datetime);
-    f_team.value  = e.team||'Golden Moms';
-    f_opponent.value = e.opponent||'';
-    f_uniform.value  = e.uniform||'';
-    f_location.value = e.location||'';
-    if(matchExtra) matchExtra.style.display = 'none';
-    if(matchPeopleRow) matchPeopleRow.style.display = 'none';
-    btnDelete.style.display='';
-  }else{
-    editingId = null;
+    f_title.value = e.title || '';
+    f_dt.value = isoToLocalInput(e.datetime);
+  } else {
     f_title.value = '';
-    f_type.value  = 'Entrenamiento';
     const base = opts.date ? new Date(opts.date) : new Date();
     base.setHours(19,30,0,0);
     f_dt.value = isoToLocalInput(base.toISOString());
-    f_team.value  = 'Golden Moms';
-    f_opponent.value = '';
-    f_uniform.value  = '';
-    f_location.value = '';
-    if(matchExtra) matchExtra.style.display = 'none';
-    if(matchPeopleRow) matchPeopleRow.style.display = 'none';
-    btnDelete.style.display='none';
-    if(f_goals_for) f_goals_for.value=''; if(f_goals_against) f_goals_against.value=''; if(f_scorers) f_scorers.value=''; if(f_assists) f_assists.value='';
   }
   modalBg.style.display = 'flex';
-  modalBg.setAttribute('aria-hidden','false');
 }
-
-function closeModal(){
-  modalBg.style.display = 'none';
-  modalBg.setAttribute('aria-hidden','true');
-  editingId = null;
-}
-modalBg.addEventListener('click', (e) => { if (e.target === modalBg) closeModal(); });
-document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
-btnCancel.addEventListener('click', ()=> closeModal());
-
-btnDelete.addEventListener('click', async ()=>{
-  if(!editingId) return;
-  if(!confirm('¿Eliminar este evento?')) return;
-  if(!supa){ alert('No conectado a Supabase.'); closeModal(); return; }
-  try{
-    await supa.from('events').delete().eq('id', editingId);
-    await supa.from('matches').delete().eq('event_id', editingId);
-  }catch(err){
-    console.warn('Error eliminando', err);
-    alert('Error eliminado. Revisa consola.');
-  }
-  closeModal();
-  renderMonth();
-  renderDash();
-});
+function closeModal(){ modalBg.style.display = 'none'; editingId = null; }
+modalBg.addEventListener('click', (e)=>{ if(e.target===modalBg) closeModal(); });
+btnCancel.addEventListener('click', closeModal);
 
 btnSave.addEventListener('click', async ()=>{
-  const title = f_title.value.trim();
-  const type  = f_type.value;
-  const team  = f_team.value.trim();
-  const opponent = f_opponent.value.trim();
-  const uniform  = f_uniform.value;
-  const location = f_location.value.trim();
+  if(!supa){ alert('No conectado a Supabase'); return; }
+  const title = (f_title.value||'').trim();
   if(!title || !f_dt.value){ alert('Completa título y fecha/hora'); return; }
-  if(!supa){ alert('No conectado a Supabase. Revisa la consola.'); closeModal(); return; }
-
   const datetime = localInputToISOWithOffset(f_dt.value);
-  const payloadEvent = { title, type, team, opponent, uniform, location, datetime };
-
+  const payload = { title, datetime };
   try{
     if(editingId){
-      const { error } = await supa.from('events').update(payloadEvent).eq('id', editingId);
+      const { error } = await supa.from('events').update(payload).eq('id', editingId);
       if(error) throw error;
     } else {
-      const { data:inserted, error } = await supa.from('events').insert([payloadEvent]).select();
+      const { error } = await supa.from('events').insert([payload]);
       if(error) throw error;
-      const newEvent = inserted && inserted[0];
-      if(type === 'Partido' && newEvent){
-        const goalsFor = f_goals_for && f_goals_for.value ? parseInt(f_goals_for.value) : null;
-        const goalsAgainst = f_goals_against && f_goals_against.value ? parseInt(f_goals_against.value) : null;
-        const diff = (goalsFor!=null && goalsAgainst!=null) ? (goalsFor - goalsAgainst) : null;
-        const matchPayload = {
-          event_id: newEvent.id,
-          goals_for: goalsFor,
-          goals_against: goalsAgainst,
-          goal_difference: diff,
-          scorers: f_scorers && f_scorers.value ? f_scorers.value.split(',').map(s=>s.trim()).filter(Boolean) : [],
-          assists: f_assists && f_assists.value ? f_assists.value.split(',').map(s=>s.trim()).filter(Boolean) : []
-        };
-        try{ await supa.from('matches').insert([matchPayload]); }catch(err){ console.warn('Error guardando match', err); }
-      }
     }
-  }catch(err){
-    alert('Error al guardar: '+(err.message||err));
-    console.error(err);
-    return;
-  }
-
-  closeModal();
-  renderMonth();
-  renderDash();
+    closeModal();
+    renderMonth();
+    renderDash();
+  }catch(err){ console.error(err); alert('Error guardando. Revisa consola.'); }
 });
 
-/* ---------- calendar & rendering ---------- */
+/* ---------- Calendar rendering ---------- */
 let monthCursor = new Date();
 let cachedEvents = [];
-const monthTitle = document.getElementById('monthTitle');
 const monthGrid = document.getElementById('monthGrid');
 const monthList = document.getElementById('monthList');
-
-/* helper to persist current view so reload keeps the same tab */
-function persistView(view){ try{ localStorage.setItem('gm_view', view); }catch(e){} }
-function getPersistedView(){ try{ return localStorage.getItem('gm_view'); }catch(e){ return null; } }
+const monthTitle = document.getElementById('monthTitle');
 
 document.getElementById('btnPrevMonth')?.addEventListener('click', ()=>{ monthCursor.setMonth(monthCursor.getMonth()-1); renderMonth(); });
 document.getElementById('btnNextMonth')?.addEventListener('click', ()=>{ monthCursor.setMonth(monthCursor.getMonth()+1); renderMonth(); });
@@ -638,372 +269,191 @@ document.getElementById('btnNewEventTop')?.addEventListener('click', ()=> openMo
 function getMonthRange(d){
   const first = new Date(d.getFullYear(), d.getMonth(), 1);
   const last = new Date(d.getFullYear(), d.getMonth()+1, 0);
-  let start = new Date(first);
-  let dow = (start.getDay()+6)%7;
-  start.setDate(start.getDate()-dow);
-  let end = new Date(last);
-  let dow2 = (end.getDay()+6)%7;
-  end.setDate(end.getDate() + (6-dow2));
-  return {start, end};
+  let start = new Date(first); let dow = (start.getDay()+6)%7; start.setDate(start.getDate()-dow);
+  let end = new Date(last); let dow2 = (end.getDay()+6)%7; end.setDate(end.getDate() + (6-dow2));
+  return { start, end };
 }
 
 async function fetchEventsRange(start,end){
-  if(!supa){ console.warn('fetchEventsRange: Supabase no disponible'); return []; }
+  if(!supa) return [];
   try{
-    const {data, error} = await supa.from("events").select("*").gte("datetime", start.toISOString()).lte("datetime", end.toISOString()).order("datetime", {ascending:true});
-    if(error){ console.error(error); return []; }
+    const { data, error } = await supa.from('events').select('*').gte('datetime', start.toISOString()).lte('datetime', end.toISOString()).order('datetime', {ascending:true});
+    if(error) { console.error(error); return []; }
     return data || [];
-  }catch(err){ console.error('fetchEventsRange error', err); return []; }
+  }catch(err){ console.error(err); return []; }
 }
 
-function renderMonthTitle(){
-  const m = monthCursor.toLocaleString('es-CL',{month:'long',year:'numeric'});
-  monthTitle.textContent = m.charAt(0).toUpperCase()+m.slice(1);
-}
+function renderMonthTitle(){ const m = monthCursor.toLocaleString('es-CL',{month:'long',year:'numeric'}); monthTitle.textContent = m.charAt(0).toUpperCase()+m.slice(1); }
 
 async function renderMonth(){
   renderMonthTitle();
-  const {start,end} = getMonthRange(monthCursor);
+  const { start, end } = getMonthRange(monthCursor);
   cachedEvents = await fetchEventsRange(start,end);
   if(window.matchMedia('(max-width:420px)').matches){
-    if(monthGrid) monthGrid.style.display = 'none';
-    if(monthList) monthList.style.display = 'block';
-    drawMonthList(start,end);
+    monthGrid.style.display = 'none'; monthList.style.display = 'block'; drawMonthList(start,end);
   } else {
-    if(monthList) monthList.style.display = 'none';
-    if(monthGrid) monthGrid.style.display = '';
-    drawMonthGrid(start,end);
+    monthList.style.display = 'none'; monthGrid.style.display = ''; drawMonthGrid(start,end);
   }
 }
 
 function drawMonthGrid(start,end){
   if(!monthGrid) return;
-  monthGrid.innerHTML='';
-  const days = [];
+  monthGrid.innerHTML = '';
+  const days=[];
   let d = new Date(start);
-  while(d<=end){
-    days.push(new Date(d));
-    d.setDate(d.getDate()+1);
-  }
-
+  while(d <= end){ days.push(new Date(d)); d.setDate(d.getDate()+1); }
   const todayYMD = localDateYMD(new Date());
-
   for(const day of days){
-    const cell = document.createElement('div');
-    cell.className='day';
-    const head = document.createElement('div');
-    head.className='day-head';
-
-    const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,''); // "lun", "mar", etc.
-    const dayStrLocal = localDateYMD(day);
-    const isToday = dayStrLocal === todayYMD;
-
-    head.innerHTML = `<div class="day-num-box">
-        <div class="day-wk-grid">${wk}</div>
-        <div class="day-n">${pad(day.getDate())}</div>
-      </div>
-      `;
-
-    // add the + as an absolutely positioned button inside the .day
-    const plusBtn = document.createElement('button');
-    plusBtn.className = 'day-add';
-    plusBtn.title = 'Nuevo evento';
-    plusBtn.innerText = '+';
-    plusBtn.onclick = ()=> openModal({ date: day });
-
-    head.querySelectorAll && cell.appendChild(head);
-    cell.appendChild(head);
-    cell.appendChild(plusBtn);
-
-    // marcar la tarjeta completa como 'today' (solo cambia el color y grosor del borde)
-    if(isToday){
-      cell.classList.add('today');
-      cell.setAttribute('aria-current','date');
-    }
-
-    const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
-
+    const cell = document.createElement('div'); cell.className='day';
+    const head = document.createElement('div'); head.className='day-head';
+    const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,'');
+    const dayStr = localDateYMD(day);
+    head.innerHTML = `<div class="day-num-box"><div class="day-wk-grid">${wk}</div><div class="day-n">${pad(day.getDate())}</div></div>`;
+    const plus = document.createElement('button'); plus.className='day-add'; plus.innerText = '+'; plus.title='Nuevo evento'; plus.onclick = ()=> openModal({ date: day });
+    cell.appendChild(head); cell.appendChild(plus);
+    if(dayStr === todayYMD){ cell.classList.add('today'); cell.setAttribute('aria-current','date'); }
+    const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStr);
     for(const e of events){
-      const ev = document.createElement('div');
-      ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
+      const ev = document.createElement('div'); ev.className = 'ev ' + (e.type==='Entrenamiento' ? 'ev-train' : 'ev-match');
       ev.innerHTML = `<div class="title">${e.title}</div>`;
-      ev.onclick=()=>openModal({ existing:e });
+      ev.onclick = ()=> openModal({ existing: e });
       cell.appendChild(ev);
     }
     monthGrid.appendChild(cell);
-
-    // if this day is Sunday (getDay() === 0) insert a week separator row after it
-    if(day.getDay() === 0){
-      const sep = document.createElement('div');
-      sep.className = 'week-sep';
-      monthGrid.appendChild(sep);
-    }
+    if(day.getDay() === 0){ const sep = document.createElement('div'); sep.className='week-sep'; monthGrid.appendChild(sep); }
   }
 }
 
 function drawMonthList(start,end){
   if(!monthList) return;
-  monthList.innerHTML='';
-  const days=[];
-  let d=new Date(start);
+  monthList.innerHTML = '';
+  const days=[]; let d = new Date(start);
   while(d<=end){ days.push(new Date(d)); d.setDate(d.getDate()+1); }
-
   const todayYMD = localDateYMD(new Date());
-
   for(const day of days){
-    const dayStrLocal = localDateYMD(day);
-    const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
+    const dayStr = localDateYMD(day);
+    const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStr);
     const row = document.createElement('div'); row.className='day';
-
-    // mark today in list view
-    if(dayStrLocal === todayYMD){
-      row.classList.add('today');
-      row.setAttribute('aria-current','date');
-    }
-
-    // dateBox now with weekday abbrev + number (mini square)
-    const dateBox = document.createElement('div'); dateBox.className='day-date';
-    const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,''); // "lun", "mar", etc.
+    if(dayStr === todayYMD){ row.classList.add('today'); row.setAttribute('aria-current','date'); }
+    const dateBox = document.createElement('div'); dateBox.className='day-date'; const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,'');
     dateBox.innerHTML = `<div class="day-wk">${wk}</div><div class="day-num">${pad(day.getDate())}</div>`;
-
     const col = document.createElement('div'); col.className='events-column';
-
-    // add the + as absolute inside the row (works because .day is position:relative)
-    const plus = document.createElement('button');
-    plus.className = 'day-add';
-    plus.title = 'Nuevo evento';
-    plus.innerText = '+';
-    plus.onclick = ()=> openModal({ date: day });
-
+    const plus = document.createElement('button'); plus.className='day-add'; plus.innerText='+'; plus.onclick=()=> openModal({ date: day });
     if(events.length){
-      for(const e of events){
-        const ev = document.createElement('div'); ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
-        ev.innerHTML = `<div class="title">${e.title}</div>`;
-        ev.onclick=()=> openModal({ existing:e });
-        col.appendChild(ev);
-      }
+      for(const e of events){ const ev=document.createElement('div'); ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match'); ev.innerHTML=`<div>${e.title}</div>`; ev.onclick=()=>openModal({ existing:e }); col.appendChild(ev); }
     } else {
-      const n = document.createElement('div'); n.style.color='var(--mut)'; n.style.fontSize='var(--content-size)'; n.innerText='—';
-      col.appendChild(n);
+      const n = document.createElement('div'); n.style.color='var(--mut)'; n.textContent='—'; col.appendChild(n);
     }
-
-    row.appendChild(dateBox);
-    row.appendChild(col);
-    row.appendChild(plus); // plus appended so absolute top-right is inside the day
+    row.appendChild(dateBox); row.appendChild(col); row.appendChild(plus);
     monthList.appendChild(row);
-
-    // if this day is Sunday insert a week separator element (list)
-    if(day.getDay() === 0){
-      const sep = document.createElement('div');
-      sep.className = 'week-sep';
-      monthList.appendChild(sep);
-    }
+    if(day.getDay()===0){ const sep=document.createElement('div'); sep.className='week-sep'; monthList.appendChild(sep); }
   }
 }
 
-/* ---------- dashboard & matches & roster ---------- */
+/* ---------- Dashboard / roster / matches ---------- */
 async function renderDash(){
   try{
     const now = new Date();
-    const weekStart = new Date(now);
-    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay()+6)%7));
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate()+6);
-    const todayStrLocal = localDateYMD(now);
+    const weekStart = new Date(now); weekStart.setDate(weekStart.getDate() - ((weekStart.getDay()+6)%7));
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
+    const todayYMD = localDateYMD(now);
 
     let evs = [];
     if(supa){
-      const {data:events, error} = await supa.from("events").select("*").gte("datetime", weekStart.toISOString()).lte("datetime", weekEnd.toISOString()).order("datetime",{ascending:true});
-      if(error){ console.warn('renderDash events error', error); evs = []; } else evs = events || [];
-    } else evs = [];
+      const { data:events, error } = await supa.from('events').select('*').gte('datetime', weekStart.toISOString()).lte('datetime', weekEnd.toISOString()).order('datetime',{ascending:true});
+      if(error){ console.warn('events err', error); evs = []; } else evs = events || [];
+    }
 
     let players = [];
     if(supa){
-      try{ const resPlayers = await supa.from("players").select("*"); if(resPlayers && resPlayers.data) players = resPlayers.data; }catch(err){ console.warn('Error cargando players', err); players = []; }
-    } else players = [];
-    document.getElementById('kRoster').textContent = (players||[]).length || 0;
+      try{ const { data:playersList, error } = await supa.from('players').select('*').order('apodo',{ascending:true}); if(error){ console.warn(error); players = []; } else players = playersList || []; }catch(e){ console.warn(e); players = []; }
+    }
 
+    document.getElementById('kRoster').textContent = (players||[]).length || 0;
     const matchesPlayed = evs.filter(e=> e.type==='Partido' && new Date(e.datetime) < now);
     document.getElementById('kGames').textContent = matchesPlayed.length;
-    if(matchesPlayed.length>0){
-      const last = matchesPlayed.sort((a,b)=> new Date(b.datetime)-new Date(a.datetime))[0];
-      const d = new Date(last.datetime);
-      document.getElementById('lastMatchSummary').textContent = `${last.title} — ${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})}`;
-    } else {
-      document.getElementById('lastMatchSummary').textContent = 'Sin partidos jugados aún';
-    }
-
-    const upB = document.getElementById("upBirth"); upB.innerHTML = '';
-    const birthTodayEl = document.getElementById('birthToday'); birthTodayEl.innerHTML = '—';
-    try{
-      if(supa){
-        const { data:vw, error:vwErr } = await supa.from("vw_upcoming_birthdays").select("*").order("proximo_cumple",{ascending:true}).limit(5);
-        if(vw && vw.length){
-          const seen = new Set();
-          const uniq = [];
-          for(const p of vw){
-            if(!seen.has(p.id)){
-              seen.add(p.id);
-              uniq.push(p);
-              if(uniq.length>=5) break;
-            }
-          }
-          uniq.forEach(p=>{
-            if(p.proximo_cumple){
-              const bd = new Date(p.proximo_cumple);
-              const li = document.createElement('li');
-              li.innerHTML = `${p.apodo||p.nombre} — ${bd.toLocaleDateString("es-CL",{day:"2-digit",month:"short"})}`;
-              upB.appendChild(li);
-            }
-          });
-          const todayList = uniq.filter(p => p.proximo_cumple && localDateYMD(new Date(p.proximo_cumple)) === todayStrLocal);
-          if(todayList.length>0){
-            birthTodayEl.innerHTML = '<ul style="margin:6px 0 0 16px">' + todayList.map(p=>`<li><strong>${p.apodo||p.nombre}</strong> ${p.edad? '— '+p.edad+' años':''}</li>`).join('') + '</ul>';
-          } else {
-            birthTodayEl.innerHTML = '<div class="no-birth">Hoy no hay cumpleaños</div>';
-          }
-        } else {
-          upB.innerHTML = '<li style="color:var(--mut)">No hay datos de cumpleaños</li>';
-          birthTodayEl.innerHTML = '<div class="no-birth">Hoy no hay cumpleaños</div>';
-        }
-      } else {
-        upB.innerHTML = '<li style="color:var(--mut)">Sin conexión — no se pudieron cargar cumpleaños</li>';
-        birthTodayEl.innerHTML = '<div class="no-birth">Hoy no hay cumpleaños (offline)</div>';
-      }
-    }catch(err){
-      console.warn('Error trayendo cumpleaños', err);
-      upB.innerHTML = '<li style="color:var(--mut)">Error cargando datos</li>';
-      birthTodayEl.innerHTML = '<div class="no-birth">Hoy no hay cumpleaños</div>';
-    }
 
     const todayEl = document.getElementById('todayEvents'); todayEl.innerHTML = '';
-    evs.filter(e => localDateYMD(new Date(e.datetime)) === todayStrLocal)
-      .forEach(e=>{
-        const d = new Date(e.datetime);
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}`;
-        todayEl.appendChild(li);
-      });
-    if(todayEl.innerHTML.trim()==='') todayEl.innerHTML = '<div style="color:var(--mut)">No hay eventos hoy</div>';
-
-    const wEl = document.getElementById('weekEvents'); wEl.innerHTML = '';
-    evs.forEach(e=>{
+    evs.filter(e => localDateYMD(new Date(e.datetime)) === todayYMD).forEach(e=>{
       const d = new Date(e.datetime);
       const li = document.createElement('li');
-      li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}`;
-      wEl.appendChild(li);
+      li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString('es-CL',{weekday:'short',hour:'2-digit',minute:'2-digit'})}`;
+      todayEl.appendChild(li);
     });
-    if(wEl.innerHTML.trim()==='') wEl.innerHTML = '<div style="color:var(--mut)">No hay eventos esta semana</div>';
+    if(todayEl.innerHTML.trim()==='') todayEl.innerHTML = '<div style="color:var(--mut)">No hay eventos hoy</div>';
 
+    // roster UI
     const rosterGrid = document.getElementById('rosterGrid'); rosterGrid.innerHTML = '';
-    try{
-      if(supa){
-        const { data:playersList } = await supa.from('players').select('*').order('nombre',{ascending:true});
-        if(playersList && playersList.length){
-          playersList.forEach(p=>{
-            const c = document.createElement('div');
-            c.className = 'card';
-            c.style.gridColumn = 'span 3';
-            c.innerHTML = `<div style="font-weight:700">${p.apodo||p.nombre||'Sin nombre'}</div><div style="font-size:13px;color:var(--mut)">${p.posicion||''} ${p.edad? '— '+p.edad+' años':''}</div>`;
-            rosterGrid.appendChild(c);
-          });
-        } else rosterGrid.innerHTML = '<div style="color:var(--mut)">No hay jugadores registrados</div>';
-      } else rosterGrid.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pudo cargar plantel</div>';
-    }catch(err){
-      console.warn('Error cargando roster', err);
-      rosterGrid.innerHTML = '<div style="color:var(--mut)">Error cargando plantel</div>';
+    if(players && players.length){
+      players.forEach(p=>{
+        const c = document.createElement('div'); c.className='card'; c.style.marginBottom='10px';
+        c.innerHTML = `<div style="font-weight:700">${p.apodo||p.nombre||'Sin nombre'}</div><div style="font-size:13px;color:var(--mut)">${p.posicion||''}</div>`;
+        rosterGrid.appendChild(c);
+      });
+    } else {
+      rosterGrid.innerHTML = '<div style="color:var(--mut)">No hay jugadores registrados</div>';
     }
 
   }catch(err){
     console.error(err);
-    document.getElementById('birthToday').innerHTML = '<div class="no-birth">Hoy no hay cumpleaños</div>';
   }
 }
 
 async function renderMatches(){
   const container = document.getElementById('matchesList');
   container.innerHTML = 'Cargando...';
+  if(!supa){ container.innerHTML = '<div style="color:var(--mut)">Sin conexión</div>'; return; }
   try{
-    if(!supa){ container.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pueden cargar partidos</div>'; return; }
     const { data, error } = await supa.from('matches').select(`*, events:event_id ( id, title, datetime, team, opponent )`).order('created_at', {ascending:false});
-    if(error){
-      console.warn('Error cargando matches table:', error.message || error);
-      const { data:events } = await supa.from('events').select('*').order('datetime',{ascending:false});
-      const matchesFromEvents = (events||[]).filter(e=> e.type==='Partido');
-      if(matchesFromEvents.length===0){
-        container.innerHTML = '<div style="color:var(--mut)">No hay registros de partidos.</div>';
-        return;
-      }
-      container.innerHTML = '<ul>' + matchesFromEvents.map(ev=>{
-        const d = new Date(ev.datetime);
-        return `<li><strong>${ev.title}</strong> — ${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})} (${d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})})</li>`;
-      }).join('') + '</ul>';
-      return;
-    }
-    if(!data || data.length===0){
-      container.innerHTML = '<div style="color:var(--mut)">No hay registros de partidos.</div>';
-      return;
-    }
-    const html = data.map(m=>{
+    if(error){ console.warn(error); container.innerHTML = '<div style="color:var(--mut)">No hay registros</div>'; return; }
+    if(!data || data.length===0){ container.innerHTML = '<div style="color:var(--mut)">No hay registros</div>'; return; }
+    container.innerHTML = data.map(m=>{
       const ev = m.events || {};
       const d = ev.datetime ? new Date(ev.datetime) : null;
       const dateTxt = d ? `${d.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})} ${d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}` : '';
-      const scorers = (m.scorers || []).join(', ') || '—';
-      const assists = (m.assists || []).join(', ') || '—';
       return `<div style="border:1px solid var(--b);padding:10px;border-radius:8px;margin-bottom:8px">
-        <div style="font-weight:700">${ev.title || 'Partido'}</div>
-        <div style="font-size:13px;color:var(--mut)">${dateTxt}</div>
-        <div style="margin-top:6px">Resultado: <strong>${m.goals_for ?? '—'}</strong> — <strong>${m.goals_against ?? '—'}</strong> (Dif: ${m.goal_difference ?? '—'})</div>
-        <div style="margin-top:6px"><strong>Goleadoras:</strong> ${scorers}</div>
-        <div style="margin-top:4px"><strong>Asistencias:</strong> ${assists}</div>
+        <div style="font-weight:700">${ev.title || 'Partido'}</div><div style="font-size:13px;color:var(--mut)">${dateTxt}</div>
       </div>`;
     }).join('');
-    container.innerHTML = html;
-  }catch(err){
-    console.error('renderMatches error', err);
-    container.innerHTML = '<div style="color:var(--mut)">Error cargando partidos</div>';
-  }
+  }catch(err){ console.error(err); container.innerHTML = '<div style="color:var(--mut)">Error cargando</div>'; }
 }
 
-/* ---------- init ---------- */
-document.addEventListener('DOMContentLoaded', async () => {
-  await initSupabase();
+/* ---------- Nav + view persistence ---------- */
+function persistView(view){ try{ localStorage.setItem('gm_view', view); }catch(e){} }
+function getPersistedView(){ try{ return localStorage.getItem('gm_view'); }catch(e){ return null; } }
 
-  // Nav buttons wiring + persist view on click
-  document.querySelectorAll('.nav .tab').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      const view = btn.dataset.view;
-      persistView(view);
-      showView(view);
-    });
+document.querySelectorAll('.nav .tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const view = btn.dataset.view;
+    persistView(view);
+    showView(view);
   });
+});
 
-  // Decide initial view:
+function showView(v){
+  ['dash','events','roster','matches'].forEach(id=>{
+    const el = document.getElementById('v-'+id);
+    if(el) el.style.display = 'none';
+  });
+  const target = document.getElementById('v-'+v); if(target) target.style.display = 'block';
+  if(v==='dash') renderDash();
+  if(v==='events') renderMonth();
+  if(v==='matches') renderMatches();
+}
+
+/* ---------- bootstrap ---------- */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  // default to dashboard unless user persisted a view
   const persisted = getPersistedView();
-  const activeTab = document.querySelector('.nav .tab.active');
-  const initialView = persisted || (activeTab ? activeTab.dataset.view : 'dash');
+  const initialView = persisted ? persisted : 'dash';
   document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
   const btnToActivate = document.querySelector(`.nav .tab[data-view="${initialView}"]`);
   if(btnToActivate) btnToActivate.classList.add('active');
 
   showView(initialView);
-  closeModal();
 });
-
-/* showView: only render content for the visible view */
-function showView(v){
-  ['dash','events','roster','matches'].forEach(id=>{
-    const el = document.getElementById('v-'+id);
-    if(el) el.style.display='none';
-  });
-  const target = document.getElementById('v-'+v) || document.getElementById('v-matches');
-  if(target) target.style.display='block';
-  if(v==='dash') renderDash();
-  if(v==='events') renderMonth();
-  if(v==='matches') renderMatches();
-}
 </script>
 </body>
 </html>
