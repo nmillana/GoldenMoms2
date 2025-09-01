@@ -14,13 +14,13 @@
   --title-size:12px; --content-size:10px; --sub-size:8px; --kpi-number-size:22px;
 
   /* controla tamaño del número del día (desktop y móvil) */
-  --day-bold-size: 16px;        /* tamaño en desktop — cámbialo aquí si quieres */
+  --day-bold-size: 16px;        /* tamaño en desktop */
   --day-bold-size-mobile: 14px; /* tamaño en móvil */
 
-  /* estilo para la separación de semanas */
-  --week-sep-height: 12px;
+  /* separación de semanas */
+  --week-sep-height: 8px;
+  --week-sep-color: #000; /* línea negra */
   --today-border-color: #ff3b3b;
-  --today-bg: #fff6f6;
 }
 
 /* base */
@@ -61,11 +61,14 @@ a{color:inherit;text-decoration:none}
   gap:10px;
   grid-auto-rows:minmax(90px,auto);
 }
-/* week separator styling (will be inserted by JS as a full-row element) */
+
+/* week separator row in grid: full-width black thick line */
 .month-grid .week-sep{
   grid-column: 1 / -1;
   height: var(--week-sep-height);
-  background: transparent;
+  background: var(--week-sep-color);
+  border-radius: 4px;
+  margin: 6px 0;
 }
 
 /* weekdays header */
@@ -82,11 +85,11 @@ a{color:inherit;text-decoration:none}
   line-height:1;
 }
 
-/* today highlight */
+/* today highlight: ONLY outer border (más grueso), no fondo ni sombra */
 .day.today{
-  border: 2px solid var(--today-border-color);
-  background: var(--today-bg);
-  box-shadow: 0 6px 18px rgba(255,59,59,0.06);
+  border: 3px solid var(--today-border-color);
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 /* small add button and event chips */
@@ -118,14 +121,19 @@ a{color:inherit;text-decoration:none}
 .day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
 .day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
 
-/* today in list view */
+/* today in list view: only outer border */
 .month-list .day.today .day-date{
-  border: 2px solid var(--today-border-color);
-  background: var(--today-bg);
+  border: 3px solid var(--today-border-color);
+  background: transparent;
 }
 
 /* week separator in list view */
-.month-list .week-sep{ height: var(--week-sep-height); }
+.month-list .week-sep{
+  height: var(--week-sep-height);
+  background: var(--week-sep-color);
+  border-radius: 4px;
+  margin: 6px 0;
+}
 
 /* Modal (hidden by default) */
 .modal-bg{position:fixed;inset:0;background:#0006;display:none;z-index:1000;justify-content:center;align-items:flex-start;padding-top:6vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -635,7 +643,7 @@ function drawMonthGrid(start,end){
     head.querySelector('.day-add').onclick=()=>openModal({ date: day });
     cell.appendChild(head);
 
-    // mark today
+    // mark today (only border)
     const dayStrLocal = localDateYMD(day);
     if(dayStrLocal === todayYMD){
       cell.classList.add('today');
@@ -713,7 +721,6 @@ function drawMonthList(start,end){
     if(day.getDay() === 0){
       const sep = document.createElement('div');
       sep.className = 'week-sep';
-      sep.style.height = getComputedStyle(document.documentElement).getPropertyValue('--week-sep-height') || '12px';
       monthList.appendChild(sep);
     }
   }
@@ -889,7 +896,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.nav .tab').forEach(btn=>{
     btn.onclick=()=>{ document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); showView(btn.dataset.view); };
   });
-  showView('events'); // puedes cambiar a 'dash' si prefieres abrir en dashboard
+  showView('events'); // abrir en Events por defecto (cámbialo si prefieres Dashboard)
   closeModal();
 });
 
