@@ -16,6 +16,11 @@
   /* controla tamaño del número del día (desktop y móvil) */
   --day-bold-size: 16px;        /* tamaño en desktop — cámbialo aquí si quieres */
   --day-bold-size-mobile: 14px; /* tamaño en móvil */
+
+  /* estilo para la separación de semanas */
+  --week-sep-height: 12px;
+  --today-border-color: #ff3b3b;
+  --today-bg: #fff6f6;
 }
 
 /* base */
@@ -50,24 +55,48 @@ a{color:inherit;text-decoration:none}
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
 .month-title{font-weight:800;font-size:var(--title-size)}
 .month-nav{display:flex;gap:6px}
-.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;grid-auto-rows:minmax(90px,auto)}
+.month-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+  grid-auto-rows:minmax(90px,auto);
+}
+/* week separator styling (will be inserted by JS as a full-row element) */
+.month-grid .week-sep{
+  grid-column: 1 / -1;
+  height: var(--week-sep-height);
+  background: transparent;
+}
+
+/* weekdays header */
 .weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:8px}
 .weekdays div{font-weight:700;color:var(--blue);text-align:center;font-size:var(--content-size)}
+
+/* day cell */
 .day{min-height:90px;background:#fff;border:1px solid var(--b);border-radius:12px;padding:8px;position:relative;display:flex;flex-direction:column;gap:6px}
 .day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
 .day-n{
   font-weight:700;
   color:var(--mut);
-  font-size: var(--day-bold-size); /* usa la variable */
+  font-size: var(--day-bold-size);
   line-height:1;
 }
+
+/* today highlight */
+.day.today{
+  border: 2px solid var(--today-border-color);
+  background: var(--today-bg);
+  box-shadow: 0 6px 18px rgba(255,59,59,0.06);
+}
+
+/* small add button and event chips */
 .day-add{border:none;background:#eef4ff;color:var(--blue);width:26px;height:26px;border-radius:999px;cursor:pointer;font-size:var(--content-size)}
 .ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word;font-size:var(--content-size)}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
 
 /* Month list fallback (mobile) */
-/* el .day-date ahora muestra: fila 1 = abreviatura día (lun/mar/...), fila 2 = número */
+/* the .day-date shows: row 1 = weekday abbrev, row 2 = number */
 .month-list{display:none;flex-direction:column;gap:8px}
 .month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto}
 .day-date{
@@ -89,7 +118,14 @@ a{color:inherit;text-decoration:none}
 .day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
 .day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
 
-.events-column{flex:1;display:flex;flex-direction:column;gap:6px}
+/* today in list view */
+.month-list .day.today .day-date{
+  border: 2px solid var(--today-border-color);
+  background: var(--today-bg);
+}
+
+/* week separator in list view */
+.month-list .week-sep{ height: var(--week-sep-height); }
 
 /* Modal (hidden by default) */
 .modal-bg{position:fixed;inset:0;background:#0006;display:none;z-index:1000;justify-content:center;align-items:flex-start;padding-top:6vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -586,6 +622,9 @@ function drawMonthGrid(start,end){
     days.push(new Date(d));
     d.setDate(d.getDate()+1);
   }
+
+  const todayYMD = localDateYMD(new Date());
+
   for(const day of days){
     const cell = document.createElement('div');
     cell.className='day';
@@ -596,7 +635,13 @@ function drawMonthGrid(start,end){
     head.querySelector('.day-add').onclick=()=>openModal({ date: day });
     cell.appendChild(head);
 
+    // mark today
     const dayStrLocal = localDateYMD(day);
+    if(dayStrLocal === todayYMD){
+      cell.classList.add('today');
+      cell.setAttribute('aria-current','date');
+    }
+
     const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
 
     for(const e of events){
@@ -607,6 +652,13 @@ function drawMonthGrid(start,end){
       cell.appendChild(ev);
     }
     monthGrid.appendChild(cell);
+
+    // if this day is Sunday (getDay() === 0) insert a week separator row after it
+    if(day.getDay() === 0){
+      const sep = document.createElement('div');
+      sep.className = 'week-sep';
+      monthGrid.appendChild(sep);
+    }
   }
 }
 
@@ -616,26 +668,34 @@ function drawMonthList(start,end){
   const days=[];
   let d=new Date(start);
   while(d<=end){ days.push(new Date(d)); d.setDate(d.getDate()+1); }
+
+  const todayYMD = localDateYMD(new Date());
+
   for(const day of days){
     const dayStrLocal = localDateYMD(day);
     const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
     const row = document.createElement('div'); row.className='day';
 
-    // dateBox ahora con abreviatura del día + número (mini cuadrado)
+    // mark today in list view
+    if(dayStrLocal === todayYMD){
+      row.classList.add('today');
+      row.setAttribute('aria-current','date');
+    }
+
+    // dateBox now with weekday abbrev + number (mini square)
     const dateBox = document.createElement('div'); dateBox.className='day-date';
     const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,''); // "lun", "mar", etc.
     dateBox.innerHTML = `<div class="day-wk">${wk}</div><div class="day-num">${pad(day.getDate())}</div>`;
 
     const col = document.createElement('div'); col.className='events-column';
 
-    // botón + (añadir evento) arriba a la derecha dentro de la columna de eventos
+    // add button at top-right of column
     const headRow = document.createElement('div'); headRow.style.display='flex'; headRow.style.justifyContent='flex-end'; headRow.style.alignItems='center';
     const plus = document.createElement('button'); plus.className='day-add'; plus.title='Nuevo evento'; plus.innerText='+';
     plus.onclick=()=> openModal({ date: day });
     headRow.appendChild(plus);
     col.appendChild(headRow);
 
-    // lista de eventos para el día (si hay)
     if(events.length){
       for(const e of events){
         const ev = document.createElement('div'); ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
@@ -648,6 +708,14 @@ function drawMonthList(start,end){
       col.appendChild(n);
     }
     row.appendChild(dateBox); row.appendChild(col); monthList.appendChild(row);
+
+    // if this day is Sunday insert a week separator element (list)
+    if(day.getDay() === 0){
+      const sep = document.createElement('div');
+      sep.className = 'week-sep';
+      sep.style.height = getComputedStyle(document.documentElement).getPropertyValue('--week-sep-height') || '12px';
+      monthList.appendChild(sep);
+    }
   }
 }
 
@@ -821,7 +889,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.nav .tab').forEach(btn=>{
     btn.onclick=()=>{ document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); showView(btn.dataset.view); };
   });
-  showView('dash');
+  showView('events'); // puedes cambiar a 'dash' si prefieres abrir en dashboard
   closeModal();
 });
 
