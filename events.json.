@@ -1,18 +1,369 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const calendarEl = document.getElementById('calendar');
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        // ... (otras configuraciones de tu calendario)
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Golden Moms — Plantel (sync Supabase)</title>
+<link rel="icon" href="Logo.webp"/>
+<style>
+:root{
+  --blue:#0f3a78; --lime:#9be22d; --mut:#64748b; --b:#e2e8f0; --bg:#f7f8fa;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:#0f172a;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+.top{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:12px}
+.brand{display:flex;gap:10px;align-items:center}
+.brand img{width:36px;height:36px;border-radius:50%;border:2px solid var(--blue)}
+.team-name{font-size:12px;color:var(--lime);font-weight:800}
+.nav{display:flex;gap:8px;align-items:center}
+.tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer}
+.tab.active{background:var(--blue);color:#fff}
+.container{max-width:900px;margin:14px auto;padding:0 12px}
+.card{background:#fff;border:1px solid var(--b);border-radius:12px;padding:12px}
+#rosterGrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin-top:12px}
+.player-card{padding:10px;border-radius:10px;border:1px solid var(--b);background:#fff;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:110px}
+.player-avatar{width:64px;height:64px;border-radius:50%;overflow:hidden;background:#f1f5f9;display:flex;align-items:center;justify-content:center}
+.player-avatar img{width:100%;height:100%;object-fit:cover}
+.player-apodo{font-weight:800;color:var(--blue)}
+.player-nombre{font-size:12px;color:var(--mut)}
+.btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer}
+.btn.p{background:var(--lime);border-color:#a3e635}
+.modal-bg{position:fixed;inset:0;background:#0006;display:none;z-index:1200;justify-content:center;align-items:flex-start;padding-top:6vh}
+.modal{width:min(880px,calc(100% - 24px));background:#fff;border-radius:12px;padding:16px;border:1px solid var(--b);max-height:90vh;overflow:auto}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+@media(max-width:800px){.form-row{grid-template-columns:1fr}}
+.input,select,textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:8px}
+.teams-list{display:flex;flex-wrap:wrap;gap:8px}
+.team-chip{padding:6px 8px;border-radius:999px;border:1px solid var(--b);cursor:pointer;background:#fff}
+.no-data{padding:16px;color:var(--mut);text-align:center}
+.footer{padding:16px;text-align:center;color:var(--mut);font-size:12px}
+.warn{background:#fff4f4;border:1px solid #f3c2c2;color:#9b1b1b;padding:10px;border-radius:8px;margin-bottom:10px}
+</style>
+</head>
+<body>
 
-        // Usa 'eventSources' para cargar los eventos desde el JSON
-        eventSources: [
-            {
-                url: './events.json', // Ruta a tu archivo JSON
-                method: 'GET',
-                failure: function() {
-                    alert('Hubo un error cargando los eventos!');
-                }
-            }
-        ]
+<div class="top">
+  <div class="brand"><img src="Logo.webp" alt="GM"><div class="team-name">Golden <span style="color:var(--lime)">Moms</span></div></div>
+  <div class="nav"><button class="tab active" data-view="roster">Plantel</button></div>
+</div>
+
+<div class="container">
+  <div id="warnSdk" class="warn" style="display:none"></div>
+
+  <section id="v-roster">
+    <div class="card">
+      <h4>Plantel</h4>
+      <div style="font-size:13px;color:var(--mut);margin-top:6px">Listado sincronizado con Supabase (tabla <code>players</code>) — ordenado por <strong>apodo</strong>.</div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+        <div style="font-size:13px;color:var(--mut)">Haz clic en una jugadora para ver/editar. Puedes subir foto (se guardará en Storage).</div>
+        <div><button id="btnAddPlayer" class="btn p">Agregar jugadora</button></div>
+      </div>
+
+      <div id="rosterGrid"></div>
+    </div>
+  </section>
+</div>
+
+<div class="footer">Golden Moms · hecho con 💚 lima & azul</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="playerModalBg" aria-hidden="true">
+  <div class="modal" role="dialog">
+    <h3 id="playerModalTitle">Ficha</h3>
+
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:8px">
+      <div style="width:120px;height:120px;border-radius:8px;overflow:hidden;background:#f7f9fb;border:1px dashed var(--b);display:flex;align-items:center;justify-content:center" id="playerPhotoPreview"></div>
+      <div style="flex:1">
+        <div style="margin-bottom:8px">
+          <label>Foto (URL)</label>
+          <input id="p_foto" class="input" placeholder="https://...">
+        </div>
+        <div style="margin-bottom:8px">
+          <label>Foto (archivo)</label>
+          <input id="p_file" type="file" accept="image/*" class="input">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div><label>Nombre completo</label><input id="p_nombre" class="input"></div>
+      <div><label>Apodo</label><input id="p_apodo" class="input"></div>
+    </div>
+
+    <div class="form-row">
+      <div><label>Número camiseta</label><input id="p_numero" class="input" placeholder="ej: 11"></div>
+      <div><label>Rol</label><input id="p_rol" class="input" placeholder="ej: jugadora"></div>
+    </div>
+
+    <div class="form-row">
+      <div><label>Fecha de nacimiento</label><input id="p_nacimiento" type="date" class="input"></div>
+      <div><label>Teléfono emergencia</label><input id="p_emergencia" class="input" placeholder="+56 9 ..."></div>
+    </div>
+
+    <div class="form-row">
+      <div><label>Seguro médico</label><input id="p_seguro" class="input"></div>
+      <div>
+        <label>Equipos (selecciona 1 o más)</label>
+        <div class="teams-list" id="teamsList"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+      <button id="btnDeletePlayer" class="btn" style="display:none">Eliminar</button>
+      <button id="btnClosePlayer" class="btn">Cerrar</button>
+      <button id="btnSavePlayer" class="btn p">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase client (will be loaded dynamically if needed) -->
+<script>
+/* ---------- CONFIG (ya los compartiste) ---------- */
+const SUPA = {
+  url: "https://xglojvvbgaivwbpdxvne.supabase.co",
+  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
+};
+const BUCKET_NAME = 'player-photos'; // ajusta si tu bucket tiene otro nombre
+
+let supa = null;
+
+/* intenta inicializar cliente Supabase (soporta cargar SDK si no existe) */
+async function initSupabase(timeoutMs = 7000){
+  try{
+    // si createClient ya está disponible (global) úsalo
+    if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
+    if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
+
+    // intenta inyectar script desde cdn (jsdelivr) con timeout
+    await new Promise((resolve,reject)=>{
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js';
+      s.async = true;
+      let done=false;
+      const to = setTimeout(()=>{ if(!done){ done=true; reject(new Error('timeout cargando supabase')); }}, timeoutMs);
+      s.onload = ()=>{ if(done) return; done=true; clearTimeout(to); resolve(); };
+      s.onerror = ()=>{ if(done) return; done=true; clearTimeout(to); reject(new Error('error cargando supabase')); };
+      document.head.appendChild(s);
     });
-    calendar.render();
+
+    if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
+    if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
+    throw new Error('SDK cargado pero createClient no disponible');
+  }catch(err){
+    console.warn('initSupabase error:', err);
+    document.getElementById('warnSdk').style.display = 'block';
+    document.getElementById('warnSdk').textContent = 'Error: SDK de Supabase no se cargó (CDN bloqueado). Si usas bloqueadores, desactívalos o descarga supabase.min.js y sirvelo localmente.';
+    supa = null;
+    return null;
+  }
+}
+
+/* ---------- helpers ---------- */
+function pad(n){return String(n).padStart(2,'0');}
+function localDateYMD(d){ if(!d) return ''; const D=new Date(d); return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`; }
+function escapeHtml(s){ if(!s && s !== 0) return ''; return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function parseTeamsField(v){
+  if(!v) return [];
+  if(Array.isArray(v)) return v;
+  if(typeof v === 'string'){
+    try{ const j = JSON.parse(v); if(Array.isArray(j)) return j; }catch(e){}
+    return v.split(',').map(x=>x.trim()).filter(Boolean);
+  }
+  return [];
+}
+function avatarOrPlaceholder(url, name){
+  if(url) return url;
+  const initials = (name||'').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() || 'GM';
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><rect width='100%' height='100%' fill='#f1f5f9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='48' fill='#64748b'>${escapeHtml(initials)}</text></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+/* upload file to storage -> return public URL */
+async function uploadFileToStorage(file){
+  if(!supa) throw new Error('Supabase no inicializado');
+  if(!file) return null;
+  const ext = file.name.split('.').pop();
+  const keyName = `players/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+  const { data, error } = await supa.storage.from(BUCKET_NAME).upload(keyName, file, { upsert: true });
+  if(error){ console.error('upload error', error); throw error; }
+  const { data: urlData } = await supa.storage.from(BUCKET_NAME).getPublicUrl(keyName);
+  return urlData?.publicUrl || null;
+}
+
+/* ---------- roster: fetch, render, modal ---------- */
+const rosterGrid = document.getElementById('rosterGrid');
+const btnAddPlayer = document.getElementById('btnAddPlayer');
+const playerModalBg = document.getElementById('playerModalBg');
+const playerPhotoPreview = document.getElementById('playerPhotoPreview');
+
+const p_foto = document.getElementById('p_foto');
+const p_file = document.getElementById('p_file');
+const p_nombre = document.getElementById('p_nombre');
+const p_apodo = document.getElementById('p_apodo');
+const p_numero = document.getElementById('p_numero');
+const p_rol = document.getElementById('p_rol');
+const p_nacimiento = document.getElementById('p_nacimiento');
+const p_emergencia = document.getElementById('p_emergencia');
+const p_seguro = document.getElementById('p_seguro');
+const teamsList = document.getElementById('teamsList');
+
+const btnClosePlayer = document.getElementById('btnClosePlayer');
+const btnSavePlayer = document.getElementById('btnSavePlayer');
+const btnDeletePlayer = document.getElementById('btnDeletePlayer');
+const playerModalTitle = document.getElementById('playerModalTitle');
+
+const TEAM_OPTIONS = ["Golden Moms","Golden Power","Golden Dream"];
+
+let playersCache = [];
+let currentEditing = null;
+
+/* render teams chips */
+function renderTeamsUI(selected=[]){
+  teamsList.innerHTML = '';
+  for(const t of TEAM_OPTIONS){
+    const label = document.createElement('label'); label.className='team-chip';
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.value=t; cb.style.display='none'; cb.checked = selected.includes(t);
+    const span = document.createElement('span'); span.textContent = t;
+    label.appendChild(cb); label.appendChild(span);
+    label.style.background = cb.checked ? '#eaffd6' : '#fff';
+    label.addEventListener('click', ()=>{ cb.checked = !cb.checked; label.style.background = cb.checked ? '#eaffd6' : '#fff'; });
+    teamsList.appendChild(label);
+  }
+}
+function getSelectedTeams(){ return Array.from(teamsList.querySelectorAll('input[type=checkbox]')).filter(i=>i.checked).map(i=>i.value); }
+
+/* fetch players from supabase */
+async function fetchPlayers(){
+  rosterGrid.innerHTML = '<div class="no-data">Cargando jugadoras…</div>';
+  try{
+    if(!supa){ rosterGrid.innerHTML = '<div class="no-data">SDK Supabase no inicializado.</div>'; return []; }
+    const { data, error } = await supa.from('players').select('*').order('apodo', { ascending: true });
+    if(error){ console.error('fetchPlayers error', error); rosterGrid.innerHTML = '<div class="no-data">Error cargando jugadoras — revisa consola.</div>'; return []; }
+    playersCache = (data || []).map(p => ({ ...p, equipos: parseTeamsField(p.equipos || p.teams || p.equipo) }));
+    renderRoster(playersCache);
+    return playersCache;
+  }catch(err){
+    console.error(err);
+    rosterGrid.innerHTML = '<div class="no-data">Error cargando jugadoras — revisa consola.</div>';
+    return [];
+  }
+}
+
+function renderRoster(list){
+  rosterGrid.innerHTML = '';
+  const sorted = (list || []).slice().sort((a,b)=> (a.apodo||'').toString().toLowerCase().localeCompare((b.apodo||'').toString().toLowerCase()));
+  if(!sorted.length){ rosterGrid.innerHTML = '<div class="no-data">No hay jugadoras registradas.</div>'; return; }
+  for(const p of sorted){
+    const card = document.createElement('div'); card.className='player-card'; card.dataset.id = p.id || '';
+    const av = document.createElement('div'); av.className='player-avatar';
+    const img = document.createElement('img'); img.src = avatarOrPlaceholder(p.foto || p.photo || '', p.apodo || p.nombre); img.alt = p.apodo || p.nombre || '';
+    av.appendChild(img);
+    const ap = document.createElement('div'); ap.className='player-apodo'; ap.textContent = p.apodo || (p.nombre||'').split(' ')[0] || 'Sin apodo';
+    const nm = document.createElement('div'); nm.className='player-nombre'; nm.textContent = p.nombre || '';
+    card.appendChild(av); card.appendChild(ap); card.appendChild(nm);
+    card.addEventListener('click', ()=> openPlayerModal(p));
+    rosterGrid.appendChild(card);
+  }
+}
+
+/* modal helpers */
+function setPhotoPreview(url){
+  playerPhotoPreview.innerHTML = '';
+  const img = document.createElement('img'); img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
+  img.src = avatarOrPlaceholder(url, p_apodo.value || p_nombre.value);
+  playerPhotoPreview.appendChild(img);
+}
+
+function openPlayerModal(player){
+  currentEditing = player ? {...player} : null;
+  playerModalTitle.textContent = player ? `Ficha — ${player.apodo || player.nombre || ''}` : 'Agregar jugadora';
+  btnDeletePlayer.style.display = player && player.id ? '' : 'none';
+
+  p_foto.value = player?.foto || player?.photo || '';
+  p_file.value = '';
+  p_nombre.value = player?.nombre || '';
+  p_apodo.value = player?.apodo || '';
+  p_numero.value = player?.numero_camiseta ?? player?.numero ?? '' ;
+  p_rol.value = player?.rol || '';
+  p_nacimiento.value = player?.fecha_nacimiento ? localDateYMD(player.fecha_nacimiento) : '';
+  p_emergencia.value = player?.Telefono_emergencia || player?.telefono_emergencia || '';
+  p_seguro.value = player?.Seguro_Medico || player?.seguro_medico || '';
+  renderTeamsUI(parseTeamsField(player?.equipos || player?.teams || player?.equipo || []));
+  setPhotoPreview(p_foto.value || '');
+  playerModalBg.style.display = 'flex';
+  playerModalBg.setAttribute('aria-hidden','false');
+}
+
+function closePlayerModal(){ playerModalBg.style.display = 'none'; playerModalBg.setAttribute('aria-hidden','true'); currentEditing = null; }
+
+/* save (insert or update) */
+async function savePlayer(){
+  try{
+    let fotoUrl = (p_foto.value || '').trim() || null;
+    if(p_file.files && p_file.files[0]){
+      try{ fotoUrl = await uploadFileToStorage(p_file.files[0]); p_foto.value = fotoUrl || ''; }catch(e){ alert('Error subiendo la foto. Revisa consola.'); console.error(e); }
+    }
+
+    const payload = {
+      nombre: p_nombre.value.trim(),
+      apodo: p_apodo.value.trim(),
+      numero_camiseta: p_numero.value.trim() ? (isNaN(Number(p_numero.value.trim())) ? null : Number(p_numero.value.trim())) : null,
+      fecha_nacimiento: p_nacimiento.value || null,
+      Telefono_emergencia: p_emergencia.value.trim() || null,
+      Seguro_Medico: p_seguro.value.trim() || null,
+      foto: fotoUrl || null,
+      rol: p_rol.value.trim() || null,
+      equipos: getSelectedTeams()
+    };
+
+    if(!payload.nombre || !payload.apodo){ alert('Completa Nombre y Apodo'); return; }
+    if(!supa){ alert('Supabase no inicializado. Revisa consola.'); return; }
+
+    if(currentEditing && currentEditing.id){
+      const { error } = await supa.from('players').update(payload).eq('id', currentEditing.id);
+      if(error) throw error;
+    } else {
+      const { data, error } = await supa.from('players').insert([payload]).select();
+      if(error) throw error;
+    }
+
+    await fetchPlayers();
+    closePlayerModal();
+  }catch(err){
+    console.error('savePlayer err', err);
+    alert('Error guardando. Revisa consola.');
+  }
+}
+
+/* delete */
+async function deletePlayer(){
+  if(!currentEditing || !currentEditing.id) return;
+  if(!confirm('Eliminar jugadora?')) return;
+  try{
+    const { error } = await supa.from('players').delete().eq('id', currentEditing.id);
+    if(error) throw error;
+    await fetchPlayers();
+    closePlayerModal();
+  }catch(err){ console.error('delete err', err); alert('Error eliminando. Revisa consola.'); }
+}
+
+/* event wiring */
+btnAddPlayer.addEventListener('click', ()=> openPlayerModal(null));
+btnClosePlayer.addEventListener('click', closePlayerModal);
+btnSavePlayer.addEventListener('click', savePlayer);
+btnDeletePlayer.addEventListener('click', deletePlayer);
+playerModalBg.addEventListener('click',(e)=>{ if(e.target === playerModalBg) closePlayerModal(); });
+p_foto.addEventListener('input', ()=> setPhotoPreview(p_foto.value || ''));
+
+/* init */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  await initSupabase();
+  // render teams
+  renderTeamsUI([]);
+  // initial load
+  await fetchPlayers();
 });
+</script>
+</body>
+</html>
