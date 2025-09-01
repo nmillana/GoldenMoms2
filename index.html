@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel (ajustes tipográficos)</title>
+<title>Golden Moms — Panel (evento + esquina)</title>
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -46,7 +46,7 @@ a{color:inherit;text-decoration:none}
 .container{max-width:1200px;margin:14px auto;padding:0 12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px; overflow:visible}
-.card h4{margin:0 0 8px;font-size:14px;font-weight:700} /* títulos de tarjeta: tamaño y negrita iguales (como "Hoy") */
+.card h4{margin:0 0 8px;font-size:14px;font-weight:700}
 .kpi h3{margin:0;color:var(--mut);font-size:var(--sub-size)}
 .kpi .n{font-size:var(--kpi-number-size);font-weight:800}
 .section-note{font-size:var(--sub-size);color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
@@ -142,7 +142,7 @@ a{color:inherit;text-decoration:none}
 .month-list .day.today{ border-color: var(--today-border-color); }
 
 /* small text for "Hoy no hay cumpleaños" */
-.no-birth { font-size: var(--content-size); color: var(--mut); } /* más chica que el texto por defecto */
+.no-birth { font-size: var(--content-size); color: var(--mut); }
 
 /* week separator in list view */
 .month-list .week-sep{
@@ -212,6 +212,36 @@ li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
   .nav .tab{padding:6px 8px;font-size:var(--content-size)}
   .container{padding:0 8px}
   #rosterGrid .card{grid-column:1 / -1 !important}
+}
+
+/* ========== CAMBIO SOLICITADO: botón "+" en esquina superior derecha del panel de eventos ========== */
+/* hace relativo el contenedor para posicionar el botón */
+#v-events .card { position: relative; }
+/* posiciona el botón en la esquina superior derecha, estilo circular, solo signo + */
+#btnNewEventTop {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1;
+  box-shadow: 0 6px 14px #00000011;
+  border: 1px solid #a3e635;
+  background: var(--lime);
+  color: #08300b;
+  cursor: pointer;
+  z-index: 40;
+}
+/* en pantallas pequeñas reducir un poco */
+@media (max-width:420px){
+  #btnNewEventTop { width:36px; height:36px; top:10px; right:10px; font-size:16px; }
 }
 
 footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:16px}
@@ -303,7 +333,9 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="month-title" id="monthTitle">Mes</div>
-          <button class="btn p" id="btnNewEventTop">Nuevo Evento</button>
+          <!-- Nota: el botón se muestra ahora como '+' y está posicionado en la esquina superior derecha.
+               Tiene title para accesibilidad y mantiene la misma id para que el JS existente lo use. -->
+          <button id="btnNewEventTop" class="btn p" title="Nuevo Evento">+</button>
         </div>
       </div>
 
