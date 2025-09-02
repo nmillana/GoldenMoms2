@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Panel (evento + en tarjeta)</title>
+<title>Golden Moms — Panel</title>
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -183,10 +182,39 @@ a{color:inherit;text-decoration:none}
   z-index:0;
 }
 
-/* Modal (hidden by default) */
-.modal-bg{position:fixed;inset:0;background:#0006;display:none;z-index:1000;justify-content:center;align-items:flex-start;padding-top:6vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.modal{width: min(860px, calc(100% - 24px));margin: 0 auto;background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;box-shadow:0 20px 40px #00000022;max-height:90vh; overflow:auto; box-sizing:border-box;}
-.modal h3{margin:0 0 10px;font-size:var(--title-size)}
+/* Modal (oculto por defecto) - centrado y responsive para player modal */
+.modal-bg{
+  position:fixed;
+  inset:0;
+  background:#0006;
+  display:none;
+  z-index:1000;
+  justify-content:center;    /* centrado horizontal */
+  align-items:center;        /* centrado vertical */
+  padding:12px;              /* espacio en mobile */
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Modal container: ancho adaptable, centrado, con max-height para scroll interno */
+.modal{
+  width: min(920px, calc(100% - 32px));
+  margin: 0 auto;
+  background:#fff;
+  border:1px solid var(--b);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 20px 40px #00000022;
+  max-height:calc(100vh - 48px);
+  overflow:auto;
+  box-sizing:border-box;
+}
+
+/* If mobile */
+@media (max-width:520px){
+  .modal{ width: calc(100% - 24px); padding:12px; border-radius:12px; }
+}
+
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:800px){.form-row{grid-template-columns:1fr}}
 .input, select, textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:10px;background:#fff;font-size:var(--content-size)}
@@ -260,6 +288,7 @@ li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
   .roster-apodo{ font-size:15px; }
 }
 
+.meta-small{ font-size:12px; color:var(--mut); margin-top:6px; }
 footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:16px}
 </style>
 </head>
@@ -385,11 +414,10 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 
 <footer style="text-align:center;padding:16px;color:var(--mut);font-size:var(--content-size)">Golden Moms · hecho con 💚 lima & azul</footer>
 
-<!-- MODAL (oculto por defecto) -->
+<!-- MODAL (oculto por defecto) para eventos (mantener original) -->
 <div class="modal-bg" id="modalBg" style="display:none;">
   <div class="modal" role="dialog" aria-modal="true">
     <h3 id="modalTitle">Nuevo evento</h3>
-
     <div class="form-row">
       <div>
         <label>Título</label>
@@ -470,7 +498,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
   </div>
 </div>
 
-<!-- PLAYER modal: sin editar URL de la foto -->
+<!-- PLAYER modal: multi-select equipos + campo Estado + responsive -->
 <div class="modal-bg" id="playerModalBg" style="display:none;">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle">
     <h3 id="playerModalTitle">Jugadora</h3>
@@ -507,45 +535,65 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
         <div class="form-row" style="margin-top:8px">
           <div>
             <label>Equipos</label>
-            <input id="p_equipos" class="input" placeholder="Golden Moms,Dream"/>
+            <!-- multi-select poblado dinámicamente; además un campo para añadir nuevos -->
+            <select id="p_equipos_select" class="input" multiple style="height:110px;padding:8px;overflow:auto"></select>
+            <div style="margin-top:6px">
+              <input id="p_equipos_extra" class="input" placeholder="Agregar equipos (separados por coma), opcional" />
+              <div class="meta-small">Selecciona varios equipos (Ctrl/Cmd+click) o escribe nombres nuevos arriba.</div>
+            </div>
           </div>
+
+          <div>
+            <label>Estado</label>
+            <select id="p_estado" class="input">
+              <option value="">(definir)</option>
+              <option value="activo">activo</option>
+              <option value="inactivo">inactivo</option>
+              <option value="licencia">licencia</option>
+              <option value="sancionado">sancionado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
           <div>
             <label>Fecha y nacimiento</label>
             <input id="p_fecha_nac" class="input" type="date"/>
           </div>
-        </div>
-
-        <div class="form-row" style="margin-top:8px">
           <div>
             <label>Celular</label>
             <input id="p_celular" class="input" placeholder="+56 9 ..."/>
           </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
           <div>
             <label>Tel. emergencia</label>
             <input id="p_telemer" class="input" placeholder="Teléfono de emergencia"/>
           </div>
-        </div>
-
-        <div class="form-row" style="margin-top:8px">
           <div>
             <label>Mail</label>
             <input id="p_email" class="input" placeholder="email@ejemplo.com"/>
           </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
           <div>
             <label>RUT</label>
             <input id="p_rut" class="input" placeholder="RUT"/>
+          </div>
+          <div>
+            <label>Seguro médico</label>
+            <input id="p_seguro" class="input" placeholder="Nombre seguro"/>
           </div>
         </div>
 
         <div class="form-row" style="margin-top:8px">
           <div>
-            <label>Seguro médico</label>
-            <input id="p_seguro" class="input" placeholder="Nombre seguro"/>
-          </div>
-          <div>
             <label>Curso hijos / nota</label>
             <input id="p_curso_hijos" class="input" placeholder="Curso hijos (si aplica)"/>
           </div>
+          <div></div>
         </div>
 
         <div class="modal-actions" style="margin-top:12px">
@@ -559,7 +607,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 </div>
 
 <script>
-/* ---------- Supabase config (USASTE ESTA CLAVE EN TU PRIMER ARCHIVO) ---------- */
+/* ---------- Supabase config ---------- */
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
@@ -1080,14 +1128,14 @@ async function renderMatches(){
   }
 }
 
-/* ---------- PLAYER modal logic ---------- */
+/* ---------- PLAYER modal logic & teams multi-select ---------- */
 const playerModalBg = document.getElementById('playerModalBg');
 const p_img_preview = document.getElementById('p_img_preview');
 const p_apodo = document.getElementById('p_apodo');
 const p_nombre = document.getElementById('p_nombre');
 const p_numero = document.getElementById('p_numero');
 const p_rol = document.getElementById('p_rol');
-const p_equipos = document.getElementById('p_equipos');
+const p_equipos_extra = document.getElementById('p_equipos_extra');
 const p_fecha_nac = document.getElementById('p_fecha_nac');
 const p_celular = document.getElementById('p_celular');
 const p_telemer = document.getElementById('p_telemer');
@@ -1100,6 +1148,51 @@ const btnDeletePlayer = document.getElementById('btnDeletePlayer');
 const btnCancelPlayer = document.getElementById('btnCancelPlayer');
 
 let currentPlayerId = null;
+let teamsCache = null;
+
+/* Load unique teams from players.equipos field and populate select */
+async function loadTeamsOptions(selectedCsv){
+  const sel = document.getElementById('p_equipos_select');
+  sel.innerHTML = '';
+  try{
+    if(!supa){
+      if(selectedCsv){
+        selectedCsv.split(',').map(s=>s.trim()).filter(Boolean).forEach(t=>{
+          const o=document.createElement('option'); o.value=t; o.textContent=t; o.selected=true; sel.appendChild(o);
+        });
+      }
+      return;
+    }
+    if(!teamsCache){
+      const set = new Set();
+      const { data } = await supa.from('players').select('equipos');
+      (data||[]).forEach(r=>{
+        if(r && r.equipos){
+          r.equipos.split(',').map(s=>s.trim()).filter(Boolean).forEach(t=>set.add(t));
+        }
+      });
+      teamsCache = Array.from(set).sort();
+    }
+    teamsCache.forEach(t=>{
+      const o = document.createElement('option');
+      o.value = t; o.textContent = t;
+      sel.appendChild(o);
+    });
+    // mark selected
+    const selected = (selectedCsv||'').split(',').map(s=>s.trim()).filter(Boolean);
+    for(const opt of sel.options){ if(selected.includes(opt.value)) opt.selected = true; }
+    // extras
+    const extras = selected.filter(s=> !teamsCache.includes(s) );
+    p_equipos_extra.value = extras.join(', ');
+  }catch(err){
+    console.warn('loadTeamsOptions error', err);
+    if(selectedCsv){
+      selectedCsv.split(',').map(s=>s.trim()).filter(Boolean).forEach(t=>{
+        const o=document.createElement('option'); o.value=t; o.textContent=t; o.selected=true; sel.appendChild(o);
+      });
+    }
+  }
+}
 
 function openPlayerModal(player){
   currentPlayerId = player.id;
@@ -1109,7 +1202,9 @@ function openPlayerModal(player){
   p_nombre.value = player.nombre || '';
   p_numero.value = player.numero_camiseta != null ? player.numero_camiseta : '';
   p_rol.value = player.rol || '';
-  p_equipos.value = player.equipos || '';
+  const equiposCsv = player.equipos || '';
+  loadTeamsOptions(equiposCsv);
+  document.getElementById('p_estado').value = player.Estado || (player.estado || '') || '';
   p_fecha_nac.value = player.fecha_nacimiento ? isoToLocalDateInput(player.fecha_nacimiento) : '';
   p_celular.value = player.celular || '';
   p_telemer.value = player.Telefono_emergencia || '';
@@ -1120,6 +1215,7 @@ function openPlayerModal(player){
   playerModalBg.style.display = 'flex';
   playerModalBg.setAttribute('aria-hidden','false');
 }
+
 function closePlayerModal(){ 
   playerModalBg.style.display = 'none';
   playerModalBg.setAttribute('aria-hidden','true');
@@ -1132,12 +1228,20 @@ btnSavePlayer.addEventListener('click', async ()=>{
   if(!supa){ alert('No conectado a Supabase.'); return; }
   if(!currentPlayerId){ alert('No hay jugadora seleccionada'); return; }
 
+  const sel = document.getElementById('p_equipos_select');
+  const selected = Array.from(sel.selectedOptions).map(o=>o.value.trim()).filter(Boolean);
+  const extraTxt = p_equipos_extra.value || '';
+  const extra = extraTxt.split(',').map(s=>s.trim()).filter(Boolean);
+  const all = Array.from(new Set([...(selected||[]), ...extra]));
+  const equiposCsv = all.length ? all.join(',') : null;
+
   const payload = {
     apodo: p_apodo.value.trim() || null,
     nombre: p_nombre.value.trim() || null,
     numero_camiseta: p_numero.value !== '' ? (isNaN(Number(p_numero.value)) ? null : Number(p_numero.value)) : null,
     rol: p_rol.value.trim() || null,
-    equipos: p_equipos.value.trim() || null,
+    equipos: equiposCsv,
+    Estado: document.getElementById('p_estado').value || null,
     fecha_nacimiento: p_fecha_nac.value ? new Date(p_fecha_nac.value).toISOString() : null,
     celular: p_celular.value.trim() || null,
     Telefono_emergencia: p_telemer.value.trim() || null,
@@ -1145,7 +1249,6 @@ btnSavePlayer.addEventListener('click', async ()=>{
     Rut: p_rut.value.trim() || null,
     Seguro_Medico: p_seguro.value.trim() || null,
     Curso_hijos: p_curso_hijos.value.trim() || null
-    // foto stays untouched here (you upload in Supabase)
   };
 
   try{
@@ -1213,9 +1316,8 @@ function showView(v){
   if(v==='dash') renderDash();
   if(v==='events') renderMonth();
   if(v==='matches') renderMatches();
-  if(v==='roster') renderDash(); // renderDash contains roster render
+  if(v==='roster') renderDash(); // renderDash refreshes roster
 }
 </script>
 </body>
 </html>
-
