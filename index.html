@@ -380,7 +380,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 
       <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD).</div>
 
-      <!-- REMOVED the horizontal weekdays header as requested -->
+      <!-- <-- horizontal weekdays removed as requested --> 
 
       <div id="monthGrid" class="month-grid"></div>
       <div id="monthList" class="month-list"></div>
@@ -499,7 +499,8 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 
     <div style="display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start">
       <div>
-        <img id="p_img_preview" src="https://via.placeholder.com/160x160.png?text=Sin+foto" alt="foto" style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:1px solid var(--b)" />
+        <!-- inline SVG data URI placeholder to avoid external request failures -->
+        <img id="p_img_preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><rect fill='%23f1f5f9' width='100%25' height='100%25'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='14' fill='%2364748b'>Sin foto</text></svg>" alt="foto" style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:1px solid var(--b)" />
         <div class="meta-small">La foto se edita directamente en Supabase (manual)</div>
       </div>
 
@@ -1182,13 +1183,13 @@ async function loadTeamsOptions(selectedCsv){
   }catch(err){
     console.warn('loadTeamsOptions error', err);
     // fallback: create options from defaults + selectedCsv
-    const arr = Array.from(new Set([...DEFAULT_TEAMS, ...(selectedCsv?selectedCsv.split(',').map(x=>x.trim()):[]))])).sort();
-    arr.forEach(t=>{
+    const fallbackArr = Array.from(new Set([ ...DEFAULT_TEAMS, ...(selectedCsv ? selectedCsv.split(',').map(x=>x.trim()) : []) ])).sort();
+    fallbackArr.forEach(t=>{
       const o = document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o);
     });
     const selected = (selectedCsv||'').split(',').map(s=>s.trim()).filter(Boolean);
     for(const opt of sel.options){ if(selected.includes(opt.value)) opt.selected = true; }
-    const extras = selected.filter(s=> !arr.includes(s) );
+    const extras = selected.filter(s=> !fallbackArr.includes(s) );
     p_equipos_extra.value = extras.join(', ');
   }
 }
@@ -1251,7 +1252,7 @@ async function loadEnums(selectedEstado, selectedRol){
 function openPlayerModal(player){
   currentPlayerId = player.id;
   document.getElementById('playerModalTitle').textContent = player.apodo ? `${player.apodo} (${player.nombre || ''})` : (player.nombre || 'Jugadora');
-  p_img_preview.src = player.foto || 'https://via.placeholder.com/160x160.png?text=Sin+foto';
+  p_img_preview.src = player.foto || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><rect fill='%23f1f5f9' width='100%25' height='100%25'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='14' fill='%2364748b'>Sin foto</text></svg>";
   p_apodo.value = player.apodo || '';
   p_nombre.value = player.nombre || '';
   p_numero.value = player.numero_camiseta != null ? player.numero_camiseta : '';
