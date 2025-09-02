@@ -70,10 +70,6 @@ a{color:inherit;text-decoration:none}
   z-index:0;
 }
 
-/* weekdays header */
-.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:var(--month-grid-gap);margin-bottom:8px}
-.weekdays div{font-weight:700;color:var(--blue);text-align:center;font-size:var(--content-size)}
-
 /* day cell */
 .day{
   min-height:90px;
@@ -384,9 +380,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 
       <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD).</div>
 
-      <div class="weekdays">
-        <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
-      </div>
+      <!-- REMOVED the horizontal weekdays header as requested -->
 
       <div id="monthGrid" class="month-grid"></div>
       <div id="monthList" class="month-list"></div>
@@ -528,7 +522,8 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
           </div>
           <div>
             <label>Rol / Posición</label>
-            <input id="p_rol" class="input" placeholder="jugadora / arquera / lateral"/>
+            <!-- rol ahora select (se popula dinámicamente o con fallback) -->
+            <select id="p_rol" class="input"></select>
           </div>
         </div>
 
@@ -545,13 +540,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 
           <div>
             <label>Estado</label>
-            <select id="p_estado" class="input">
-              <option value="">(definir)</option>
-              <option value="activo">activo</option>
-              <option value="inactivo">inactivo</option>
-              <option value="licencia">licencia</option>
-              <option value="sancionado">sancionado</option>
-            </select>
+            <select id="p_estado" class="input"></select>
           </div>
         </div>
 
@@ -1128,7 +1117,7 @@ async function renderMatches(){
   }
 }
 
-/* ---------- PLAYER modal logic & teams multi-select ---------- */
+/* ---------- PLAYER modal logic & teams multi-select & enums ---------- */
 const playerModalBg = document.getElementById('playerModalBg');
 const p_img_preview = document.getElementById('p_img_preview');
 const p_apodo = document.getElementById('p_apodo');
@@ -1150,30 +1139,36 @@ const btnCancelPlayer = document.getElementById('btnCancelPlayer');
 let currentPlayerId = null;
 let teamsCache = null;
 
-/* Load unique teams from players.equipos field and populate select */
+/* Default teams (y luego agregamos los que existan en la DB) */
+const DEFAULT_TEAMS = ['Golden Moms','Golden Dream','Golden Power'];
+const DEFAULT_ESTADOS = ['activo','reposo'];
+const DEFAULT_ROLES = ['jugadora','capitana','dt','admin'];
+
+/* Load unique teams from players.equipos field and populate select
+   merged with DEFAULT_TEAMS (so the three requested teams are always present)
+*/
 async function loadTeamsOptions(selectedCsv){
   const sel = document.getElementById('p_equipos_select');
   sel.innerHTML = '';
   try{
-    if(!supa){
-      if(selectedCsv){
-        selectedCsv.split(',').map(s=>s.trim()).filter(Boolean).forEach(t=>{
-          const o=document.createElement('option'); o.value=t; o.textContent=t; o.selected=true; sel.appendChild(o);
+    // build set starting with defaults
+    let set = new Set(DEFAULT_TEAMS);
+    if(supa){
+      if(!teamsCache){
+        const { data } = await supa.from('players').select('equipos');
+        (data||[]).forEach(r=>{
+          if(r && r.equipos){
+            r.equipos.split(',').map(s=>s.trim()).filter(Boolean).forEach(t=>set.add(t));
+          }
         });
+        teamsCache = Array.from(set).sort();
+      } else {
+        teamsCache.forEach(t=>set.add(t));
       }
-      return;
     }
-    if(!teamsCache){
-      const set = new Set();
-      const { data } = await supa.from('players').select('equipos');
-      (data||[]).forEach(r=>{
-        if(r && r.equipos){
-          r.equipos.split(',').map(s=>s.trim()).filter(Boolean).forEach(t=>set.add(t));
-        }
-      });
-      teamsCache = Array.from(set).sort();
-    }
-    teamsCache.forEach(t=>{
+    // final array
+    const arr = Array.from(set).sort();
+    arr.forEach(t=>{
       const o = document.createElement('option');
       o.value = t; o.textContent = t;
       sel.appendChild(o);
@@ -1181,16 +1176,75 @@ async function loadTeamsOptions(selectedCsv){
     // mark selected
     const selected = (selectedCsv||'').split(',').map(s=>s.trim()).filter(Boolean);
     for(const opt of sel.options){ if(selected.includes(opt.value)) opt.selected = true; }
-    // extras
-    const extras = selected.filter(s=> !teamsCache.includes(s) );
+    // extras (items in selected but not in arr)
+    const extras = selected.filter(s=> !arr.includes(s) );
     p_equipos_extra.value = extras.join(', ');
   }catch(err){
     console.warn('loadTeamsOptions error', err);
-    if(selectedCsv){
-      selectedCsv.split(',').map(s=>s.trim()).filter(Boolean).forEach(t=>{
-        const o=document.createElement('option'); o.value=t; o.textContent=t; o.selected=true; sel.appendChild(o);
+    // fallback: create options from defaults + selectedCsv
+    const arr = Array.from(new Set([...DEFAULT_TEAMS, ...(selectedCsv?selectedCsv.split(',').map(x=>x.trim()):[]))])).sort();
+    arr.forEach(t=>{
+      const o = document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o);
+    });
+    const selected = (selectedCsv||'').split(',').map(s=>s.trim()).filter(Boolean);
+    for(const opt of sel.options){ if(selected.includes(opt.value)) opt.selected = true; }
+    const extras = selected.filter(s=> !arr.includes(s) );
+    p_equipos_extra.value = extras.join(', ');
+  }
+}
+
+/* Load Estado and Rol options from DB (reads distinct values from players) with fallbacks */
+async function loadEnums(selectedEstado, selectedRol){
+  const estadoSel = document.getElementById('p_estado');
+  const rolSel = document.getElementById('p_rol');
+  estadoSel.innerHTML = '';
+  rolSel.innerHTML = '';
+  try{
+    let estadosSet = new Set(DEFAULT_ESTADOS);
+    let rolesSet = new Set(DEFAULT_ROLES);
+    if(supa){
+      // fetch values for Estado and rol (may contain duplicates)
+      const { data } = await supa.from('players').select('Estado, rol');
+      (data||[]).forEach(r=>{
+        if(r && r.Estado) estadosSet.add(r.Estado);
+        if(r && r.rol) rolesSet.add(r.rol);
       });
     }
+    const estadosArr = Array.from(estadosSet).filter(Boolean).sort();
+    const rolesArr = Array.from(rolesSet).filter(Boolean).sort();
+    // populate selects
+    const emptyOpt = document.createElement('option'); emptyOpt.value = ''; emptyOpt.textContent = '(definir)';
+    estadoSel.appendChild(emptyOpt.cloneNode(true));
+    estadosArr.forEach(e=>{
+      const o = document.createElement('option'); o.value = e; o.textContent = e;
+      if(selectedEstado && selectedEstado === e) o.selected = true;
+      estadoSel.appendChild(o);
+    });
+    rolSel.appendChild(emptyOpt.cloneNode(true));
+    rolesArr.forEach(r=>{
+      const o = document.createElement('option'); o.value = r; o.textContent = r;
+      if(selectedRol && selectedRol === r) o.selected = true;
+      rolSel.appendChild(o);
+    });
+    // if selected not present in arrays, set it as extra option
+    if(selectedEstado && !estadosArr.includes(selectedEstado)){
+      const o = document.createElement('option'); o.value = selectedEstado; o.textContent = selectedEstado; o.selected=true;
+      estadoSel.appendChild(o);
+    }
+    if(selectedRol && !rolesArr.includes(selectedRol)){
+      const o = document.createElement('option'); o.value = selectedRol; o.textContent = selectedRol; o.selected=true;
+      rolSel.appendChild(o);
+    }
+  }catch(err){
+    console.warn('loadEnums error', err);
+    // fallback: defaults
+    const estadosArr = DEFAULT_ESTADOS;
+    const rolesArr = DEFAULT_ROLES;
+    const emptyOpt = document.createElement('option'); emptyOpt.value = ''; emptyOpt.textContent = '(definir)';
+    estadoSel.appendChild(emptyOpt.cloneNode(true));
+    estadosArr.forEach(e=>{ const o=document.createElement('option'); o.value=e; o.textContent=e; if(selectedEstado===e) o.selected=true; estadoSel.appendChild(o); });
+    rolSel.appendChild(emptyOpt.cloneNode(true));
+    rolesArr.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; if(selectedRol===r) o.selected=true; rolSel.appendChild(o); });
   }
 }
 
@@ -1201,10 +1255,10 @@ function openPlayerModal(player){
   p_apodo.value = player.apodo || '';
   p_nombre.value = player.nombre || '';
   p_numero.value = player.numero_camiseta != null ? player.numero_camiseta : '';
-  p_rol.value = player.rol || '';
+  // cargar rol/estado y equipos dinámicamente
+  loadEnums(player.Estado || player.estado || '', player.rol || '');
   const equiposCsv = player.equipos || '';
   loadTeamsOptions(equiposCsv);
-  document.getElementById('p_estado').value = player.Estado || (player.estado || '') || '';
   p_fecha_nac.value = player.fecha_nacimiento ? isoToLocalDateInput(player.fecha_nacimiento) : '';
   p_celular.value = player.celular || '';
   p_telemer.value = player.Telefono_emergencia || '';
@@ -1212,6 +1266,7 @@ function openPlayerModal(player){
   p_rut.value = player.Rut || '';
   p_seguro.value = player.Seguro_Medico || '';
   p_curso_hijos.value = player.Curso_hijos || '';
+  // open modal centered
   playerModalBg.style.display = 'flex';
   playerModalBg.setAttribute('aria-hidden','false');
 }
@@ -1239,7 +1294,7 @@ btnSavePlayer.addEventListener('click', async ()=>{
     apodo: p_apodo.value.trim() || null,
     nombre: p_nombre.value.trim() || null,
     numero_camiseta: p_numero.value !== '' ? (isNaN(Number(p_numero.value)) ? null : Number(p_numero.value)) : null,
-    rol: p_rol.value.trim() || null,
+    rol: document.getElementById('p_rol').value || null,
     equipos: equiposCsv,
     Estado: document.getElementById('p_estado').value || null,
     fecha_nacimiento: p_fecha_nac.value ? new Date(p_fecha_nac.value).toISOString() : null,
