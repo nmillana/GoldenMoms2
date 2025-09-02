@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Golden Moms — Plantel (compact)</title>
+<title>Golden Moms — Plantel (compact) - routing</title>
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -29,7 +29,6 @@ a{color:inherit;text-decoration:none}
 /* Top bar */
 .top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;overflow:visible;gap:12px}
 .brand{display:flex;gap:10px;align-items:center;flex:0 0 auto;}
-/* Logo wrapper: logo + team name stacked (consumes minimal width so nav doesn't wrap) */
 .brand .logo-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:0 0 56px;width:56px}
 .brand img{width:44px;height:44px;border-radius:50%;border:2px solid var(--blue);display:block}
 .brand .team-name{font-size:11px;line-height:1;color:var(--lime);font-weight:800;text-align:center;margin-top:0;}
@@ -51,7 +50,6 @@ a{color:inherit;text-decoration:none}
 #rosterGrid{
   display:grid;
   gap:10px;
-  /* default responsive grid: try to fit small cards */
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
 }
 
@@ -133,15 +131,27 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 
   <div style="display:flex;align-items:center;gap:12px">
     <div class="nav" role="tablist" aria-label="Navegación">
-      <button class="tab" data-view="dash">Dashboard</button>
-      <button class="tab" data-view="events">Eventos</button>
-      <button class="tab active" data-view="roster">Plantel</button>
-      <button class="tab" data-view="matches">Partidos</button>
+      <!-- Usamos enlaces hash para que sean linkables/compartibles -->
+      <a class="tab" href="#/dash" data-view="dash">Dashboard</a>
+      <a class="tab" href="#/events" data-view="events">Eventos</a>
+      <a class="tab active" href="#/roster" data-view="roster">Plantel</a>
+      <a class="tab" href="#/matches" data-view="matches">Partidos</a>
     </div>
   </div>
 </div>
 
 <div class="container">
+
+  <!-- VIEWS: cada section tiene id v-{view} -->
+  <!-- DASH -->
+  <section id="v-dash" style="display:none">
+    <div class="card"><h4>Dashboard (placeholder)</h4><div class="section-note">Resumen rápido</div></div>
+  </section>
+
+  <!-- EVENTS -->
+  <section id="v-events" style="display:none">
+    <div class="card"><h4>Eventos (placeholder)</h4><div class="section-note">Calendario</div></div>
+  </section>
 
   <!-- ROSTER / PLANTEL -->
   <section id="v-roster">
@@ -160,20 +170,22 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
     </div>
   </section>
 
+  <!-- MATCHES placeholder -->
+  <section id="v-matches" style="display:none">
+    <div class="card"><h4>Partidos</h4><div class="section-note">Aquí irán los partidos</div></div>
+  </section>
+
 </div>
 
 <footer style="text-align:center;padding:16px;color:var(--mut);font-size:var(--content-size)">Golden Moms · hecho con 💚 lima & azul</footer>
 
-<!-- Player modal -->
+<!-- Player modal (igual que antes) -->
 <div class="modal-bg" id="playerModalBg" style="display:none;">
   <div class="modal" role="dialog" aria-modal="true" id="playerModal">
     <h3 id="playerModalTitle">Ficha de jugadora</h3>
-
     <div style="display:flex;gap:12px;flex-direction:column">
       <div class="player-form-row" style="margin-bottom:10px">
-        <div class="player-photo-preview" id="playerPhotoPreview" style="width:120px;height:120px;border-radius:8px;overflow:hidden;background:#f7f9fb;border:1px dashed var(--b);display:flex;align-items:center;justify-content:center">
-          <!-- preview img -->
-        </div>
+        <div class="player-photo-preview" id="playerPhotoPreview" style="width:120px;height:120px;border-radius:8px;overflow:hidden;background:#f7f9fb;border:1px dashed var(--b);display:flex;align-items:center;justify-content:center"></div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <label>Foto (URL)</label>
           <input id="p_foto" class="input" placeholder="https://.../foto.jpg">
@@ -213,9 +225,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
         </div>
         <div>
           <label>Equipos (selecciona 1 o más)</label>
-          <div class="teams-list" id="teamsList" style="display:flex;gap:8px;flex-wrap:wrap">
-            <!-- chips inserted by JS -->
-          </div>
+          <div class="teams-list" id="teamsList" style="display:flex;gap:8px;flex-wrap:wrap"></div>
         </div>
       </div>
 
@@ -230,7 +240,70 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 </div>
 
 <script>
-/* ---------- Supabase config (same as before) ---------- */
+/* ---------- Routing por hash: lee y aplica view desde #/view ---------- */
+function getHashView(){
+  const h = (location.hash || '#/roster').replace(/^#\/?/, '');
+  return h || 'roster';
+}
+function setActiveTabForView(view){
+  document.querySelectorAll('.nav .tab').forEach(el=>{
+    // si es <a href="#/view"> o tiene data-view
+    const v = el.dataset.view || (el.getAttribute('href') || '').replace(/^#\/?/, '');
+    if(v === view || (v === '' && view==='dash')) el.classList.add('active'); else el.classList.remove('active');
+  });
+}
+function showView(view){
+  // normaliza nombres: si viene 'dash' 'events' 'roster' 'matches' -> id v-{view} or v-matches
+  const allowed = ['dash','events','roster','matches'];
+  if(!allowed.includes(view)) view = 'roster';
+  // esconder todo y mostrar elegido
+  allowed.forEach(v=>{
+    const sec = document.getElementById('v-'+v);
+    if(sec) sec.style.display = (v === view) ? 'block' : 'none';
+  });
+  setActiveTabForView(view);
+}
+
+/* Cuando el hash cambia, actualizamos vista */
+window.addEventListener('hashchange', ()=> {
+  const view = getHashView();
+  showView(view);
+});
+
+/* Inicializamos la vista segun hash (o por defecto) */
+document.addEventListener('DOMContentLoaded', ()=> {
+  // Si las pestañas son <a href="#/x"> el navegador ya puso el hash al hacer click; showView respeta eso
+  const initial = getHashView();
+  // si el hash no existe, ponemos por defecto roster
+  if(!location.hash) location.replace('#/roster');
+  showView(initial);
+
+  // --- ahora arranque app normal (supabase + roster) ---
+  initSupabase().then(()=> {
+    renderTeamsList([]);
+    fetchPlayers().then(renderRoster);
+  });
+});
+
+/* También hacemos que los clicks en tabs cambien el hash (por si usas botones en vez de <a>) */
+document.querySelectorAll('.nav .tab').forEach(el=>{
+  el.addEventListener('click', (e)=>{
+    // si es <a> no queremos prevenir la navegación natural (que ya cambia hash),
+    // pero para botones o elementos sin href forzamos el hash:
+    const href = el.getAttribute('href');
+    const view = el.dataset.view || (href ? href.replace(/^#\/?/, '') : null);
+    if(view){
+      if(location.hash !== '#/'+view) {
+        location.hash = '#/'+view;
+      } else {
+        // si ya estamos en el mismo hash, forzamos showView para refrescar
+        showView(view);
+      }
+    }
+  });
+});
+
+/* ---------- Supabase config (igual que antes) ---------- */
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
@@ -407,14 +480,14 @@ function openPlayerModal(player=null){
 
 function closePlayerModal(){ playerModalBg.style.display = 'none'; currentEditingPlayer = null; }
 
-btnClosePlayer.addEventListener('click', ()=> closePlayerModal());
+document.getElementById('btnClosePlayer').addEventListener('click', ()=> closePlayerModal());
 playerModalBg.addEventListener('click',(e)=>{ if(e.target===playerModalBg) closePlayerModal(); });
 document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closePlayerModal(); });
 
 p_foto.addEventListener('input', ()=> setPhotoPreview(p_foto.value || ''));
 
 /* Save player (local fallback or supabase) */
-btnSavePlayer.addEventListener('click', async ()=>{
+document.getElementById('btnSavePlayer').addEventListener('click', async ()=>{ 
   const payload = {
     nombre: p_nombre.value.trim(),
     apodo: p_apodo.value.trim(),
@@ -460,7 +533,7 @@ btnSavePlayer.addEventListener('click', async ()=>{
 });
 
 /* delete */
-btnDeletePlayer.addEventListener('click', async ()=>{
+document.getElementById('btnDeletePlayer').addEventListener('click', async ()=>{ 
   if(!currentEditingPlayer || !currentEditingPlayer.id) return;
   if(!confirm('Eliminar jugadora?')) return;
   if(supa){
@@ -484,8 +557,8 @@ btnAddPlayer.addEventListener('click', ()=> openPlayerModal(null));
 
 /* ---------- init: seed local players if no supabase ---------- */
 document.addEventListener('DOMContentLoaded', async () => {
-  await initSupabase();
-  if(!supa && localPlayersCache.length===0){
+  // seed minimal local data only if supabase no responde
+  if(localPlayersCache.length===0){
     localPlayersCache = [
       { id:'local-1', nombre:'Alejandra Vasquez', apodo:'Ale V', numero:'11', fecha_nacimiento:'1990-10-09', equipos:['Golden Moms'], rol:'Delantera', seguro_medico:'Isapre ABC', telefono_emergencia:'+56 9 1234 5678', foto:'' },
       { id:'local-2', nombre:'Andre Perez', apodo:'Andre', numero:'7', fecha_nacimiento:'1992-05-22', equipos:['Golden Moms','Golden Power'], rol:'Mediocampista', seguro_medico:'Isapre XYZ', telefono_emergencia:'+56 9 8765 4321', foto:'' },
@@ -493,13 +566,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       { id:'local-4', nombre:'Camila R', apodo:'Cami', numero:'10', fecha_nacimiento:'1991-07-14', equipos:['Golden Moms'], rol:'Portera', seguro_medico:'Isapre ABC', telefono_emergencia:'+56 9 4444 3333', foto:'' }
     ];
   }
-
-  // render teams UI template
-  renderTeamsList([]);
-
-  // initial fetch+render
-  const players = await fetchPlayers();
-  renderRoster(players);
 });
 </script>
 </body>
