@@ -51,7 +51,15 @@ a{color:inherit;text-decoration:none}
 .kpi .n{font-size:var(--kpi-number-size);font-weight:800}
 .section-note{font-size:var(--sub-size);color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
 
-/* Calendar */
+/* Player card specifics */
+.player-card{display:flex;gap:12px;align-items:center;padding:12px}
+.player-photo{width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid var(--b);flex:0 0 64px;background:#f1f5f9;display:inline-block}
+.player-info{flex:1;min-width:0}
+.player-info .name{font-weight:800}
+.player-info .meta{font-size:12px;color:var(--mut);margin-top:6px}
+.player-number{background:var(--blue);color:#fff;border-radius:999px;padding:6px 10px;font-weight:800;margin-left:8px;display:inline-block}
+
+/* Calendar & list etc (kept as before) */
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
 .month-title{font-weight:800;font-size:var(--title-size)}
 .month-nav{display:flex;gap:6px}
@@ -83,7 +91,7 @@ a{color:inherit;text-decoration:none}
   border:1px solid var(--b);
   border-radius:12px;
   padding:12px;
-  position:relative; /* important: relative to place + inside */
+  position:relative;
   display:flex;
   flex-direction:column;
   gap:6px;
@@ -147,43 +155,6 @@ a{color:inherit;text-decoration:none}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
 
-/* Month list fallback (mobile) */
-.month-list{display:none;flex-direction:column;gap:var(--month-list-gap)}
-.month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto;position:relative}
-.day-date{
-  min-width:52px;
-  border-radius:8px;
-  background:#f1f5f9;
-  padding:6px 8px;
-  text-align:center;
-  font-weight:700;
-  color:var(--mut);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:2px;
-  line-height:1;
-  font-size:var(--day-bold-size);
-}
-.day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
-.day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
-
-/* today in list view: color del borde (si aplica) */
-.month-list .day.today{ border-color: var(--today-border-color); }
-
-/* small text for "Hoy no hay cumpleaños" */
-.no-birth { font-size: var(--content-size); color: var(--mut); }
-
-/* week separator in list view */
-.month-list .week-sep{
-  height: var(--week-sep-height);
-  background: var(--week-sep-color);
-  border-radius: 4px;
-  margin: 10px 0;
-  z-index:0;
-}
-
 /* Modal (hidden by default) */
 .modal-bg{position:fixed;inset:0;background:#0006;display:none;z-index:1000;justify-content:center;align-items:flex-start;padding-top:6vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal{width: min(860px, calc(100% - 24px));margin: 0 auto;background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;box-shadow:0 20px 40px #00000022;max-height:90vh; overflow:auto; box-sizing:border-box;}
@@ -225,8 +196,13 @@ li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
   }
 }
 
+/* Roster-specific grid card sizing (desktop) */
+#rosterGrid .card{ grid-column: span 3; display:flex; align-items:center; gap:12px; padding:12px }
+
+/* small screens: roster cards full width */
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}
+  #rosterGrid .card{ grid-column: 1 / -1 !important; }
   .month-grid, .weekdays{gap:6px}
   .day{min-height:100px;padding:6px}
   .kpi { padding:12px 10px; }
@@ -292,30 +268,25 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
       </div>
     </div>
 
-    <!-- REORDEN: Hoy -> Cumpleaños Hoy -> Eventos de la semana -> Próximos cumpleaños -->
     <div class="grid cards-dashboard" style="margin-top:12px;grid-template-columns:repeat(12,1fr);gap:12px">
-      <!-- 1) Hoy -->
       <div class="card card-hoy" style="grid-column:span 4">
         <h4>📅 Hoy</h4>
         <div class="section-note">Eventos que ocurren hoy (fecha local).</div>
         <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
       </div>
 
-      <!-- 2) Cumpleaños — Hoy -->
       <div class="card card-birth-today" style="grid-column:span 4">
         <h4>🎂 Cumpleaños — Hoy</h4>
         <div class="section-note">Personas del plantel que cumplen hoy</div>
         <div id="birthToday" style="margin-top:8px">—</div>
       </div>
 
-      <!-- 3) Eventos de la semana (ocupa toda la fila) -->
       <div class="card card-week" style="grid-column:span 12;margin-top:12px">
         <h4>📅 Eventos de la semana</h4>
         <div class="section-note">Eventos de la semana actual (lunes a domingo).</div>
         <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
       </div>
 
-      <!-- 4) Próximos cumpleaños -->
       <div class="card card-birth-next" style="grid-column:span 4;margin-top:0">
         <h4>🎉 Próximos cumpleaños</h4>
         <div class="section-note">Lista con los próximos 5 cumpleaños.</div>
@@ -335,7 +306,6 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="month-title" id="monthTitle">Mes</div>
-          <!-- Botón "Nuevo Evento" en su lugar original (píldora verde) -->
           <button class="btn p" id="btnNewEventTop">Nuevo Evento</button>
         </div>
       </div>
@@ -463,32 +433,14 @@ const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
 };
-let supa = null;
-async function initSupabase(timeoutMs = 8000){
-  try{
-    if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
-    if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
-    await new Promise((resolve,reject)=>{
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js';
-      s.async = true;
-      let done=false;
-      const to=setTimeout(()=>{ if(!done){ done=true; reject(new Error('timeout cargando supabase')); }}, timeoutMs);
-      s.onload=()=>{ if(done) return; done=true; clearTimeout(to); resolve(); };
-      s.onerror=()=>{ if(done) return; done=true; clearTimeout(to); reject(new Error('error cargando supabase')); };
-      document.head.appendChild(s);
-    });
-    if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); return supa; }
-    if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); return supa; }
-    throw new Error('SDK cargado pero no se encontró createClient');
-  }catch(err){ console.error('initSupabase error:', err); supa = null; return null; }
-}
+const supa = supabase.createClient(SUPA.url, SUPA.key);
 
 /* ---------- Helpers ---------- */
 function pad(n){return n.toString().padStart(2,'0');}
 function localInputToISOWithOffset(inp){ if(!inp) return null; const [d,t]=inp.split('T'); const offMin = -new Date().getTimezoneOffset(); const sign = offMin>=0?'+':'-'; const abs=Math.abs(offMin); const oh=pad(Math.floor(abs/60)); const om=pad(abs%60); return `${d}T${t}:00${sign}${oh}:${om}`; }
 function isoToLocalInput(iso){ if(!iso) return ''; const d=new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
 function localDateYMD(d){ const D=new Date(d); return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`; }
+function calcAgeFromIso(iso){ if(!iso) return null; const b=new Date(iso); const today=new Date(); let age = today.getFullYear() - b.getFullYear(); const m = today.getMonth() - b.getMonth(); if(m<0 || (m===0 && today.getDate() < b.getDate())) age--; return age; }
 
 /* ---------- DOM refs & modal handlers ---------- */
 const modalBg = document.getElementById('modalBg');
@@ -556,7 +508,7 @@ modalBg.addEventListener('click', (e) => { if (e.target === modalBg) closeModal(
 document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
 btnCancel.addEventListener('click', ()=> closeModal());
 
-btnDelete.addEventListener('click', async ()=>{
+btnDelete.addEventListener('click', async ()=>{ 
   if(!editingId) return;
   if(!confirm('¿Eliminar este evento?')) return;
   if(!supa){ alert('No conectado a Supabase.'); closeModal(); return; }
@@ -895,25 +847,7 @@ async function renderDash(){
     });
     if(wEl.innerHTML.trim()==='') wEl.innerHTML = '<div style="color:var(--mut)">No hay eventos esta semana</div>';
 
-    const rosterGrid = document.getElementById('rosterGrid'); rosterGrid.innerHTML = '';
-    try{
-      if(supa){
-        const { data:playersList } = await supa.from('players').select('*').order('nombre',{ascending:true});
-        if(playersList && playersList.length){
-          playersList.forEach(p=>{
-            const c = document.createElement('div');
-            c.className = 'card';
-            c.style.gridColumn = 'span 3';
-            c.innerHTML = `<div style="font-weight:700">${p.apodo||p.nombre||'Sin nombre'}</div><div style="font-size:13px;color:var(--mut)">${p.posicion||''} ${p.edad? '— '+p.edad+' años':''}</div>`;
-            rosterGrid.appendChild(c);
-          });
-        } else rosterGrid.innerHTML = '<div style="color:var(--mut)">No hay jugadores registrados</div>';
-      } else rosterGrid.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pudo cargar plantel</div>';
-    }catch(err){
-      console.warn('Error cargando roster', err);
-      rosterGrid.innerHTML = '<div style="color:var(--mut)">Error cargando plantel</div>';
-    }
-
+    // Roster small summary is handled above; full roster view has its own renderer
   }catch(err){
     console.error(err);
     document.getElementById('birthToday').innerHTML = '<div class="no-birth">Hoy no hay cumpleaños</div>';
@@ -965,13 +899,73 @@ async function renderMatches(){
   }
 }
 
+/* ---------- ROSTER renderer (new) ---------- */
+async function renderRoster(){
+  const rosterGrid = document.getElementById('rosterGrid');
+  rosterGrid.innerHTML = '<div style="color:var(--mut)">Cargando plantel…</div>';
+  try{
+    if(!supa){ rosterGrid.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pudo cargar plantel</div>'; return; }
+    const { data:playersList, error } = await supa.from('players').select('*').order('apodo',{ascending:true});
+    if(error){ console.error('Error cargando players', error); rosterGrid.innerHTML = '<div style="color:var(--mut)">Error cargando plantel</div>'; return; }
+    if(!playersList || playersList.length===0){ rosterGrid.innerHTML = '<div style="color:var(--mut)">No hay jugadores registrados</div>'; return; }
+
+    rosterGrid.innerHTML = '';
+    playersList.forEach(p=>{
+      const c = document.createElement('div');
+      c.className = 'card player-card';
+
+      // photo
+      const img = document.createElement('img');
+      img.className = 'player-photo';
+      img.src = p.foto || 'https://via.placeholder.com/160x160.png?text=Sin+foto';
+      img.alt = p.apodo || p.nombre || 'Jugador';
+
+      // info
+      const info = document.createElement('div');
+      info.className = 'player-info';
+      const nameLine = document.createElement('div');
+      nameLine.innerHTML = `<span class="name">${p.apodo || p.nombre || 'Sin nombre'}</span> <span style="color:var(--mut);font-weight:600">(${p.nombre? ' '+p.nombre.split(' ')[0] : ''})</span>`;
+      // number & role line
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      let numberTxt = (p.numero_camiseta != null && p.numero_camiseta !== '') ? `<span class="player-number">${p.numero_camiseta}</span>` : '';
+      const roleTxt = p.rol ? `<strong>${p.rol}</strong>` : '';
+      const teamTxt = p.equipos ? ` — ${p.equipos}` : '';
+      meta.innerHTML = `${roleTxt}${teamTxt} ${numberTxt}`;
+
+      // contact line
+      const contact = document.createElement('div');
+      contact.className = 'meta';
+      const age = p.fecha_nacimiento ? (calcAgeFromIso(p.fecha_nacimiento) !== null ? `${calcAgeFromIso(p.fecha_nacimiento)} años` : '') : '';
+      contact.innerHTML = `${age ? 'Edad: '+age+' — ' : ''}${p.celular? 'Cel: '+p.celular : ''}${p.Telefono_emergencia? ' — Emerg: '+p.Telefono_emergencia : ''}`;
+
+      // bottom line (email, seguro, curso_hijos, rut)
+      const bottom = document.createElement('div');
+      bottom.className = 'meta';
+      bottom.style.marginTop = '6px';
+      bottom.innerHTML = `${p.email? '✉️ '+p.email+' ' : ''}${p.Seguro_Medico? ' — 🩺 '+p.Seguro_Medico : ''}${p.Curso_hijos? ' — Curso hijos: '+p.Curso_hijos : ''}${p.Rut? ' — RUT: '+p.Rut : ''}`;
+
+      info.appendChild(nameLine);
+      info.appendChild(meta);
+      info.appendChild(contact);
+      info.appendChild(bottom);
+
+      c.appendChild(img);
+      c.appendChild(info);
+
+      rosterGrid.appendChild(c);
+    });
+  }catch(err){
+    console.error('renderRoster error', err);
+    rosterGrid.innerHTML = '<div style="color:var(--mut)">Error cargando plantel</div>';
+  }
+}
+
 /* ---------- init ---------- */
 document.addEventListener('DOMContentLoaded', async () => {
-  await initSupabase();
-
   // Nav buttons wiring + persist view on click
   document.querySelectorAll('.nav .tab').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
+    btn.addEventListener('click', ()=>{ 
       document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       const view = btn.dataset.view;
@@ -1003,6 +997,7 @@ function showView(v){
   if(v==='dash') renderDash();
   if(v==='events') renderMonth();
   if(v==='matches') renderMatches();
+  if(v==='roster') renderRoster(); // <-- NEW: render roster when tab shown
 }
 </script>
 </body>
