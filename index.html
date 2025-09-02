@@ -115,6 +115,10 @@ a{color:inherit;text-decoration:none}
 
 /* footer */
 footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:16px}
+.kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.kpi{flex:1;min-width:140px;padding:12px;border-radius:10px;background:#f8fafc;border:1px solid #eef6ff;text-align:center}
+.kpi .num{font-size:20px;font-weight:800;color:var(--blue)}
+.kpi .label{font-size:12px;color:var(--mut);margin-top:6px}
 </style>
 </head>
 <body>
@@ -145,12 +149,30 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
   <!-- VIEWS: cada section tiene id v-{view} -->
   <!-- DASH -->
   <section id="v-dash" style="display:none">
-    <div class="card"><h4>Dashboard (placeholder)</h4><div class="section-note">Resumen rápido</div></div>
+    <div class="card">
+      <h4>Dashboard</h4>
+      <div class="section-note">Resumen rápido</div>
+
+      <!-- KPIs dinámicos -->
+      <div id="dashboardContent">
+        <div class="kpi-row">
+          <div class="kpi"><div class="num" id="kpiPlayers">—</div><div class="label">Jugadoras</div></div>
+          <div class="kpi"><div class="num" id="kpiEvents">—</div><div class="label">Eventos próximos</div></div>
+          <div class="kpi"><div class="num" id="kpiMatches">—</div><div class="label">Partidos próximos</div></div>
+        </div>
+        <div id="dashboardNotes" style="margin-top:12px;color:var(--mut);font-size:13px"></div>
+      </div>
+
+    </div>
   </section>
 
   <!-- EVENTS -->
   <section id="v-events" style="display:none">
-    <div class="card"><h4>Eventos (placeholder)</h4><div class="section-note">Calendario</div></div>
+    <div class="card">
+      <h4>Eventos</h4>
+      <div class="section-note">Calendario y próximos eventos</div>
+      <div id="eventsList" style="margin-top:12px">Cargando eventos...</div>
+    </div>
   </section>
 
   <!-- ROSTER / PLANTEL -->
@@ -172,7 +194,11 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 
   <!-- MATCHES placeholder -->
   <section id="v-matches" style="display:none">
-    <div class="card"><h4>Partidos</h4><div class="section-note">Aquí irán los partidos</div></div>
+    <div class="card">
+      <h4>Partidos</h4>
+      <div class="section-note">Calendario de partidos</div>
+      <div id="matchesList" style="margin-top:12px">Cargando partidos...</div>
+    </div>
   </section>
 
 </div>
@@ -247,21 +273,34 @@ function getHashView(){
 }
 function setActiveTabForView(view){
   document.querySelectorAll('.nav .tab').forEach(el=>{
-    // si es <a href="#/view"> o tiene data-view
     const v = el.dataset.view || (el.getAttribute('href') || '').replace(/^#\/?/, '');
     if(v === view || (v === '' && view==='dash')) el.classList.add('active'); else el.classList.remove('active');
   });
 }
+
+/* loadedViews evita recargar la vista si ya se cargó una vez */
+const loadedViews = {};
+
 function showView(view){
-  // normaliza nombres: si viene 'dash' 'events' 'roster' 'matches' -> id v-{view} or v-matches
   const allowed = ['dash','events','roster','matches'];
   if(!allowed.includes(view)) view = 'roster';
-  // esconder todo y mostrar elegido
   allowed.forEach(v=>{
     const sec = document.getElementById('v-'+v);
     if(sec) sec.style.display = (v === view) ? 'block' : 'none';
   });
   setActiveTabForView(view);
+
+  // cargar datos específicos la primera vez que se muestra la vista
+  if(!loadedViews[view]){
+    loadedViews[view] = true;
+    if(view === 'events') loadEvents();
+    if(view === 'dash') loadDashboard();
+    if(view === 'matches') loadMatches();
+    if(view === 'roster') {
+      // actualiza roster
+      fetchPlayers().then(renderRoster);
+    }
+  }
 }
 
 /* Cuando el hash cambia, actualizamos vista */
@@ -272,15 +311,14 @@ window.addEventListener('hashchange', ()=> {
 
 /* Inicializamos la vista segun hash (o por defecto) */
 document.addEventListener('DOMContentLoaded', ()=> {
-  // Si las pestañas son <a href="#/x"> el navegador ya puso el hash al hacer click; showView respeta eso
   const initial = getHashView();
-  // si el hash no existe, ponemos por defecto roster
   if(!location.hash) location.replace('#/roster');
   showView(initial);
 
-  // --- ahora arranque app normal (supabase + roster) ---
+  // --- arranque app normal (supabase + roster) ---
   initSupabase().then(()=> {
     renderTeamsList([]);
+    // sólo renderizamos roster ahora; las demás vistas se cargarán al mostrarse
     fetchPlayers().then(renderRoster);
   });
 });
@@ -288,15 +326,12 @@ document.addEventListener('DOMContentLoaded', ()=> {
 /* También hacemos que los clicks en tabs cambien el hash (por si usas botones en vez de <a>) */
 document.querySelectorAll('.nav .tab').forEach(el=>{
   el.addEventListener('click', (e)=>{
-    // si es <a> no queremos prevenir la navegación natural (que ya cambia hash),
-    // pero para botones o elementos sin href forzamos el hash:
     const href = el.getAttribute('href');
     const view = el.dataset.view || (href ? href.replace(/^#\/?/, '') : null);
     if(view){
       if(location.hash !== '#/'+view) {
         location.hash = '#/'+view;
       } else {
-        // si ya estamos en el mismo hash, forzamos showView para refrescar
         showView(view);
       }
     }
@@ -329,9 +364,10 @@ async function initSupabase(timeoutMs = 8000){
   }catch(err){ console.warn('initSupabase error:', err); supa = null; return null; }
 }
 
-/* ---------- Helpers + minimal roster code (adapted) ---------- */
+/* ---------- Helpers + minimal roster code (adaptado) ---------- */
 function pad(n){return n.toString().padStart(2,'0');}
 function localDateYMD(d){ const D=new Date(d); return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`; }
+function niceDate(d){ if(!d) return ''; const D=new Date(d); return D.toLocaleDateString(); }
 function escapeHtml(str){ if(!str && str!==0) return ''; return String(str).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function parseTeamsField(v){
   if(!v) return [];
@@ -555,9 +591,94 @@ document.getElementById('btnDeletePlayer').addEventListener('click', async ()=>{
 /* add new */
 btnAddPlayer.addEventListener('click', ()=> openPlayerModal(null));
 
+/* ---------- VISTAS: carga dinámica para dash/events/matches ---------- */
+async function loadDashboard(){
+  const players = await fetchPlayers();
+  const playersCount = players ? players.length : 0;
+  const kpiPlayersEl = document.getElementById('kpiPlayers');
+  const kpiEventsEl = document.getElementById('kpiEvents');
+  const kpiMatchesEl = document.getElementById('kpiMatches');
+  const notes = document.getElementById('dashboardNotes');
+
+  kpiPlayersEl.textContent = playersCount;
+
+  // eventos (proximos 30 días) -> fallback local
+  let upcomingEvents = [];
+  if(supa){
+    try{
+      const thirty = new Date(); thirty.setDate(thirty.getDate() - 1);
+      const { data, error } = await supa.from('events').select('*').order('date',{ascending:true}).limit(10);
+      if(!error && data) upcomingEvents = data;
+    }catch(e){ console.warn('loadDashboard events err', e); }
+  }
+  kpiEventsEl.textContent = upcomingEvents.length;
+
+  // matches proximos -> fallback supabase
+  let upcomingMatches = [];
+  if(supa){
+    try{
+      const { data, error } = await supa.from('matches').select('*').order('date',{ascending:true}).limit(10);
+      if(!error && data) upcomingMatches = data;
+    }catch(e){ console.warn('loadDashboard matches err', e); }
+  }
+  kpiMatchesEl.textContent = upcomingMatches.length;
+
+  notes.innerHTML = `Última actualización: ${new Date().toLocaleString()}.`;
+}
+
+async function loadEvents(){
+  const el = document.getElementById('eventsList');
+  if(!el) return;
+  el.innerHTML = 'Cargando eventos...';
+
+  if(supa){
+    try{
+      const { data, error } = await supa.from('events').select('*').order('date',{ascending:true}).limit(50);
+      if(error) throw error;
+      if(!data || data.length===0){ el.innerHTML = '<div>No hay eventos registrados.</div>'; return; }
+
+      el.innerHTML = '<ul style="margin:0;padding-left:18px">' + data.map(ev=>{
+        const title = escapeHtml(ev.title || ev.nombre || 'Sin título');
+        const date = niceDate(ev.date || ev.fecha || '');
+        const note = ev.note ? ` — ${escapeHtml(ev.note)}` : '';
+        return `<li style="margin-bottom:8px"><strong>${title}</strong> — <span style="color:var(--mut)">${date}</span>${note}</li>`;
+      }).join('') + '</ul>';
+    }catch(err){
+      console.warn(err);
+      el.innerHTML = '<div>Error cargando eventos. Revisa consola.</div>';
+    }
+  } else {
+    el.innerHTML = '<div>Modo local: no hay conexión a Supabase. Configura Supabase o agrega eventos manualmente.</div>';
+  }
+}
+
+async function loadMatches(){
+  const el = document.getElementById('matchesList');
+  if(!el) return;
+  el.innerHTML = 'Cargando partidos...';
+  if(supa){
+    try{
+      const { data, error } = await supa.from('matches').select('*').order('date',{ascending:true}).limit(50);
+      if(error) throw error;
+      if(!data || data.length===0){ el.innerHTML = '<div>No hay partidos registrados.</div>'; return; }
+
+      el.innerHTML = '<ul style="margin:0;padding-left:18px">' + data.map(m=>{
+        const date = niceDate(m.date || m.fecha || '');
+        const vs = escapeHtml(m.opponent || m.rival || m.vs || '—');
+        const loc = m.location ? ` — ${escapeHtml(m.location)}` : '';
+        return `<li style="margin-bottom:8px"><strong>${date}</strong> — ${vs}${loc}</li>`;
+      }).join('') + '</ul>';
+    }catch(err){
+      console.warn(err);
+      el.innerHTML = '<div>Error cargando partidos. Revisa consola.</div>';
+    }
+  } else {
+    el.innerHTML = '<div>Modo local: no hay conexión a Supabase. Configura Supabase o agrega partidos manualmente.</div>';
+  }
+}
+
 /* ---------- init: seed local players if no supabase ---------- */
 document.addEventListener('DOMContentLoaded', async () => {
-  // seed minimal local data only if supabase no responde
   if(localPlayersCache.length===0){
     localPlayersCache = [
       { id:'local-1', nombre:'Alejandra Vasquez', apodo:'Ale V', numero:'11', fecha_nacimiento:'1990-10-09', equipos:['Golden Moms'], rol:'Delantera', seguro_medico:'Isapre ABC', telefono_emergencia:'+56 9 1234 5678', foto:'' },
