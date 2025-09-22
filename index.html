@@ -19,7 +19,6 @@
   --today-border-color: #ff3b3b;
   --month-grid-gap: 18px;
   --month-list-gap: 12px;
-  --card-radius:12px;
 }
 
 /* base */
@@ -44,13 +43,13 @@ a{color:inherit;text-decoration:none}
 /* Layout */
 .container{max-width:1200px;margin:14px auto;padding:0 12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-.card{background:#fff;border:1px solid var(--b);border-radius:var(--card-radius);box-shadow:0 8px 20px #0000000a;padding:12px; overflow:visible}
+.card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px; overflow:visible}
 .card h4{margin:0 0 8px;font-size:14px;font-weight:700}
 .kpi h3{margin:0;color:var(--mut);font-size:var(--sub-size)}
 .kpi .n{font-size:var(--kpi-number-size);font-weight:800}
 .section-note{font-size:var(--sub-size);color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
 
-/* Calendar (kept original styles, unchanged) */
+/* Calendar */
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
 .month-title{font-weight:800;font-size:var(--title-size)}
 .month-nav{display:flex;gap:6px}
@@ -60,6 +59,8 @@ a{color:inherit;text-decoration:none}
   gap: var(--month-grid-gap);
   grid-auto-rows:minmax(90px,auto);
 }
+
+/* week separator row in grid */
 .month-grid .week-sep{
   grid-column: 1 / -1;
   height: var(--week-sep-height);
@@ -76,13 +77,15 @@ a{color:inherit;text-decoration:none}
   border:1px solid var(--b);
   border-radius:12px;
   padding:12px;
-  position:relative;
+  position:relative; /* important: relative to place + inside */
   display:flex;
   flex-direction:column;
   gap:6px;
   z-index:0;
 }
 .day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+
+/* mini square for day (grid) */
 .day-num-box{
   background:#f1f5f9;
   border-radius:8px;
@@ -95,14 +98,42 @@ a{color:inherit;text-decoration:none}
   min-width:48px;
   line-height:1;
 }
-.day-num-box .day-wk-grid{font-size:10px;text-transform:lowercase;color:var(--mut)}
-.day-num-box .day-n{font-weight:800;color:var(--mut);font-size: var(--day-bold-size);}
+.day-num-box .day-wk-grid{
+  font-size:10px;
+  text-transform:lowercase;
+  color:var(--mut);
+}
+.day-num-box .day-n{
+  font-weight:800;
+  color:var(--mut);
+  font-size: var(--day-bold-size);
+}
 
-.day.today{ border: 3px solid var(--today-border-color); border-radius:12px; }
+/* today card border (más grueso y rojo) */
+.day.today{
+  border: 3px solid var(--today-border-color);
+  border-radius:12px;
+}
 
+/* + button positioned inside each day in top-right */
 .day-add{
-  position:absolute; top:10px; right:10px; width:36px; height:36px; border-radius:999px;
-  border:1px solid var(--b); background:#eef4ff; color:var(--blue); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; line-height:1; box-shadow: 0 4px 8px #00000011; z-index:3;
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:36px;
+  height:36px;
+  border-radius:999px;
+  border:1px solid var(--b);
+  background:#eef4ff;
+  color:var(--blue);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:18px;
+  line-height:1;
+  box-shadow: 0 4px 8px #00000011;
+  z-index:3;
 }
 
 /* evento chips */
@@ -110,48 +141,165 @@ a{color:inherit;text-decoration:none}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
 
-/* Month list */
+/* Month list fallback (mobile) */
 .month-list{display:none;flex-direction:column;gap:var(--month-list-gap)}
 .month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto;position:relative}
 .day-date{
-  min-width:52px;border-radius:8px;background:#f1f5f9;padding:6px 8px;text-align:center;font-weight:700;color:var(--mut);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1;font-size:var(--day-bold-size);
+  min-width:52px;
+  border-radius:8px;
+  background:#f1f5f9;
+  padding:6px 8px;
+  text-align:center;
+  font-weight:700;
+  color:var(--mut);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  line-height:1;
+  font-size:var(--day-bold-size);
 }
+.day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
+.day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
+
+/* today in list view: color del borde (si aplica) */
 .month-list .day.today{ border-color: var(--today-border-color); }
 
-/* Modal */
-.modal-bg{ position:fixed; inset:0; background:#0006; display:none; z-index:1000; justify-content:center; align-items:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
-.modal{ width: min(920px, calc(100% - 32px)); margin:0 auto; background:#fff; border:1px solid var(--b); border-radius:14px; padding:16px; box-shadow:0 20px 40px #00000022; max-height:calc(100vh - 48px); overflow:auto; box-sizing:border-box; }
-@media (max-width:520px){ .modal{ width: calc(100% - 24px); padding:12px; border-radius:12px; } }
+/* small text for "Hoy no hay cumpleaños" */
+.no-birth { font-size: var(--content-size); color: var(--mut); }
 
-/* forms */
+/* week separator in list view */
+.month-list .week-sep{
+  height: var(--week-sep-height);
+  background: var(--week-sep-color);
+  border-radius: 4px;
+  margin: 10px 0;
+  z-index:0;
+}
+
+/* Modal (oculto por defecto) - centrado y responsive for player modal */
+.modal-bg{
+  position:fixed;
+  inset:0;
+  background:#0006;
+  display:none;
+  z-index:1000;
+  justify-content:center;    /* centrado horizontal */
+  align-items:center;        /* centrado vertical */
+  padding:12px;              /* espacio en mobile */
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Modal container */
+.modal{
+  width: min(920px, calc(100% - 32px));
+  margin: 0 auto;
+  background:#fff;
+  border:1px solid var(--b);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 20px 40px #00000022;
+  max-height:calc(100vh - 48px);
+  overflow:auto;
+  box-sizing:border-box;
+}
+
+/* If mobile */
+@media (max-width:520px){
+  .modal{ width: calc(100% - 24px); padding:12px; border-radius:12px; }
+}
+
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:800px){.form-row{grid-template-columns:1fr}}
 .input, select, textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:10px;background:#fff;font-size:var(--content-size)}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
 
-/* roster */
-#rosterGrid{ display:grid; grid-template-columns: repeat(12,1fr); gap:12px; align-items:start; }
-.player-photo{ width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid #fff; box-shadow:0 6px 18px #00000010; background:#f1f5f9; flex:0 0 64px; }
+/* Responsive tweaks */
+@media (max-width:420px){
+  .day-num-box .day-n{ font-size: var(--day-bold-size-mobile); }
+  .day-date{ font-size: var(--day-bold-size-mobile); }
+  .day-date .day-wk{ font-size: calc(var(--day-bold-size-mobile) - 6px); }
+  .day-date .day-num{ font-size: calc(var(--day-bold-size-mobile)); }
+  .day-add{ width:34px; height:34px; font-size:16px; top:8px; right:8px; }
+}
+
+/* Lists */
+ul{ margin:6px 0 6px 18px; padding:0; font-size:var(--content-size) }
+li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
+
+/* Dashboard layout */
+.cards-dashboard{
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+}
+.cards-dashboard .card{ grid-column: auto; }
+.card-hoy { grid-column: span 4; }
+.card-birth-today { grid-column: span 4; }
+.card-birth-next  { grid-column: span 4; }
+.card-week        { grid-column: span 12; }
+
+@media (max-width: 900px) {
+  .cards-dashboard{ grid-template-columns: 1fr; }
+  .card-hoy, .card-birth-today, .card-birth-next, .card-week {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* ROSTER */
+#rosterGrid{ display:grid; grid-template-columns: repeat(12, 1fr); gap:12px; align-items:start; }
+#rosterGrid .card{ display:flex; gap:12px; align-items:center; cursor:pointer; padding:12px; border-radius:12px; }
+
+/* photo or placeholder */
+.player-photo { width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid #fff; box-shadow:0 6px 18px #00000010; background:#f1f5f9; flex:0 0 64px; }
 .jersey-placeholder{ width:64px; height:64px; border-radius:50%; background:#eef2ff; display:flex; align-items:center; justify-content:center; border:2px solid #fff; font-weight:800; color:var(--blue); font-size:18px; box-shadow:0 6px 18px #00000010; flex:0 0 64px; }
 
-/* small helpers */
-.meta-small{ font-size:12px; color:var(--mut); margin-top:6px; }
-.no-birth { font-size:var(--content-size); color:var(--mut); }
+/* text */
+.roster-text{ display:flex; flex-direction:column; gap:4px; }
+.roster-apodo{ font-weight:800; font-size:16px; }
+.roster-nombre{ color:var(--mut); font-size:13px; }
 
-/* ===== PARTIDOS: added styles ===== */
-.match-row{ border:1px solid var(--b); border-radius:10px; padding:12px; margin-bottom:10px; display:grid; grid-template-columns: 1fr 360px; gap:12px; align-items:start; }
+/* columns per screen size */
+@media (min-width:1201px){
+  #rosterGrid .card{ grid-column: span 3; }
+}
+@media (min-width:901px) and (max-width:1200px){
+  #rosterGrid .card{ grid-column: span 4; }
+}
+@media (max-width:900px){
+  #rosterGrid{ grid-template-columns: repeat(2, 1fr) !important; }
+  #rosterGrid .card{ grid-column: span 1 !important; }
+}
+@media (max-width:420px){
+  #rosterGrid{ grid-template-columns: repeat(1, 1fr) !important; }
+  #rosterGrid .card{ grid-column: 1 / -1 !important; }
+  .player-photo, .jersey-placeholder{ width:56px; height:56px; flex:0 0 56px; }
+  .roster-apodo{ font-size:15px; }
+}
+
+.meta-small{ font-size:12px; color:var(--mut); margin-top:6px; }
+footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:16px}
+
+/* ====== PARTIDOS: estilos añadidos para la pestaña Partidos ====== */
+.match-row{
+  border:1px solid var(--b); border-radius:12px; padding:12px; margin-bottom:10px;
+  display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:start;
+}
 .match-head{font-weight:700}
-.match-meta{font-size:12px;color:var(--mut);margin-top:4px}
+.match-meta{font-size:12px;color:var(--mut);margin-top:2px}
 .match-right{display:flex; flex-direction:column; gap:8px; align-items:flex-end}
-.match-form{display:grid; grid-template-columns: repeat(2, 1fr); gap:8px; width:100%;}
-.match-form textarea{grid-column: 1 / -1; min-height:80px; resize:vertical}
-.match-actions{display:flex; gap:8px; justify-content:flex-end; width:100%}
-.match-compact { font-size:13px; margin-top:8px; color:var(--mut) }
-@media (max-width:900px){ .match-row{ grid-template-columns: 1fr; } .match-right{ align-items:stretch; } .match-form{ grid-template-columns: 1fr 1fr; } }
-@media (max-width:480px){ .match-actions{ flex-direction:row; justify-content:flex-start; gap:8px} .match-form textarea{ min-height:70px; } .match-right{ margin-top:8px } }
-select[multiple]{ min-height:120px; }
-.empty-msg{ color:var(--mut); padding:12px; text-align:center }
-.chev { transition: transform .18s ease; } .chev.open { transform: rotate(180deg); }
+.match-form{display:grid; grid-template-columns: repeat(2, minmax(120px,160px)); gap:8px; width:320px; }
+.match-form textarea{grid-column: 1 / -1; min-height:72px}
+.match-actions{display:flex; gap:8px}
+.match-score{display:flex; gap:6px; align-items:center}
+#matchesList .input[multiple]{height:110px; padding:8px; overflow:auto}
+@media(max-width:700px){
+  .match-row{grid-template-columns:1fr}
+  .match-right{align-items:stretch}
+  .match-form{grid-template-columns:1fr 1fr}
+}
 </style>
 </head>
 <body>
@@ -197,25 +345,30 @@ select[multiple]{ min-height:120px; }
       </div>
     </div>
 
+    <!-- REORDEN: Hoy -> Cumpleaños Hoy -> Eventos de la semana -> Próximos cumpleaños -->
     <div class="grid cards-dashboard" style="margin-top:12px;grid-template-columns:repeat(12,1fr);gap:12px">
+      <!-- 1) Hoy -->
       <div class="card card-hoy" style="grid-column:span 4">
         <h4>📅 Hoy</h4>
         <div class="section-note">Eventos que ocurren hoy (fecha local).</div>
         <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
       </div>
 
+      <!-- 2) Cumpleaños — Hoy -->
       <div class="card card-birth-today" style="grid-column:span 4">
         <h4>🎂 Cumpleaños — Hoy</h4>
         <div class="section-note">Personas del plantel que cumplen hoy</div>
         <div id="birthToday" style="margin-top:8px">—</div>
       </div>
 
+      <!-- 3) Eventos de la semana (ocupa toda la fila) -->
       <div class="card card-week" style="grid-column:span 12;margin-top:12px">
         <h4>📅 Eventos de la semana</h4>
         <div class="section-note">Eventos de la semana actual (lunes a domingo).</div>
         <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
       </div>
 
+      <!-- 4) Próximos cumpleaños -->
       <div class="card card-birth-next" style="grid-column:span 4;margin-top:0">
         <h4>🎉 Próximos cumpleaños</h4>
         <div class="section-note">Lista con los próximos 5 cumpleaños.</div>
@@ -240,6 +393,8 @@ select[multiple]{ min-height:120px; }
       </div>
 
       <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD).</div>
+
+      <!-- <-- horizontal weekdays removed as requested --> 
 
       <div id="monthGrid" class="month-grid"></div>
       <div id="monthList" class="month-list"></div>
@@ -267,7 +422,7 @@ select[multiple]{ min-height:120px; }
 
 <footer style="text-align:center;padding:16px;color:var(--mut);font-size:var(--content-size)">Golden Moms · hecho con 💚 lima & azul</footer>
 
-<!-- MODAL EVENTOS: mantengo completo (igual que tu versión original) -->
+<!-- MODAL (oculto por defecto) para eventos (mantener original) -->
 <div class="modal-bg" id="modalBg" style="display:none;">
   <div class="modal" role="dialog" aria-modal="true">
     <h3 id="modalTitle">Nuevo evento</h3>
@@ -351,7 +506,7 @@ select[multiple]{ min-height:120px; }
   </div>
 </div>
 
-<!-- PLAYER modal: mantengo completo -->
+<!-- PLAYER modal -->
 <div class="modal-bg" id="playerModalBg" style="display:none;">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle">
     <h3 id="playerModalTitle">Jugadora</h3>
@@ -453,7 +608,7 @@ select[multiple]{ min-height:120px; }
 </div>
 
 <script>
-/* ---------- Supabase config ---------- */
+/* ---------- Supabase config & init ---------- */
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
@@ -615,7 +770,7 @@ btnSave.addEventListener('click', async ()=>{
   renderDash();
 });
 
-/* ---------- calendar & rendering (kept intact) ---------- */
+/* ---------- calendar & rendering ---------- */
 let monthCursor = new Date();
 let cachedEvents = [];
 const monthTitle = document.getElementById('monthTitle');
@@ -691,6 +846,7 @@ function drawMonthGrid(start,end){
       </div>
       `;
 
+    // add the + as an absolutely positioned button inside the .day
     const plusBtn = document.createElement('button');
     plusBtn.className = 'day-add';
     plusBtn.title = 'Nuevo evento';
@@ -701,6 +857,7 @@ function drawMonthGrid(start,end){
     cell.appendChild(head);
     cell.appendChild(plusBtn);
 
+    // mark today
     if(isToday){
       cell.classList.add('today');
       cell.setAttribute('aria-current','date');
@@ -716,6 +873,7 @@ function drawMonthGrid(start,end){
       cell.appendChild(ev);
     }
     monthGrid.appendChild(cell);
+
     if(day.getDay() === 0){
       const sep = document.createElement('div');
       sep.className = 'week-sep';
@@ -780,7 +938,7 @@ function drawMonthList(start,end){
   }
 }
 
-/* ---------- dashboard & roster (kept intact) ---------- */
+/* ---------- dashboard & matches & roster ---------- */
 async function renderDash(){
   try{
     const now = new Date();
@@ -920,8 +1078,8 @@ async function renderDash(){
   }
 }
 
-/* ====== PARTIDOS: funciones añadidas (responsive + histórico por mes) ====== */
-/* cache de plantel */
+/* ====== PARTIDOS: funciones añadidas ====== */
+/* cache de plantel para poblar el selector de goleadoras */
 let PLAYERS_CACHE = null; // [{id, label, nombre, apodo}, ...]
 let PLAYERS_MAP = null;   // id -> etiqueta visible
 
@@ -955,7 +1113,7 @@ async function upsertMatchByEventId(eventId, payload){
   }
 }
 
-/* renderMatches: upcoming + historic (grouped by month) */
+/* Reemplaza renderMatches por versión con edición en pestaña Partidos */
 async function renderMatches(){
   const container = document.getElementById('matchesList');
   container.innerHTML = 'Cargando...';
@@ -963,137 +1121,149 @@ async function renderMatches(){
   if(!supa){ container.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pueden cargar partidos</div>'; return; }
 
   try{
-    // traer eventos tipo Partido
-    const { data:events = [], error: evErr } = await supa.from('events')
-      .select('id, title, datetime, team, opponent, location, type')
-      .eq('type','Partido')
-      .order('datetime',{ascending:true});
+    // 1) Traemos los eventos de tipo Partido (orden descendente por fecha)
+    const { data:events, error:evErr } = await supa
+      .from('events').select('id, title, datetime, team, opponent, location, type').eq('type','Partido').order('datetime',{ascending:false});
     if(evErr){ throw evErr; }
 
-    // traer matches
-    const { data:matches = [], error: mErr } = await supa.from('matches')
-      .select('id, event_id, goals_for, goals_against, goal_difference, observation, scorer_ids, scorers');
+    // 2) Traemos los registros en matches (si existen)
+    const { data:matches, error:mErr } = await supa
+      .from('matches')
+      .select('id, event_id, goals_for, goals_against, goal_difference, observation, scorer_ids, scorers')
+      .order('created_at',{ascending:false});
     if(mErr){ console.warn('matches select error', mErr); }
 
     const byEvent = {};
     (matches||[]).forEach(m=>{ byEvent[m.event_id] = m; });
 
-    // separar upcoming y past
-    const now = new Date();
-    const upcoming = (events || []).filter(e => !e.datetime || new Date(e.datetime) >= now).sort((a,b)=> new Date(a.datetime) - new Date(b.datetime));
-    const past = (events || []).filter(e => e.datetime && new Date(e.datetime) < now).sort((a,b)=> new Date(b.datetime) - new Date(a.datetime));
-
-    // carga players
+    // 3) Cache del plantel para llenar selects
     await loadPlayersCache();
 
-    // render
+    // 4) Render
+    if(!events || !events.length){
+      container.innerHTML = '<div style="color:var(--mut)">No hay partidos aún.</div>';
+      return;
+    }
+
     container.innerHTML = '';
+    for(const ev of events){
+      const m = byEvent[ev.id] || {};
+      const d = ev.datetime ? new Date(ev.datetime) : null;
 
-    // Próximos
-    const upTitle = document.createElement('div'); upTitle.className='match-head'; upTitle.style.marginBottom='6px'; upTitle.textContent = 'Próximos partidos';
-    container.appendChild(upTitle);
-    if(upcoming.length===0){
-      const e = document.createElement('div'); e.className='empty-msg'; e.textContent='No hay partidos próximos.'; container.appendChild(e);
-    } else {
-      for(const ev of upcoming){
-        const m = byEvent[ev.id] || {};
-        container.appendChild(createMatchRow(ev,m,false));
-      }
-    }
+      const row = document.createElement('div');
+      row.className = 'match-row';
 
-    // Histórico agrupado por mes
-    const histTitle = document.createElement('div'); histTitle.className='match-head'; histTitle.style.margin='14px 0 6px 0'; histTitle.textContent = 'Histórico por mes';
-    container.appendChild(histTitle);
-    if(past.length===0){
-      const e = document.createElement('div'); e.className='empty-msg'; e.textContent='No hay partidos en el histórico.'; container.appendChild(e);
-    } else {
-      const groups = {};
-      for(const ev of past){
-        const d = new Date(ev.datetime);
-        const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-        if(!groups[key]) groups[key] = { events: [], date: d };
-        groups[key].events.push(ev);
+      // Left column: info + read-only current values
+      const left = document.createElement('div');
+      left.innerHTML = `
+        <div class="match-head">${ev.title || ((ev.team||'GM') + (ev.opponent? (' vs '+ev.opponent) : ''))}</div>
+        <div class="match-meta">
+          ${d ? d.toLocaleDateString('es-CL',{weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) : ''}
+          ${ev.location ? ' · ' + ev.location : ''}
+        </div>
+        <div style="margin-top:10px">
+          <div><strong>Marcador</strong>: ${m.goals_for ?? '—'} : ${m.goals_against ?? '—'} ${m.goal_difference!=null ? '(Dif: '+m.goal_difference+')' : ''}</div>
+          <div style="margin-top:4px"><strong>Goleadoras</strong>: ${labelsFromIds(m.scorer_ids) || (Array.isArray(m.scorers)&&m.scorers.length? m.scorers.join(', '): '—')}</div>
+          <div style="margin-top:4px"><strong>Observación</strong>: ${m.observation ? m.observation : '—'}</div>
+        </div>
+      `;
+
+      // Right column: editor
+      const right = document.createElement('div');
+      right.className = 'match-right';
+
+      const form = document.createElement('div');
+      form.className = 'match-form';
+
+      const goalsFor = document.createElement('input');
+      goalsFor.type='number'; goalsFor.min='0'; goalsFor.placeholder='Goles a favor';
+      goalsFor.className='input'; goalsFor.value = m.goals_for ?? '';
+
+      const goalsAgainst = document.createElement('input');
+      goalsAgainst.type='number'; goalsAgainst.min='0'; goalsAgainst.placeholder='Goles en contra';
+      goalsAgainst.className='input'; goalsAgainst.value = m.goals_against ?? '';
+
+      const scorerSel = document.createElement('select');
+      scorerSel.className = 'input'; scorerSel.multiple = true;
+      const preselectedIds = Array.isArray(m.scorer_ids) ? m.scorer_ids : [];
+      const legacyNames = Array.isArray(m.scorers) ? m.scorers : [];
+      const legacyAsSet = new Set(legacyNames.map(s=>s.toLowerCase()));
+
+      for(const p of (PLAYERS_CACHE||[])){
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.label;
+        if(preselectedIds.includes(p.id)) opt.selected = true;
+        if(!preselectedIds.length && (legacyAsSet.has((p.apodo||'').toLowerCase()) || legacyAsSet.has((p.nombre||'').toLowerCase()))){
+          opt.selected = true;
+        }
+        scorerSel.appendChild(opt);
       }
-      const keys = Object.keys(groups).sort((a,b)=> a<b?1:-1);
-      keys.forEach((key, idx)=>{
-        const g = groups[key];
-        const monthLabel = g.date.toLocaleDateString('es-CL',{month:'short', year:'numeric'});
-        const node = document.createElement('div'); node.className='month-accordion';
-        const header = document.createElement('div'); header.className='month-header';
-        header.innerHTML = `<div><strong>${monthLabel}</strong> <span class="month-count">· ${g.events.length} partido(s)</span></div><div style="display:flex;align-items:center;gap:8px"><button class="btn s" aria-expanded="false">${idx===0?'Colapsar':'Expandir'}</button><span class="chev ${idx===0?'open':''}">&#9660;</span></div>`;
-        const body = document.createElement('div'); body.className='month-body'; body.style.display = idx===0 ? 'block' : 'none';
-        g.events.sort((a,b)=> new Date(b.datetime) - new Date(a.datetime)).forEach(ev=> body.appendChild(createMatchRow(ev, byEvent[ev.id]||{}, true)));
-        header.addEventListener('click', ()=>{
-          const visible = body.style.display !== 'none';
-          body.style.display = visible ? 'none' : 'block';
-          const btn = header.querySelector('button'); const chev = header.querySelector('.chev');
-          btn.textContent = visible ? 'Expandir' : 'Colapsar';
-          if(chev) chev.classList.toggle('open', !visible);
-          header.scrollIntoView({behavior:'smooth', block:'center'});
+
+      const obs = document.createElement('textarea');
+      obs.className = 'input'; obs.placeholder='Observación del partido';
+      obs.value = m.observation || '';
+
+      const actions = document.createElement('div');
+      actions.className = 'match-actions';
+
+      const btnClear = document.createElement('button');
+      btnClear.className = 'btn s';
+      btnClear.textContent = 'Borrar marcador';
+      btnClear.onclick = async ()=>{
+        const { error } = await upsertMatchByEventId(ev.id, {
+          goals_for: null, goals_against: null, goal_difference: null, observation: null, scorer_ids: []
         });
-        node.appendChild(header); node.appendChild(body); container.appendChild(node);
-      });
-    }
+        if(error){ alert('Error: '+error.message); return; }
+        renderMatches();
+        renderDash();
+      };
 
+      const btnSave = document.createElement('button');
+      btnSave.className = 'btn p';
+      btnSave.textContent = 'Guardar';
+      btnSave.onclick = async ()=>{
+        const gf = goalsFor.value === '' ? null : Number(goalsFor.value);
+        const ga = goalsAgainst.value === '' ? null : Number(goalsAgainst.value);
+        const diff = (gf!=null && ga!=null) ? (gf - ga) : null;
+        const ids = Array.from(scorerSel.selectedOptions).map(o=>o.value);
+
+        const payload = {
+          goals_for: gf,
+          goals_against: ga,
+          goal_difference: diff,
+          observation: obs.value.trim() || null,
+          scorer_ids: ids
+        };
+
+        const { error } = await upsertMatchByEventId(ev.id, payload);
+        if(error){ alert('Error al guardar: ' + error.message); return; }
+        renderMatches();
+        renderDash();
+      };
+
+      actions.appendChild(btnClear);
+      actions.appendChild(btnSave);
+
+      form.appendChild(goalsFor);
+      form.appendChild(goalsAgainst);
+      form.appendChild(scorerSel);
+      form.appendChild(obs);
+
+      right.appendChild(form);
+      right.appendChild(actions);
+
+      row.appendChild(left);
+      row.appendChild(right);
+      container.appendChild(row);
+    }
   }catch(err){
     console.error('renderMatches error', err);
     container.innerHTML = '<div style="color:var(--mut)">Error cargando partidos</div>';
   }
 }
 
-/* crea la fila de partido con editor (usa PLAYERS_CACHE) */
-function createMatchRow(ev, m, isPast){
-  const row = document.createElement('div'); row.className='match-row';
-  const d = ev.datetime ? new Date(ev.datetime) : null;
-  const dateTxt = d ? d.toLocaleDateString('es-CL',{weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) : '';
-
-  const left = document.createElement('div');
-  left.innerHTML = `<div class="match-head">${ev.title || ((ev.team||'GM') + (ev.opponent? (' vs '+ev.opponent) : ''))}</div>
-    <div class="match-meta">${dateTxt}${ev.location ? ' · ' + ev.location : ''}</div>
-    <div class="match-compact">
-      <div><strong>Marcador</strong>: ${m.goals_for ?? '—'} : ${m.goals_against ?? '—'} ${m.goal_difference!=null ? '(Dif: '+m.goal_difference+')' : ''}</div>
-      <div style="margin-top:6px"><strong>Goleadoras</strong>: ${renderScorersText(m)}</div>
-      <div style="margin-top:6px"><strong>Observación</strong>: ${m.observation ? escapeHtml(m.observation) : '—'}</div>
-    </div>`;
-
-  const right = document.createElement('div'); right.className='match-right';
-  const form = document.createElement('div'); form.className='match-form';
-
-  const inputGF = document.createElement('input'); inputGF.type='number'; inputGF.min='0'; inputGF.placeholder='Goles a favor'; inputGF.value = (m.goals_for != null) ? m.goals_for : '';
-  const inputGA = document.createElement('input'); inputGA.type='number'; inputGA.min='0'; inputGA.placeholder='Goles en contra'; inputGA.value = (m.goals_against != null) ? m.goals_against : '';
-
-  const scorerSel = document.createElement('select'); scorerSel.multiple = true; scorerSel.setAttribute('aria-label','Seleccionar goleadoras');
-  const preIds = Array.isArray(m.scorer_ids) ? m.scorer_ids : [];
-  (PLAYERS_CACHE || []).forEach(p=>{ const opt = document.createElement('option'); opt.value = p.id; opt.textContent = p.label; if(preIds.includes(p.id)) opt.selected=true; scorerSel.appendChild(opt); });
-
-  const obs = document.createElement('textarea'); obs.placeholder='Observación del partido'; obs.value = m.observation || '';
-
-  const actions = document.createElement('div'); actions.className='match-actions';
-  const btnClear = document.createElement('button'); btnClear.className='btn s'; btnClear.textContent='Borrar marcador';
-  btnClear.onclick = async ()=>{ try{ await upsertMatchByEventId(ev.id, { goals_for:null, goals_against:null, goal_difference:null, observation:null, scorer_ids:[] }); await renderMatches(); await renderDash(); }catch(err){ alert('Error borrando: '+(err.message||err)); console.error(err); } };
-
-  const btnSave = document.createElement('button'); btnSave.className='btn p'; btnSave.textContent='Guardar';
-  btnSave.onclick = async ()=>{ try{ const gf = inputGF.value===''?null:Number(inputGF.value); const ga = inputGA.value===''?null:Number(inputGA.value); const diff = (gf!=null && ga!=null)?(gf-ga):null; const ids = Array.from(scorerSel.selectedOptions).map(o=>o.value); const payload = { goals_for:gf, goals_against:ga, goal_difference:diff, observation: obs.value.trim()||null, scorer_ids: ids }; const { error } = await upsertMatchByEventId(ev.id, payload); if(error){ alert('Error al guardar: '+error.message); return; } await renderMatches(); await renderDash(); }catch(err){ alert('Error guardando: '+(err.message||err)); console.error(err); } };
-
-  actions.appendChild(btnClear); actions.appendChild(btnSave);
-
-  form.appendChild(inputGF); form.appendChild(inputGA); form.appendChild(scorerSel); form.appendChild(obs);
-  right.appendChild(form); right.appendChild(actions);
-  row.appendChild(left); row.appendChild(right);
-  return row;
-}
-
-function renderScorersText(m){
-  if(!m) return '—';
-  if(Array.isArray(m.scorer_ids) && m.scorer_ids.length && PLAYERS_MAP){
-    return m.scorer_ids.map(id => PLAYERS_MAP[id] || id).join(', ');
-  }
-  if(Array.isArray(m.scorers) && m.scorers.length) return m.scorers.join(', ');
-  return '—';
-}
-function escapeHtml(s){ if(!s) return s; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-/* ---------- PLAYER modal logic & teams multi-select & enums (kept intact) ---------- */
+/* ---------- PLAYER modal logic & teams multi-select & enums (no changes) ---------- */
 const playerModalBg = document.getElementById('playerModalBg');
 const p_img_preview = document.getElementById('p_img_preview');
 const p_apodo = document.getElementById('p_apodo');
@@ -1308,6 +1478,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // Decide initial view:
   const persisted = (function(){ try{ return localStorage.getItem('gm_view'); }catch(e){return null;} })();
   const activeTab = document.querySelector('.nav .tab.active');
   const initialView = persisted || (activeTab ? activeTab.dataset.view : 'dash');
@@ -1319,7 +1490,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   closeModal();
 });
 
-/* showView */
+/* showView: only render content for the visible view */
 function showView(v){
   ['dash','events','roster','matches'].forEach(id=>{
     const el = document.getElementById('v-'+id);
