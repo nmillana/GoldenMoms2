@@ -351,7 +351,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
     <div class="grid cards-dashboard" style="margin-top:12px;grid-template-columns:repeat(12,1fr);gap:12px">
       <div class="card card-hoy" style="grid-column:span 4">
         <h4>📅 Hoy</h4>
-        <div class="section-note">Calendario que ocurren hoy (fecha local).</div>
+        <div class="section-note">Eventos que ocurren hoy (fecha local).</div>
         <ul id="todayEvents" style="margin:8px 0 0 16px"></ul>
       </div>
 
@@ -362,8 +362,8 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
       </div>
 
       <div class="card card-week" style="grid-column:span 12;margin-top:12px">
-        <h4>📅 Calendario de la semana</h4>
-        <div class="section-note">Calendario de la semana actual (lunes a domingo).</div>
+        <h4>📅 Eventos de la semana</h4>
+        <div class="section-note">Eventos de la semana actual (lunes a domingo).</div>
         <ul id="weekEvents" style="margin:8px 0 0 16px"></ul>
       </div>
 
@@ -1007,7 +1007,7 @@ async function renderDash(){
       birthTodayEl.innerHTML = '<div class="no-birth">Hoy no hay cumpleaños</div>';
     }
 
-    /* Calendario de hoy */
+    /* Eventos de hoy */
     const todayEl = document.getElementById('todayEvents'); todayEl.innerHTML = '';
     evs.filter(e => localDateYMD(new Date(e.datetime)) === todayStrLocal)
       .forEach(e=>{
@@ -1016,7 +1016,7 @@ async function renderDash(){
         li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}`;
         todayEl.appendChild(li);
       });
-    if(todayEl.innerHTML.trim()==='') todayEl.innerHTML = '<div style="color:var(--mut)">No hay Calendario hoy</div>';
+    if(todayEl.innerHTML.trim()==='') todayEl.innerHTML = '<div style="color:var(--mut)">No hay Eventos hoy</div>';
 
     const wEl = document.getElementById('weekEvents'); wEl.innerHTML = '';
     evs.forEach(e=>{
@@ -1025,7 +1025,7 @@ async function renderDash(){
       li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString('es-CL',{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}`;
       wEl.appendChild(li);
     });
-    if(wEl.innerHTML.trim()==='') wEl.innerHTML = '<div style="color:var(--mut)">No hay Calendario esta semana</div>';
+    if(wEl.innerHTML.trim()==='') wEl.innerHTML = '<div style="color:var(--mut)">No hay Eventos esta semana</div>';
 
     /* roster */
     const rosterGrid = document.getElementById('rosterGrid'); rosterGrid.innerHTML = '';
