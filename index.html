@@ -7,7 +7,6 @@
 <link rel="icon" href="Logo.webp"/>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
-/* --- mantuve tu CSS original (copiado tal cual) --- */
 :root{
   --blue:#0f3a78; --lime:#9be22d; --ink:#0f172a; --mut:#64748b;
   --b:#e2e8f0; --bg:#f7f8fa;
@@ -21,12 +20,17 @@
   --month-grid-gap: 18px;
   --month-list-gap: 12px;
 }
+/* base */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
 a{color:inherit;text-decoration:none}
+
+/* Buttons */
 .btn{border:1px solid var(--b);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer;font-size:var(--content-size)}
 .btn.p{background:var(--lime);border-color:#a3e635;font-weight:800}
 .btn.s{background:#f8fafc}
+
+/* Top bar */
 .top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;overflow:visible}
 .brand{display:flex;gap:10px;align-items:center}
 .brand img{width:32px;height:32px;border-radius:50%;border:2px solid var(--blue)}
@@ -34,6 +38,8 @@ a{color:inherit;text-decoration:none}
 .nav{display:flex;gap:8px;flex-wrap:nowrap;align-items:center;overflow-x:auto;padding-bottom:4px}
 .nav .tab{border:1px solid var(--b);border-radius:999px;padding:8px 12px;background:#fff;cursor:pointer;white-space:nowrap;font-size:var(--content-size)}
 .nav .tab.active{background:var(--blue);color:#fff}
+
+/* Layout */
 .container{max-width:1200px;margin:14px auto;padding:0 12px}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 20px #0000000a;padding:12px; overflow:visible}
@@ -41,61 +47,247 @@ a{color:inherit;text-decoration:none}
 .kpi h3{margin:0;color:var(--mut);font-size:var(--sub-size)}
 .kpi .n{font-size:var(--kpi-number-size);font-weight:800}
 .section-note{font-size:var(--sub-size);color:var(--mut);margin-top:8px;border-left:3px solid #e6edf7;padding-left:8px}
+
+/* Calendar */
 .month-bar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
 .month-title{font-weight:800;font-size:var(--title-size)}
 .month-nav{display:flex;gap:6px}
-.month-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap: var(--month-grid-gap); grid-auto-rows:minmax(90px,auto); }
-.month-grid .week-sep{ grid-column: 1 / -1; height: var(--week-sep-height); background: var(--week-sep-color); border-radius: 4px; margin: 10px 0; z-index:0; }
-.day{ min-height:90px; background:#fff; border:1px solid var(--b); border-radius:12px; padding:12px; position:relative; display:flex; flex-direction:column; gap:6px; z-index:0; }
+.month-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap: var(--month-grid-gap);
+  grid-auto-rows:minmax(90px,auto);
+}
+
+/* week separator row in grid */
+.month-grid .week-sep{
+  grid-column: 1 / -1;
+  height: var(--week-sep-height);
+  background: var(--week-sep-color);
+  border-radius: 4px;
+  margin: 10px 0;
+  z-index:0;
+}
+
+/* day cell */
+.day{
+  min-height:90px;
+  background:#fff;
+  border:1px solid var(--b);
+  border-radius:12px;
+  padding:12px;
+  position:relative; /* important: relative to place + inside */
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  z-index:0;
+}
 .day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-.day-num-box{ background:#f1f5f9; border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:48px; line-height:1;}
-.day-num-box .day-wk-grid{ font-size:10px; text-transform:lowercase; color:var(--mut); }
-.day-num-box .day-n{ font-weight:800; color:var(--mut); font-size: var(--day-bold-size); }
-.day.today{ border: 3px solid var(--today-border-color); border-radius:12px; }
-.day-add{ position:absolute; top:10px; right:10px; width:36px; height:36px; border-radius:999px; border:1px solid var(--b); background:#eef4ff; color:var(--blue); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; line-height:1; box-shadow: 0 4px 8px #00000011; z-index:3; }
+
+/* mini square for day (grid) */
+.day-num-box{
+  background:#f1f5f9;
+  border-radius:8px;
+  padding:6px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  min-width:48px;
+  line-height:1;
+}
+.day-num-box .day-wk-grid{
+  font-size:10px;
+  text-transform:lowercase;
+  color:var(--mut);
+}
+.day-num-box .day-n{
+  font-weight:800;
+  color:var(--mut);
+  font-size: var(--day-bold-size);
+}
+
+/* today card border (más grueso y rojo) */
+.day.today{
+  border: 3px solid var(--today-border-color);
+  border-radius:12px;
+}
+
+/* + button positioned inside each day in top-right */
+.day-add{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:36px;
+  height:36px;
+  border-radius:999px;
+  border:1px solid var(--b);
+  background:#eef4ff;
+  color:var(--blue);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:18px;
+  line-height:1;
+  box-shadow: 0 4px 8px #00000011;
+  z-index:3;
+}
+
+/* evento chips */
 .ev{border-radius:10px;padding:8px;border:1px solid #0001;cursor:pointer;line-height:1.2;word-break:break-word;font-size:var(--content-size)}
 .ev.ev-train{background:var(--lime-strong);color:#0c3200;border-color:#8ed400}
 .ev.ev-match{background:#dce9ff;color:var(--blue-strong);border-color:#b9d0ff}
+
+/* Month list fallback (mobile) */
 .month-list{display:none;flex-direction:column;gap:var(--month-list-gap)}
 .month-list .day{display:flex;flex-direction:row;align-items:flex-start;gap:8px;padding:8px;min-height:auto;position:relative}
-.day-date{ min-width:52px; border-radius:8px; background:#f1f5f9; padding:6px 8px; text-align:center; font-weight:700; color:var(--mut); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; line-height:1; font-size:var(--day-bold-size); }
+.day-date{
+  min-width:52px;
+  border-radius:8px;
+  background:#f1f5f9;
+  padding:6px 8px;
+  text-align:center;
+  font-weight:700;
+  color:var(--mut);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  line-height:1;
+  font-size:var(--day-bold-size);
+}
 .day-date .day-wk{ font-size: calc(var(--day-bold-size) - 6px); text-transform:lowercase; color:var(--mut); }
 .day-date .day-num{ font-size: calc(var(--day-bold-size)); font-weight:800; color:var(--mut); }
+
+/* today in list view: color del borde (si aplica) */
 .month-list .day.today{ border-color: var(--today-border-color); }
+
+/* small text for "Hoy no hay cumpleaños" */
 .no-birth { font-size: var(--content-size); color: var(--mut); }
-.month-list .week-sep{ height: var(--week-sep-height); background: var(--week-sep-color); border-radius: 4px; margin: 10px 0; z-index:0; }
-.modal-bg{ position:fixed; inset:0; background:#0006; display:none; z-index:1000; justify-content:center; align-items:center; padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
-.modal{ width: min(920px, calc(100% - 32px)); margin: 0 auto; background:#fff; border:1px solid var(--b); border-radius:14px; padding:16px; box-shadow:0 20px 40px #00000022; max-height:calc(100vh - 48px); overflow:auto; box-sizing:border-box; }
-@media (max-width:520px){ .modal{ width: calc(100% - 24px); padding:12px; border-radius:12px; } }
+
+/* week separator in list view */
+.month-list .week-sep{
+  height: var(--week-sep-height);
+  background: var(--week-sep-color);
+  border-radius: 4px;
+  margin: 10px 0;
+  z-index:0;
+}
+
+/* Modal (oculto por defecto) - centrado y responsive for player modal */
+.modal-bg{
+  position:fixed;
+  inset:0;
+  background:#0006;
+  display:none;
+  z-index:1000;
+  justify-content:center;    /* centrado horizontal */
+  align-items:center;        /* centrado vertical */
+  padding:12px;              /* espacio en mobile */
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Modal container */
+.modal{
+  width: min(920px, calc(100% - 32px));
+  margin: 0 auto;
+  background:#fff;
+  border:1px solid var(--b);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 20px 40px #00000022;
+  max-height:calc(100vh - 48px);
+  overflow:auto;
+  box-sizing:border-box;
+}
+
+/* If mobile */
+@media (max-width:520px){
+  .modal{ width: calc(100% - 24px); padding:12px; border-radius:12px; }
+}
+
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:800px){.form-row{grid-template-columns:1fr}}
 .input, select, textarea{width:100%;padding:10px;border:1px solid var(--b);border-radius:10px;background:#fff;font-size:var(--content-size)}
+/* ensure multi-selects look good */
 .input[multiple]{height:110px;padding:8px;overflow:auto}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
-@media (max-width:420px){ .day-num-box .day-n{ font-size: var(--day-bold-size-mobile); } .day-date{ font-size: var(--day-bold-size-mobile); } .day-date .day-wk{ font-size: calc(var(--day-bold-size-mobile) - 6px); } .day-date .day-num{ font-size: calc(var(--day-bold-size-mobile)); } .day-add{ width:34px; height:34px; font-size:16px; top:8px; right:8px; } }
+
+/* Responsive tweaks */
+@media (max-width:420px){
+  .day-num-box .day-n{ font-size: var(--day-bold-size-mobile); }
+  .day-date{ font-size: var(--day-bold-size-mobile); }
+  .day-date .day-wk{ font-size: calc(var(--day-bold-size-mobile) - 6px); }
+  .day-date .day-num{ font-size: calc(var(--day-bold-size-mobile)); }
+  .day-add{ width:34px; height:34px; font-size:16px; top:8px; right:8px; }
+}
+
+/* Lists */
 ul{ margin:6px 0 6px 18px; padding:0; font-size:var(--content-size) }
 li{ margin-bottom:6px; font-size:var(--content-size); line-height:1.2 }
-.cards-dashboard{ display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+
+/* Dashboard layout */
+.cards-dashboard{
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+}
 .cards-dashboard .card{ grid-column: auto; }
 .card-hoy { grid-column: span 4; }
 .card-birth-today { grid-column: span 4; }
 .card-birth-next  { grid-column: span 4; }
 .card-week        { grid-column: span 12; }
-@media (max-width: 900px) { .cards-dashboard{ grid-template-columns: 1fr; } .card-hoy, .card-birth-today, .card-birth-next, .card-week { grid-column: 1 / -1 !important; } }
+
+@media (max-width: 900px) {
+  .cards-dashboard{ grid-template-columns: 1fr; }
+  .card-hoy, .card-birth-today, .card-birth-next, .card-week {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* ROSTER */
 #rosterGrid{ display:grid; grid-template-columns: repeat(12, 1fr); gap:12px; align-items:start; }
 #rosterGrid .card{ display:flex; gap:12px; align-items:center; cursor:pointer; padding:12px; border-radius:12px; }
+
+/* photo or placeholder */
 .player-photo { width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid #fff; box-shadow:0 6px 18px #00000010; background:#f1f5f9; flex:0 0 64px; }
 .jersey-placeholder{ width:64px; height:64px; border-radius:50%; background:#eef2ff; display:flex; align-items:center; justify-content:center; border:2px solid #fff; font-weight:800; color:var(--blue); font-size:18px; box-shadow:0 6px 18px #00000010; flex:0 0 64px; }
+
+/* text */
 .roster-text{ display:flex; flex-direction:column; gap:4px; }
 .roster-apodo{ font-weight:800; font-size:16px; }
 .roster-nombre{ color:var(--mut); font-size:13px; }
-@media (min-width:1201px){ #rosterGrid .card{ grid-column: span 3; } }
-@media (min-width:901px) and (max-width:1200px){ #rosterGrid .card{ grid-column: span 4; } }
-@media (max-width:900px){ #rosterGrid{ grid-template-columns: repeat(2, 1fr) !important; } #rosterGrid .card{ grid-column: span 1 !important; } }
-@media (max-width:420px){ #rosterGrid{ grid-template-columns: repeat(1, 1fr) !important; } #rosterGrid .card{ grid-column: 1 / -1 !important; } .player-photo, .jersey-placeholder{ width:56px; height:56px; flex:0 0 56px; } .roster-apodo{ font-size:15px; } }
+
+/* columns per screen size */
+@media (min-width:1201px){
+  #rosterGrid .card{ grid-column: span 3; }
+}
+@media (min-width:901px) and (max-width:1200px){
+  #rosterGrid .card{ grid-column: span 4; }
+}
+@media (max-width:900px){
+  #rosterGrid{ grid-template-columns: repeat(2, 1fr) !important; }
+  #rosterGrid .card{ grid-column: span 1 !important; }
+}
+@media (max-width:420px){
+  #rosterGrid{ grid-template-columns: repeat(1, 1fr) !important; }
+  #rosterGrid .card{ grid-column: 1 / -1 !important; }
+  .player-photo, .jersey-placeholder{ width:56px; height:56px; flex:0 0 56px; }
+  .roster-apodo{ font-size:15px; }
+}
+
 .meta-small{ font-size:12px; color:var(--mut); margin-top:6px; }
 footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:16px}
-.match-row{ border:1px solid var(--b); border-radius:12px; padding:12px; margin-bottom:10px; display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:start; }
+
+/* ====== PARTIDOS: estilos añadidos para la pestaña Partidos ====== */
+.match-row{
+  border:1px solid var(--b); border-radius:12px; padding:12px; margin-bottom:10px;
+  display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:start;
+}
 .match-head{font-weight:700}
 .match-meta{font-size:12px;color:var(--mut);margin-top:2px}
 .match-right{display:flex; flex-direction:column; gap:8px; align-items:flex-end}
@@ -104,7 +296,11 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 .match-actions{display:flex; gap:8px}
 .match-score{display:flex; gap:6px; align-items:center}
 #matchesList .input[multiple]{height:110px; padding:8px; overflow:auto}
-@media(max-width:700px){ .match-row{grid-template-columns:1fr} .match-right{align-items:stretch} .match-form{grid-template-columns:1fr 1fr} }
+@media(max-width:700px){
+  .match-row{grid-template-columns:1fr}
+  .match-right{align-items:stretch}
+  .match-form{grid-template-columns:1fr 1fr}
+}
 </style>
 </head>
 <body>
@@ -116,7 +312,6 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
     <div><strong>Golden</strong> <span style="color:var(--lime);font-weight:800">Moms</span></div>
   </div>
 
-  <!-- indicador de conexión sencillo -->
   <div style="display:flex;align-items:center;gap:12px">
     <div id="connStatus" style="font-size:12px;color:var(--mut)">Comprobando conexión…</div>
     <div class="nav" role="tablist" aria-label="Navegación">
@@ -129,6 +324,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 </div>
 
 <div class="container">
+
   <!-- DASHBOARD -->
   <section id="v-dash">
     <div class="grid" style="align-items:stretch">
@@ -222,7 +418,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 
 <footer style="text-align:center;padding:16px;color:var(--mut);font-size:var(--content-size)">Golden Moms · hecho con 💚 lima & azul</footer>
 
-<!-- MODAL CORREGIDO: solo campos que pediste -->
+<!-- MODAL CORREGIDO: solo campos que pediste; equipo es SELECT con 3 opciones -->
 <div class="modal-bg" id="modalBg" style="display:none;">
   <div class="modal" role="dialog" aria-modal="true">
     <h3 id="modalTitle">Nuevo evento</h3>
@@ -248,7 +444,12 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
       </div>
       <div>
         <label>Equipo</label>
-        <input id="f_team" class="input" value="Golden Moms">
+        <!-- <-- AQUI: combo box con los 3 equipos; por defecto Golden Moms -->
+        <select id="f_team" class="input">
+          <option value="Golden Moms">Golden Moms</option>
+          <option value="Golden Dream">Golden Dream</option>
+          <option value="Golden Power">Golden Power</option>
+        </select>
       </div>
     </div>
 
@@ -310,7 +511,75 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
             <input id="p_nombre" class="input" placeholder="Nombre (ej: Alejandra Pérez)"/>
           </div>
         </div>
-        <!-- resto de campos iguales al original (omitidos para brevedad en este bloque) -->
+
+        <div class="form-row" style="margin-top:8px">
+          <div>
+            <label>Número de camiseta</label>
+            <input id="p_numero" class="input" placeholder="14" type="number" min="0"/>
+          </div>
+          <div>
+            <label>Rol / Posición</label>
+            <select id="p_rol" class="input"></select>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
+          <div>
+            <label>Equipos</label>
+            <select id="p_equipos_select" class="input" multiple size="4"></select>
+            <div style="font-size:12px;color:var(--mut);margin-top:6px">
+              Mantén Ctrl/Cmd o usa Shift para seleccionar múltiples; o agrega equipos adicionales en el campo siguiente.
+            </div>
+            <input id="p_equipos_extra" class="input" placeholder="Equipos adicionales, separados por comas" style="margin-top:8px"/>
+          </div>
+          
+          <div>
+            <label>Estado</label>
+            <select id="p_estado" class="input"></select>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
+          <div>
+            <label>Fecha y nacimiento</label>
+            <input id="p_fecha_nac" class="input" type="date"/>
+          </div>
+          <div>
+            <label>Celular</label>
+            <input id="p_celular" class="input" placeholder="+56 9 ..."/>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
+          <div>
+            <label>Tel. emergencia</label>
+            <input id="p_telemer" class="input" placeholder="Teléfono de emergencia"/>
+          </div>
+          <div>
+            <label>Mail</label>
+            <input id="p_email" class="input" placeholder="email@ejemplo.com"/>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
+          <div>
+            <label>RUT</label>
+            <input id="p_rut" class="input" placeholder="RUT"/>
+          </div>
+          <div>
+            <label>Seguro médico</label>
+            <input id="p_seguro" class="input" placeholder="Nombre seguro"/>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
+          <div>
+            <label>Curso hijos / nota</label>
+            <input id="p_curso_hijos" class="input" placeholder="Curso hijos (si aplica)"/>
+          </div>
+          <div></div>
+        </div>
+
         <div class="modal-actions" style="margin-top:12px">
           <button class="btn s" id="btnDeletePlayer" style="margin-right:auto">Eliminar</button>
           <button class="btn s" id="btnCancelPlayer">Cancelar</button>
@@ -323,7 +592,6 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
 
 <script>
 /* ---------- Supabase config & init ---------- */
-/* He dejado los valores que tenías originalmente — si quieres usar otra key, cámbiala aquí. */
 const SUPA = {
   url: "https://xglojvvbgaivwbpdxvne.supabase.co",
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnbG9qdnZiZ2FpdndicGR4dm5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxMjEzMjQsImV4cCI6MjA3MDY5NzMyNH0.vQOBuvphgm0iue-lybJoBVhyai7RtRp8Tfn-hGIKKgw"
@@ -336,7 +604,6 @@ async function initSupabase(timeoutMs = 8000){
     if(typeof createClient === 'function'){ supa = createClient(SUPA.url, SUPA.key); }
     else if(window.supabase && typeof window.supabase.createClient === 'function'){ supa = window.supabase.createClient(SUPA.url, SUPA.key); }
     else {
-      // fallback: cargar SDK dinámicamente
       await new Promise((resolve,reject)=>{
         const s = document.createElement('script');
         s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js';
@@ -351,7 +618,7 @@ async function initSupabase(timeoutMs = 8000){
       else if(window.supabase && typeof window.supabase.createClient === 'function') supa = window.supabase.createClient(SUPA.url, SUPA.key);
     }
 
-    // comprobación simple: un select mínimo para validar la conexión/políticas
+    // quick test select to validate connection & RLS
     try{
       const test = await supa.from('events').select('id').limit(1);
       if(test && test.error){
@@ -382,7 +649,7 @@ function updateConnStatus(){
   }
 }
 
-/* ---------- Helpers y utilidades (mantengo las funciones que ya tenías) ---------- */
+/* ---------- Helpers y utilidades ---------- */
 function pad(n){return n.toString().padStart(2,'0');}
 function localInputToISOWithOffset(inp){ if(!inp) return null; const [d,t]=inp.split('T'); const offMin = -new Date().getTimezoneOffset(); const sign = offMin>=0?'+':'-'; const abs=Math.abs(offMin); const oh=pad(Math.floor(abs/60)); const om=pad(abs%60); return `${d}T${t}:00${sign}${oh}:${om}`; }
 function isoToLocalInput(iso){ if(!iso) return ''; const d=new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
@@ -394,7 +661,7 @@ const modalBg = document.getElementById('modalBg');
 const f_title = document.getElementById('f_title');
 const f_type = document.getElementById('f_type');
 const f_dt   = document.getElementById('f_dt');
-const f_team = document.getElementById('f_team');
+const f_team = document.getElementById('f_team'); // ahora SELECT
 const f_opponent = document.getElementById('f_opponent');
 const f_uniform  = document.getElementById('f_uniform');
 const f_location = document.getElementById('f_location');
@@ -407,14 +674,23 @@ let editingId = null;
 function openModal(opts={}) {
   document.getElementById('modalTitle').textContent = opts.existing ? 'Editar evento' : 'Nuevo evento';
   editingId = null;
-  // Siempre mostramos sólo los campos solicitados (no mostramos goles/goleadoras/etc.)
   if(opts.existing){
     const e = opts.existing;
     editingId = e.id;
     f_title.value = e.title||'';
     f_type.value  = e.type||'Entrenamiento';
     f_dt.value    = isoToLocalInput(e.datetime);
-    f_team.value  = e.team||'Golden Moms';
+    // set select value safely
+    if(e.team){
+      const opt = Array.from(f_team.options).find(o=>o.value === e.team);
+      if(opt) f_team.value = e.team;
+      else {
+        // si el valor viene distinto, añade temporalmente la opción y la selecciona
+        const o = document.createElement('option'); o.value = e.team; o.textContent = e.team; f_team.appendChild(o); f_team.value = e.team;
+      }
+    } else {
+      f_team.value = 'Golden Moms';
+    }
     f_opponent.value = e.opponent||'';
     f_uniform.value  = e.uniform||'';
     f_location.value = e.location||'';
@@ -426,7 +702,7 @@ function openModal(opts={}) {
     const base = opts.date ? new Date(opts.date) : new Date();
     base.setHours(19,30,0,0);
     f_dt.value = isoToLocalInput(base.toISOString());
-    f_team.value  = 'Golden Moms';
+    f_team.value  = 'Golden Moms'; // default
     f_opponent.value = '';
     f_uniform.value  = '';
     f_location.value = '';
@@ -475,8 +751,6 @@ btnSave.addEventListener('click', async ()=>{
     } else {
       const { data:inserted, error } = await supa.from('events').insert([payloadEvent]).select();
       if(error) throw error;
-      // NOTA: No creamos automáticamente registros en 'matches' aquí (según tu petición).
-      // Si necesitas que se cree un registro en otra tabla, lo hacemos explícito después.
     }
   }catch(err){
     alert('Error al guardar: '+(err.message||err));
@@ -489,7 +763,7 @@ btnSave.addEventListener('click', async ()=>{
   renderDash();
 });
 
-/* ---------- calendar & rendering (sin cambios en comportamiento visual) ---------- */
+/* ---------- calendar & rendering ---------- */
 let monthCursor = new Date();
 let cachedEvents = [];
 const monthTitle = document.getElementById('monthTitle');
@@ -546,28 +820,44 @@ function drawMonthGrid(start,end){
     days.push(new Date(d));
     d.setDate(d.getDate()+1);
   }
+
   const todayYMD = localDateYMD(new Date());
+
   for(const day of days){
     const cell = document.createElement('div');
     cell.className='day';
     const head = document.createElement('div');
     head.className='day-head';
-    const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,'');
+
+    const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,''); // "lun", "mar", etc.
     const dayStrLocal = localDateYMD(day);
     const isToday = dayStrLocal === todayYMD;
+
     head.innerHTML = `<div class="day-num-box">
         <div class="day-wk-grid">${wk}</div>
         <div class="day-n">${pad(day.getDate())}</div>
-      </div>`;
+      </div>
+      `;
+
+    // add the + as an absolutely positioned button inside the .day
     const plusBtn = document.createElement('button');
     plusBtn.className = 'day-add';
     plusBtn.title = 'Nuevo evento';
     plusBtn.innerText = '+';
     plusBtn.onclick = ()=> openModal({ date: day });
+
+    head.querySelectorAll && cell.appendChild(head);
     cell.appendChild(head);
     cell.appendChild(plusBtn);
-    if(isToday){ cell.classList.add('today'); cell.setAttribute('aria-current','date'); }
+
+    // mark today
+    if(isToday){
+      cell.classList.add('today');
+      cell.setAttribute('aria-current','date');
+    }
+
     const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
+
     for(const e of events){
       const ev = document.createElement('div');
       ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
@@ -576,6 +866,7 @@ function drawMonthGrid(start,end){
       cell.appendChild(ev);
     }
     monthGrid.appendChild(cell);
+
     if(day.getDay() === 0){
       const sep = document.createElement('div');
       sep.className = 'week-sep';
@@ -590,21 +881,31 @@ function drawMonthList(start,end){
   const days=[];
   let d=new Date(start);
   while(d<=end){ days.push(new Date(d)); d.setDate(d.getDate()+1); }
+
   const todayYMD = localDateYMD(new Date());
+
   for(const day of days){
     const dayStrLocal = localDateYMD(day);
     const events = (cachedEvents || []).filter(e => localDateYMD(new Date(e.datetime)) === dayStrLocal);
     const row = document.createElement('div'); row.className='day';
-    if(dayStrLocal === todayYMD){ row.classList.add('today'); row.setAttribute('aria-current','date'); }
+
+    if(dayStrLocal === todayYMD){
+      row.classList.add('today');
+      row.setAttribute('aria-current','date');
+    }
+
     const dateBox = document.createElement('div'); dateBox.className='day-date';
-    const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,'');
+    const wk = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,''); // "lun", "mar", etc.
     dateBox.innerHTML = `<div class="day-wk">${wk}</div><div class="day-num">${pad(day.getDate())}</div>`;
+
     const col = document.createElement('div'); col.className='events-column';
+
     const plus = document.createElement('button');
     plus.className = 'day-add';
     plus.title = 'Nuevo evento';
     plus.innerText = '+';
     plus.onclick = ()=> openModal({ date: day });
+
     if(events.length){
       for(const e of events){
         const ev = document.createElement('div'); ev.className='ev '+(e.type==='Entrenamiento'?'ev-train':'ev-match');
@@ -616,10 +917,12 @@ function drawMonthList(start,end){
       const n = document.createElement('div'); n.style.color='var(--mut)'; n.style.fontSize='var(--content-size)'; n.innerText='—';
       col.appendChild(n);
     }
+
     row.appendChild(dateBox);
     row.appendChild(col);
     row.appendChild(plus);
     monthList.appendChild(row);
+
     if(day.getDay() === 0){
       const sep = document.createElement('div');
       sep.className = 'week-sep';
@@ -759,8 +1062,7 @@ async function renderDash(){
   }
 }
 
-/* ---------- renderMatches (sin cambios importantes) ---------- */
-/* (Para no extender demasiado la respuesta incluyo la función básica que ya tenías; no la toco ahora) */
+/* ---------- renderMatches básico ---------- */
 async function renderMatches(){
   const container = document.getElementById('matchesList');
   if(!supa || !IS_CONNECTED){ container.innerHTML = '<div style="color:var(--mut)">Sin conexión — no se pueden cargar partidos</div>'; return; }
@@ -784,15 +1086,16 @@ async function renderMatches(){
   }
 }
 
-/* ---------- Player modal handlers (no cambios funcionales aquí) ---------- */
+/* ---------- Player modal handlers (simplificado) ---------- */
 const playerModalBg = document.getElementById('playerModalBg');
-function openPlayerModal(player){ /* abre modal (implementación corta para no extender) */ alert('Abrir modal jugador: ' + (player.apodo||player.nombre||'')); }
+function openPlayerModal(player){ alert('Abrir modal jugador: ' + (player.apodo||player.nombre||'')); }
 function closePlayerModal(){ playerModalBg.style.display='none'; }
 
 /* ---------- init ---------- */
 document.addEventListener('DOMContentLoaded', async () => {
   await initSupabase(); // detecta conexión y la marca en IS_CONNECTED
-  // wiring de tabs
+
+  // Nav buttons wiring + persist view on click
   document.querySelectorAll('.nav .tab').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
@@ -803,6 +1106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // Decide initial view:
   const persisted = (function(){ try{ return localStorage.getItem('gm_view'); }catch(e){return null;} })();
   const activeTab = document.querySelector('.nav .tab.active');
   const initialView = persisted || (activeTab ? activeTab.dataset.view : 'dash');
@@ -825,7 +1129,7 @@ function showView(v){
   if(v==='dash') renderDash();
   if(v==='events') renderMonth();
   if(v==='matches') renderMatches();
-  if(v==='roster') renderDash(); // renderDash refresca roster
+  if(v==='roster') renderDash(); // renderDash refreshes roster
 }
 </script>
 </body>
