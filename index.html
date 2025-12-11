@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Golden Moms 💚</title>
 <link rel="icon" href="Logo.webp"/>
+  <link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f3a78">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 /* --- mantuve tu CSS original (copiado tal cual) --- */
@@ -826,6 +828,13 @@ function showView(v){
   if(v==='events') renderMonth();
   if(v==='matches') renderMatches();
   if(v==='roster') renderDash(); // renderDash refresca roster
+}
+</script>
+  <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(console.warn);
+  });
 }
 </script>
 </body>
