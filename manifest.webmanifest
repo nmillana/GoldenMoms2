@@ -1,7 +1,7 @@
 {
   "name": "Golden Moms",
   "short_name": "Golden Moms",
-  "start_url": "/",
+  "start_url": "/GoldenMoms2/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0f3a78",
