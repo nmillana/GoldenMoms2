@@ -316,7 +316,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
     <div id="connStatus" style="font-size:12px;color:var(--mut)">Comprobando conexión…</div>
     <div class="nav" role="tablist" aria-label="Navegación">
       <button class="tab active" data-view="dash">Dashboard</button>
-      <button class="tab" data-view="events">Eventos</button>
+      <button class="tab" data-view="events">Calendario</button>
       <button class="tab" data-view="roster">Plantel</button>
       <button class="tab" data-view="matches">Partidos</button>
     </div>
@@ -375,7 +375,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
     </div>
   </section>
 
-  <!-- EVENTOS -->
+  <!-- Calendario -->
   <section id="v-events" style="display:none">
     <div class="card">
       <div class="month-bar">
@@ -390,7 +390,7 @@ footer{font-size:var(--content-size);color:var(--mut);text-align:center;padding:
         </div>
       </div>
 
-      <div class="section-note">El calendario muestra eventos agrupados por <strong>fecha local</strong> (YYYY-MM-DD).</div>
+      <div class="section-note">El calendario muestra Calendario agrupados por <strong>fecha local</strong> (YYYY-MM-DD).</div>
 
       <div id="monthGrid" class="month-grid"></div>
       <div id="monthList" class="month-list"></div>
@@ -599,10 +599,10 @@ const SUPA = {
 let supa = null;
 let IS_CONNECTED = false;
 
+/* === EDITADO: initSupabase sin test agresivo de tabla === */
 async function initSupabase(){
   try{
-    // 1) ya tienes el script <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    //    así que aquí usamos directamente el global "supabase"
+    // Usamos la librería cargada en el script <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     if (window.supabase && typeof window.supabase.createClient === 'function') {
       supa = window.supabase.createClient(SUPA.url, SUPA.key);
       IS_CONNECTED = true;
@@ -611,31 +611,11 @@ async function initSupabase(){
       supa = null;
       IS_CONNECTED = false;
     }
-  } catch (err){
+  } catch(err){
     console.error('initSupabase error:', err);
     supa = null;
     IS_CONNECTED = false;
   }
-  updateConnStatus();
-  return supa;
-}
-
-
-    // quick test select to validate connection & RLS
-    try{
-      const test = await supa.from('events').select('id').limit(1);
-      if(test && test.error){
-        console.warn('initSupabase: consulta de test devolvió error', test.error);
-        IS_CONNECTED = false;
-      } else {
-        IS_CONNECTED = true;
-      }
-    }catch(err){
-      console.warn('initSupabase test query error', err);
-      IS_CONNECTED = false;
-    }
-
-  }catch(err){ console.error('initSupabase error:', err); supa = null; IS_CONNECTED = false; }
   updateConnStatus();
   return supa;
 }
@@ -659,7 +639,7 @@ function isoToLocalInput(iso){ if(!iso) return ''; const d=new Date(iso); return
 function isoToLocalDateInput(iso){ if(!iso) return ''; const d=new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function localDateYMD(d){ const D=new Date(d); return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`; }
 
-/* ---------- DOM refs & modal handlers (eventos) ---------- */
+/* ---------- DOM refs & modal handlers (Calendario) ---------- */
 const modalBg = document.getElementById('modalBg');
 const f_title = document.getElementById('f_title');
 const f_type = document.getElementById('f_type');
@@ -1010,7 +990,7 @@ async function renderDash(){
       birthTodayEl.innerHTML = '<div class="no-birth">Hoy no hay cumpleaños</div>';
     }
 
-    /* eventos de hoy */
+    /* Eventos de hoy */
     const todayEl = document.getElementById('todayEvents'); todayEl.innerHTML = '';
     evs.filter(e => localDateYMD(new Date(e.datetime)) === todayStrLocal)
       .forEach(e=>{
@@ -1019,7 +999,7 @@ async function renderDash(){
         li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString("es-CL",{weekday:'short',hour:'2-digit',minute:'2-digit'})}`;
         todayEl.appendChild(li);
       });
-    if(todayEl.innerHTML.trim()==='') todayEl.innerHTML = '<div style="color:var(--mut)">No hay eventos hoy</div>';
+    if(todayEl.innerHTML.trim()==='') todayEl.innerHTML = '<div style="color:var(--mut)">No hay Eventos hoy</div>';
 
     const wEl = document.getElementById('weekEvents'); wEl.innerHTML = '';
     evs.forEach(e=>{
@@ -1028,7 +1008,7 @@ async function renderDash(){
       li.innerHTML = `<strong>${e.title}</strong> — ${d.toLocaleString('es-CL',{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}`;
       wEl.appendChild(li);
     });
-    if(wEl.innerHTML.trim()==='') wEl.innerHTML = '<div style="color:var(--mut)">No hay eventos esta semana</div>';
+    if(wEl.innerHTML.trim()==='') wEl.innerHTML = '<div style="color:var(--mut)">No hay Eventos esta semana</div>';
 
     /* roster */
     const rosterGrid = document.getElementById('rosterGrid'); rosterGrid.innerHTML = '';
