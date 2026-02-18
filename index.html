@@ -592,6 +592,151 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   to   { opacity: 1; transform: translateY(0); }
 }
 .view-enter { animation: fadeUp 0.18s ease both; }
+
+/* ── Asistencia rápida ───────────────────────────────── */
+.att-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--r-sm);
+  border: 1px solid var(--line); background: var(--surface);
+  transition: background 0.12s, border-color 0.12s;
+  cursor: pointer; user-select: none;
+}
+.att-row:hover { border-color: var(--line-2); }
+.att-row.att-yes { background: var(--win-bg); border-color: #86efac; }
+.att-row.att-no  { background: var(--loss-bg); border-color: #fca5a5; }
+.att-row.att-maybe { background: #fffbeb; border-color: #fde68a; }
+.att-avatar {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: var(--lime-pale); border: 1.5px solid var(--lime-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; color: var(--lime);
+  font-family: var(--font-head);
+}
+.att-name { font-weight: 600; font-size: 14px; flex: 1; }
+.att-num  { font-size: 11px; color: var(--muted); font-weight: 600; }
+.att-btns { display: flex; gap: 4px; }
+.att-btn  {
+  width: 34px; height: 34px; border-radius: var(--r-sm);
+  border: 1px solid var(--line); background: var(--surface);
+  font-size: 16px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.12s;
+}
+.att-btn:hover    { transform: scale(1.1); }
+.att-btn.act-yes  { background: var(--win-bg); border-color: #86efac; }
+.att-btn.act-no   { background: var(--loss-bg); border-color: #fca5a5; }
+.att-btn.act-duda { background: #fffbeb; border-color: #fde68a; }
+
+/* ── Resultado partido desde calendario ──────────────── */
+.ev-result-btn {
+  display: inline-flex; align-items: center; gap: 3px;
+  margin-top: 3px; font-size: 9px; font-weight: 700;
+  background: var(--blue-pale); color: var(--blue);
+  border: 1px solid var(--blue-soft); border-radius: 5px;
+  padding: 2px 6px; cursor: pointer; transition: background 0.12s;
+}
+.ev-result-btn:hover { background: var(--blue-soft); }
+
+/* ── Estadísticas ─────────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 60px 60px 80px;
+  align-items: center; gap: 12px;
+  padding: 12px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  box-shadow: var(--sh-1); transition: border-color 0.13s;
+}
+.stats-row:hover { border-color: var(--line-2); }
+.stats-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  object-fit: cover; background: var(--lime-pale);
+  border: 2px solid var(--lime-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head); font-weight: 800; color: var(--lime); font-size: 15px;
+  flex-shrink: 0;
+}
+.stats-name  { font-weight: 700; font-size: 14px; }
+.stats-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.stats-kpi   { text-align: center; }
+.stats-kpi-n { font-family: var(--font-head); font-size: 20px; font-weight: 800; color: var(--ink); line-height: 1; }
+.stats-kpi-l { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+.stats-bar-wrap { display: flex; align-items: center; gap: 6px; }
+.stats-bar-bg {
+  flex: 1; height: 6px; background: var(--surface-3);
+  border-radius: 99px; overflow: hidden;
+}
+.stats-bar-fill { height: 100%; background: var(--lime-mid); border-radius: 99px; transition: width 0.4s ease; }
+.stats-pct { font-size: 11px; font-weight: 700; color: var(--muted); min-width: 30px; text-align: right; }
+@media (max-width: 600px) {
+  .stats-row { grid-template-columns: 36px 1fr 50px 50px; }
+  .stats-bar-wrap { display: none; }
+}
+
+/* ── Tablón ───────────────────────────────────────────── */
+.ann-card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 16px; box-shadow: var(--sh-1);
+  position: relative; transition: border-color 0.13s;
+}
+.ann-card.pinned { border-color: var(--lime-soft); background: var(--lime-pale); }
+.ann-card:hover  { border-color: var(--line-2); }
+.ann-pin-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700; color: var(--lime);
+  background: var(--surface); border: 1px solid var(--lime-soft);
+  border-radius: 99px; padding: 1px 7px; margin-bottom: 6px;
+}
+.ann-title { font-family: var(--font-head); font-size: 17px; font-weight: 800; color: var(--ink); }
+.ann-body  { font-size: 13px; color: var(--ink-2); margin-top: 5px; line-height: 1.5; white-space: pre-line; }
+.ann-meta  { font-size: 11px; color: var(--muted); margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.ann-edit-btn {
+  margin-left: auto; font-size: 11px; font-weight: 600;
+  background: none; border: 1px solid var(--line-2); border-radius: var(--r-xs);
+  padding: 2px 8px; color: var(--muted); cursor: pointer; transition: all 0.12s;
+}
+.ann-edit-btn:hover { border-color: var(--lime-soft); color: var(--lime); }
+
+/* ── Cuotas ───────────────────────────────────────────── */
+.fee-card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); box-shadow: var(--sh-1); overflow: hidden;
+}
+.fee-header {
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: center; gap: 12px;
+  padding: 14px 18px; border-bottom: 1px solid var(--line);
+  cursor: pointer; transition: background 0.13s;
+}
+.fee-header:hover { background: var(--surface-2); }
+.fee-title { font-family: var(--font-head); font-size: 16px; font-weight: 800; color: var(--ink); }
+.fee-meta  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.fee-progress-wrap { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.fee-progress-bg   { flex: 1; height: 8px; background: var(--surface-3); border-radius: 99px; overflow: hidden; }
+.fee-progress-fill { height: 100%; background: var(--lime-mid); border-radius: 99px; transition: width 0.4s ease; }
+.fee-pct { font-size: 12px; font-weight: 700; color: var(--lime); min-width: 36px; text-align: right; }
+.fee-body { padding: 10px 18px 14px; }
+.fee-player-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.fee-player-row:last-child { border-bottom: none; }
+.fee-player-name { flex: 1; font-weight: 600; }
+.fee-toggle {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line-2);
+  background: var(--surface); transition: all 0.13s; user-select: none;
+}
+.fee-toggle.paid   { background: var(--win-bg); border-color: #86efac; color: var(--win); }
+.fee-toggle.unpaid { background: var(--loss-bg); border-color: #fca5a5; color: var(--loss); }
+.fee-collapsed { display: none; }
+.fee-edit-btn {
+  font-size: 11px; font-weight: 600; background: none;
+  border: 1px solid var(--line-2); border-radius: var(--r-xs);
+  padding: 3px 9px; color: var(--muted); cursor: pointer; transition: all 0.12s;
+}
+.fee-edit-btn:hover { border-color: var(--lime-soft); color: var(--lime); }
+
 </style>
 </head>
 <body>
@@ -609,6 +754,9 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
       <button class="tab" data-view="events">Eventos</button>
       <button class="tab" data-view="roster">Plantel</button>
       <button class="tab" data-view="matches">Partidos</button>
+      <button class="tab" data-view="stats">Estadísticas</button>
+      <button class="tab" data-view="board">Tablón</button>
+      <button class="tab" data-view="fees">Cuotas</button>
     </nav>
   </div>
 </header>
@@ -735,6 +883,163 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   </section>
 
 </div>
+
+
+  <!-- ═══════════ ASISTENCIA RÁPIDA MODAL ═══════════ -->
+  <div class="modal-bg" id="attModalBg" style="display:none" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-title"><div class="modal-title-icon">✅</div><span id="attModalTitle">Pase de lista</span></div>
+      <div id="attEventMeta" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
+      <div id="attList" style="display:flex;flex-direction:column;gap:6px;max-height:55vh;overflow-y:auto"></div>
+      <div class="modal-actions" style="margin-top:14px">
+        <span id="attCounter" style="margin-right:auto;font-size:13px;color:var(--muted);font-weight:600"></span>
+        <button class="btn" id="btnCloseAtt">Cerrar</button>
+        <button class="btn p" id="btnSaveAtt">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ RESULTADO PARTIDO MODAL ═══════════ -->
+  <div class="modal-bg" id="resultModalBg" style="display:none" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-title"><div class="modal-title-icon">⚽</div><span id="resultModalTitle">Cargar resultado</span></div>
+      <input type="hidden" id="res_event_id">
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group" style="align-items:center">
+          <label class="form-label">Golden Moms</label>
+          <input id="res_gf" type="number" min="0" max="99" class="input" placeholder="0"
+            style="font-size:40px;font-weight:800;text-align:center;padding:8px">
+        </div>
+        <div class="form-group" style="align-items:center">
+          <label class="form-label" id="res_opp_label">Rival</label>
+          <input id="res_ga" type="number" min="0" max="99" class="input" placeholder="0"
+            style="font-size:40px;font-weight:800;text-align:center;padding:8px">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label">Goleadoras (seleccioná)</label>
+        <div id="res_scorers_grid" class="conv-grid" style="margin-top:6px"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observación</label>
+        <textarea id="res_obs" class="input" rows="2" placeholder="Notas del partido…" style="resize:vertical"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="btnCloseResult">Cancelar</button>
+        <button class="btn p" id="btnSaveResult">💾 Guardar resultado</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ ANUNCIO MODAL ═══════════ -->
+  <div class="modal-bg" id="annModalBg" style="display:none" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-title"><div class="modal-title-icon">📢</div><span id="annModalTitle">Nuevo anuncio</span></div>
+      <input type="hidden" id="ann_id">
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label">Título *</label>
+        <input id="ann_title" class="input" placeholder="Ej: Cancha suspendida por lluvia">
+      </div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label">Mensaje</label>
+        <textarea id="ann_body" class="input" rows="3" placeholder="Detalle del anuncio…" style="resize:vertical"></textarea>
+      </div>
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group">
+          <label class="form-label">Equipo</label>
+          <select id="ann_team" class="input">
+            <option value="Golden Moms">💚 Golden Moms</option>
+            <option value="Dreams">💜 Dreams</option>
+            <option value="Power">🧡 Power</option>
+            <option value="Todos">📣 Todos</option>
+          </select>
+        </div>
+        <div class="form-group" style="justify-content:flex-end">
+          <label class="form-label">Fijar arriba</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;margin-top:4px">
+            <input type="checkbox" id="ann_pinned"> Destacado 📌
+          </label>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn danger" id="btnDeleteAnn" style="margin-right:auto;display:none">🗑 Eliminar</button>
+        <button class="btn" id="btnCloseAnn">Cancelar</button>
+        <button class="btn p" id="btnSaveAnn">💾 Publicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CUOTA MODAL ═══════════ -->
+  <div class="modal-bg" id="feeModalBg" style="display:none" aria-hidden="true">
+    <div class="modal modal-wide" role="dialog" aria-modal="true">
+      <div class="modal-title"><div class="modal-title-icon">💰</div><span id="feeModalTitle">Nueva cuota</span></div>
+      <input type="hidden" id="fee_id">
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group">
+          <label class="form-label">Título *</label>
+          <input id="fee_title" class="input" placeholder="Ej: Cuota Marzo 2025">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monto ($)</label>
+          <input id="fee_amount" class="input" type="number" min="0" placeholder="10000">
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group">
+          <label class="form-label">Vencimiento</label>
+          <input id="fee_due" class="input" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Equipo</label>
+          <select id="fee_team" class="input">
+            <option value="Golden Moms">💚 Golden Moms</option>
+            <option value="Dreams">💜 Dreams</option>
+            <option value="Power">🧡 Power</option>
+            <option value="Todos">Todos</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-section-title">Pagos por jugadora</div>
+      <div id="fee_payments_grid" style="display:flex;flex-direction:column;gap:5px;max-height:45vh;overflow-y:auto"></div>
+      <div class="modal-actions">
+        <button class="btn danger" id="btnDeleteFee" style="margin-right:auto;display:none">🗑 Eliminar</button>
+        <button class="btn" id="btnCloseFee">Cancelar</button>
+        <button class="btn p" id="btnSaveFee">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ ESTADÍSTICAS ═══════════ -->
+  <section id="v-stats" style="display:none">
+    <div class="section-header">
+      <div><div class="section-title">Estadísticas</div><div class="section-sub">Rendimiento individual de la temporada</div></div>
+      <select id="stats_team_filter" class="input" style="width:auto;min-width:160px">
+        <option value="all">Todos los equipos</option>
+        <option value="Golden Moms">💚 Golden Moms</option>
+        <option value="Dreams">💜 Dreams</option>
+        <option value="Power">🧡 Power</option>
+      </select>
+    </div>
+    <div id="statsGrid" style="display:flex;flex-direction:column;gap:8px"></div>
+  </section>
+
+  <!-- ═══════════ TABLÓN ═══════════ -->
+  <section id="v-board" style="display:none">
+    <div class="section-header">
+      <div><div class="section-title">Tablón</div><div class="section-sub">Anuncios y avisos del equipo</div></div>
+      <button class="btn p" id="btnNewAnn">＋ Anuncio</button>
+    </div>
+    <div id="boardList" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <!-- ═══════════ CUOTAS ═══════════ -->
+  <section id="v-fees" style="display:none">
+    <div class="section-header">
+      <div><div class="section-title">Cuotas</div><div class="section-sub">Control de pagos del equipo</div></div>
+      <button class="btn p" id="btnNewFee">＋ Nueva cuota</button>
+    </div>
+    <div id="feesList" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
 
 <footer>Golden Moms · hecho con 💚 lima &amp; azul</footer>
 
@@ -1365,6 +1670,20 @@ function makeEventChip(e){
     const time = document.createElement('div'); time.className='ev-time';
     time.textContent = d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}); ev.appendChild(time);
   }
+  // Attendance button for training events
+  if(e.type === EVENT_TYPES.TRAIN){
+    const attBtn = document.createElement('div');
+    attBtn.className='ev-result-btn'; attBtn.textContent='✅ Lista';
+    attBtn.addEventListener('click', ev2=>{ ev2.stopPropagation(); openAttModal(e); });
+    ev.appendChild(attBtn);
+  }
+  // Result button for match events
+  if(e.type === EVENT_TYPES.MATCH){
+    const resBtn = document.createElement('div');
+    resBtn.className='ev-result-btn'; resBtn.textContent='⚽ Resultado';
+    resBtn.addEventListener('click', ev2=>{ ev2.stopPropagation(); openResultModal(e); });
+    ev.appendChild(resBtn);
+  }
   ev.addEventListener('click', () => openModal({ existing: e }));
   return ev;
 }
@@ -1697,7 +2016,7 @@ document.getElementById('btnNewPlayer').addEventListener('click', ()=>openPlayer
    ROUTING
    ══════════════════════════════════════════════════════════ */
 function showView(v){
-  for(const id of ['dash','events','roster','matches']){
+  for(const id of ['dash','events','roster','matches','stats','board','fees']){
     const el=document.getElementById('v-'+id);
     if(el){ el.style.display='none'; el.classList.remove('view-enter'); }
   }
@@ -1707,6 +2026,9 @@ function showView(v){
   if(v==='events')  renderMonth();
   if(v==='matches') renderMatches();
   if(v==='roster')  renderRoster(currentRosterFilter);
+  if(v==='stats')   renderStats();
+  if(v==='board')   renderBoard();
+  if(v==='fees')    renderFees();
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1732,6 +2054,592 @@ document.addEventListener('DOMContentLoaded', async () => {
   closeModal();
   closePlayerModal();
 });
+
+/* ═══════════════════════════════════════════════════════════
+   ASISTENCIA RÁPIDA
+   ══════════════════════════════════════════════════════════ */
+let attEventId = null;
+let attStatuses = {}; // player_id → 'Asiste'|'No asiste'|'Duda'
+
+function openAttModal(event) {
+  attEventId = event.id;
+  attStatuses = {};
+  selectedPlayerIds = new Set();
+
+  document.getElementById('attModalTitle').textContent = event.title || 'Pase de lista';
+  const d = safeDate(event.datetime);
+  document.getElementById('attEventMeta').textContent =
+    (d ? d.toLocaleString('es-CL',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '') +
+    (event.team ? ' · ' + event.team : '');
+
+  attModalBg.style.display = 'flex';
+  loadAttendanceForEvent(event.id).then(() => {
+    // Pre-populate attStatuses from selectedPlayerIds
+    for(const pid of selectedPlayerIds) attStatuses[pid] = 'Asiste';
+    renderAttList(event.team || TEAMS.GM);
+  });
+}
+
+async function renderAttList(team) {
+  const list = document.getElementById('attList');
+  list.innerHTML = '';
+  if(!allPlayers.length) {
+    const { data } = await supa.from('players')
+      .select('id,apodo,nombre,numero_camiseta,equipos').order('apodo',{ascending:true});
+    allPlayers = data || [];
+  }
+  const filtered = team === TEAMS.GM ? allPlayers
+    : allPlayers.filter(p => Array.isArray(p.equipos) && p.equipos.includes(team));
+
+  for(const p of filtered) {
+    const status = attStatuses[p.id] || null;
+    const row = document.createElement('div');
+    row.className = 'att-row' + (status==='Asiste'?' att-yes':status==='No asiste'?' att-no':status==='Duda'?' att-maybe':'');
+    row.dataset.pid = p.id;
+
+    const av = document.createElement('div'); av.className='att-avatar';
+    av.textContent = (p.apodo||p.nombre||'?')[0].toUpperCase();
+    const nm = document.createElement('div'); nm.className='att-name';
+    nm.textContent = p.apodo || p.nombre || '—';
+    const num = document.createElement('div'); num.className='att-num';
+    if(p.numero_camiseta) num.textContent = '#'+p.numero_camiseta;
+
+    const btns = document.createElement('div'); btns.className='att-btns';
+    [['✅','Asiste','act-yes'],['❌','No asiste','act-no'],['🤔','Duda','act-duda']].forEach(([emoji,val,cls])=>{
+      const b = document.createElement('button'); b.className='att-btn'+(status===val?' '+cls:'');
+      b.textContent=emoji; b.title=val;
+      b.addEventListener('click', e=>{
+        e.stopPropagation();
+        attStatuses[p.id] = attStatuses[p.id]===val ? null : val;
+        renderAttList(team); updateAttCounter();
+      });
+      btns.appendChild(b);
+    });
+
+    row.addEventListener('click', ()=>{
+      // Quick tap cycles: null→Asiste→No asiste→null
+      const cur = attStatuses[p.id];
+      attStatuses[p.id] = cur===null||!cur ? 'Asiste' : cur==='Asiste' ? 'No asiste' : null;
+      renderAttList(team); updateAttCounter();
+    });
+    row.appendChild(av); row.appendChild(nm); row.appendChild(num); row.appendChild(btns);
+    list.appendChild(row);
+  }
+  updateAttCounter();
+}
+
+function updateAttCounter(){
+  const vals = Object.values(attStatuses);
+  const yes = vals.filter(v=>v==='Asiste').length;
+  const no  = vals.filter(v=>v==='No asiste').length;
+  const duda= vals.filter(v=>v==='Duda').length;
+  document.getElementById('attCounter').textContent =
+    `✅ ${yes}  ❌ ${no}${duda?' 🤔 '+duda:''}`;
+}
+
+const attModalBg = document.getElementById('attModalBg');
+document.getElementById('btnCloseAtt').addEventListener('click', ()=>{ attModalBg.style.display='none'; });
+attModalBg.addEventListener('click', e=>{ if(e.target===attModalBg) attModalBg.style.display='none'; });
+
+document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
+  if(!supa||!IS_CONNECTED||!attEventId){ alert('Sin conexión.'); return; }
+  if(!allPlayers.length){ alert('No hay jugadoras cargadas.'); return; }
+  try{
+    const upserts = allPlayers.map(p=>({
+      event_id: attEventId,
+      player_id: p.id,
+      status: attStatuses[p.id] || 'No asiste',
+      updated_at: new Date().toISOString()
+    }));
+    const {error} = await supa.from('attendance').upsert(upserts, {onConflict:'event_id,player_id'});
+    if(error) throw error;
+    attModalBg.style.display='none';
+  } catch(err){ alert('Error guardando asistencia: '+(err.message||err)); }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   RESULTADO PARTIDO
+   ══════════════════════════════════════════════════════════ */
+let resSelectedScorers = new Set();
+
+function openResultModal(event) {
+  resSelectedScorers = new Set();
+  document.getElementById('resultModalTitle').textContent = 'Resultado — ' + (event.title||'Partido');
+  document.getElementById('res_event_id').value = event.id;
+  document.getElementById('res_opp_label').textContent = event.opponent || 'Rival';
+  document.getElementById('res_gf').value = '';
+  document.getElementById('res_ga').value = '';
+  document.getElementById('res_obs').value = '';
+
+  // Load existing match if any
+  if(supa&&IS_CONNECTED){
+    supa.from('matches').select('*').eq('event_id', event.id).maybeSingle().then(({data:m})=>{
+      if(m){
+        document.getElementById('res_gf').value = m.goals_for ?? '';
+        document.getElementById('res_ga').value = m.goals_against ?? '';
+        document.getElementById('res_obs').value = m.observation || m.notes || '';
+        resSelectedScorers = new Set(m.scorer_ids||[]);
+      }
+      renderScorerGrid(event.team || TEAMS.GM);
+    });
+  } else { renderScorerGrid(event.team || TEAMS.GM); }
+
+  resultModalBg.style.display='flex';
+}
+
+async function renderScorerGrid(team) {
+  const grid = document.getElementById('res_scorers_grid');
+  grid.innerHTML='';
+  if(!allPlayers.length && supa && IS_CONNECTED){
+    const {data} = await supa.from('players').select('id,apodo,nombre,numero_camiseta,equipos').order('apodo',{ascending:true});
+    allPlayers = data||[];
+  }
+  const filtered = team===TEAMS.GM ? allPlayers
+    : allPlayers.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(team));
+  for(const p of filtered){
+    const btn = document.createElement('button'); btn.type='button';
+    btn.className = 'conv-player'+(resSelectedScorers.has(p.id)?' selected':'');
+    btn.dataset.id=p.id;
+    if(p.numero_camiseta){ const s=document.createElement('span');s.className='conv-num';s.textContent='#'+p.numero_camiseta;btn.appendChild(s); }
+    const nm=document.createElement('span');nm.textContent=p.apodo||p.nombre||'—';btn.appendChild(nm);
+    btn.addEventListener('click',()=>{
+      resSelectedScorers.has(p.id)?resSelectedScorers.delete(p.id):resSelectedScorers.add(p.id);
+      btn.classList.toggle('selected');
+    });
+    grid.appendChild(btn);
+  }
+}
+
+const resultModalBg = document.getElementById('resultModalBg');
+document.getElementById('btnCloseResult').addEventListener('click',()=>{ resultModalBg.style.display='none'; });
+resultModalBg.addEventListener('click', e=>{ if(e.target===resultModalBg) resultModalBg.style.display='none'; });
+
+document.getElementById('btnSaveResult').addEventListener('click', async ()=>{
+  if(!supa||!IS_CONNECTED){ alert('Sin conexión.'); return; }
+  const event_id = document.getElementById('res_event_id').value;
+  const gf = parseInt(document.getElementById('res_gf').value);
+  const ga = parseInt(document.getElementById('res_ga').value);
+  if(isNaN(gf)||isNaN(ga)){ alert('Ingresá el marcador.'); return; }
+
+  const scorerIds = [...resSelectedScorers];
+  // Get scorer names for the scorers array
+  const scorerNames = allPlayers.filter(p=>scorerIds.includes(p.id)).map(p=>p.apodo||p.nombre);
+
+  const observation = document.getElementById('res_obs').value.trim()||null;
+  const payload = {
+    event_id, goals_for:gf, goals_against:ga,
+    goal_difference: gf-ga,
+    scorer_ids: scorerIds,
+    scorers: scorerNames,
+    observation
+  };
+  try{
+    // Check if match exists for this event
+    const {data:existing} = await supa.from('matches').select('id').eq('event_id',event_id).maybeSingle();
+    if(existing){
+      const {error} = await supa.from('matches').update(payload).eq('id',existing.id);
+      if(error) throw error;
+    } else {
+      // Also grab event data for the match record
+      const {data:ev} = await supa.from('events').select('team,opponent,datetime').eq('id',event_id).maybeSingle();
+      const {error} = await supa.from('matches').insert([{
+        ...payload,
+        team: ev?.team||TEAMS.GM,
+        opponent: ev?.opponent||null,
+        date: ev?.datetime ? ev.datetime.slice(0,10) : null
+      }]);
+      if(error) throw error;
+    }
+    resultModalBg.style.display='none';
+    if(document.querySelector('.nav .tab.active')?.dataset.view==='matches') renderMatches();
+    renderKPIs();
+  } catch(err){ alert('Error: '+(err.message||err)); console.error(err); }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   ESTADÍSTICAS INDIVIDUALES
+   ══════════════════════════════════════════════════════════ */
+async function renderStats() {
+  const grid = document.getElementById('statsGrid');
+  const filterTeam = document.getElementById('stats_team_filter').value;
+  grid.innerHTML = '<div class="empty-state"><span class="empty-state-icon">⏳</span>Calculando…</div>';
+  if(!supa||!IS_CONNECTED){ grid.innerHTML='<div class="empty-state">Sin conexión</div>'; return; }
+  try{
+    // Load players
+    const {data:players} = await supa.from('players').select('id,apodo,nombre,numero_camiseta,foto,equipos').order('apodo',{ascending:true});
+    // Load attendance with event info (only entrenos for attendance %)
+    const {data:att} = await supa.from('attendance').select('player_id,status,events(type)');
+    // Load goals
+    const {data:goals} = await supa.from('goals').select('player_id');
+    // Load scorer_ids from matches
+    const {data:matches} = await supa.from('matches').select('scorer_ids');
+
+    grid.innerHTML='';
+
+    // Build stats per player
+    const attByPlayer = {};
+    const trainTotal = (att||[]).filter(a=>a.events?.type==='Entrenamiento').length;
+    for(const a of (att||[])){
+      if(!attByPlayer[a.player_id]) attByPlayer[a.player_id]={total:0,asiste:0};
+      if(a.events?.type==='Entrenamiento'){
+        attByPlayer[a.player_id].total++;
+        if(a.status==='Asiste') attByPlayer[a.player_id].asiste++;
+      }
+    }
+    const goalsByPlayer = {};
+    for(const g of (goals||[])){ if(g.player_id) goalsByPlayer[g.player_id]=(goalsByPlayer[g.player_id]||0)+1; }
+    // Also count from matches.scorer_ids
+    for(const m of (matches||[])){ for(const id of (m.scorer_ids||[])){ goalsByPlayer[id]=(goalsByPlayer[id]||0)+1; } }
+
+    let filtered = (players||[]);
+    if(filterTeam!=='all') filtered=filtered.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(filterTeam));
+
+    // Sort by goals desc, then attendance desc
+    filtered.sort((a,b)=>{
+      const gd=(goalsByPlayer[b.id]||0)-(goalsByPlayer[a.id]||0);
+      if(gd!==0) return gd;
+      const ad=(attByPlayer[b.id]?.asiste||0)-(attByPlayer[a.id]?.asiste||0);
+      return ad;
+    });
+
+    if(!filtered.length){ grid.innerHTML='<div class="empty-state"><span class="empty-state-icon">👥</span>Sin jugadoras</div>'; return; }
+
+    // Header
+    const header = document.createElement('div');
+    header.className='stats-row'; header.style.background='var(--surface-2)'; header.style.fontWeight='700'; header.style.fontSize='10px'; header.style.color='var(--muted)'; header.style.textTransform='uppercase'; header.style.letterSpacing='0.5px';
+    header.innerHTML='<div></div><div>Jugadora</div><div style="text-align:center">Goles</div><div style="text-align:center">Asistencia</div><div>% entrenamientos</div>';
+    grid.appendChild(header);
+
+    for(const p of filtered){
+      const goles = goalsByPlayer[p.id]||0;
+      const att_data = attByPlayer[p.id]||{total:0,asiste:0};
+      const pct = att_data.total>0 ? Math.round(att_data.asiste/att_data.total*100) : null;
+
+      const row = document.createElement('div'); row.className='stats-row';
+
+      // Avatar
+      const avWrap = document.createElement('div');
+      if(p.foto){
+        const img=document.createElement('img');img.className='stats-avatar';img.style.width='40px';img.style.height='40px';img.style.borderRadius='50%';img.style.objectFit='cover';img.src=p.foto;img.alt='';avWrap.appendChild(img);
+      } else {
+        const av=document.createElement('div');av.className='stats-avatar';av.textContent=(p.apodo||p.nombre||'?')[0].toUpperCase();avWrap.appendChild(av);
+      }
+
+      const info=document.createElement('div');
+      const nm=document.createElement('div');nm.className='stats-name';nm.textContent=p.apodo||p.nombre||'—';
+      const sub=document.createElement('div');sub.className='stats-sub';sub.textContent=p.nombre&&p.apodo?p.nombre:(p.numero_camiseta?'#'+p.numero_camiseta:'');
+      info.appendChild(nm);info.appendChild(sub);
+
+      const golesKpi=document.createElement('div');golesKpi.className='stats-kpi';
+      golesKpi.innerHTML=`<div class="stats-kpi-n">${goles}</div><div class="stats-kpi-l">Goles</div>`;
+
+      const attKpi=document.createElement('div');attKpi.className='stats-kpi';
+      attKpi.innerHTML=`<div class="stats-kpi-n">${att_data.asiste}</div><div class="stats-kpi-l">Presencias</div>`;
+
+      const barWrap=document.createElement('div');barWrap.className='stats-bar-wrap';
+      if(pct!==null){
+        barWrap.innerHTML=`<div class="stats-bar-bg"><div class="stats-bar-fill" style="width:${pct}%"></div></div><div class="stats-pct">${pct}%</div>`;
+      } else { barWrap.innerHTML='<div class="stats-pct" style="color:var(--muted-2)">—</div>'; }
+
+      row.appendChild(avWrap);row.appendChild(info);row.appendChild(golesKpi);row.appendChild(attKpi);row.appendChild(barWrap);
+      grid.appendChild(row);
+    }
+  } catch(err){ console.error('renderStats',err); grid.innerHTML='<div class="empty-state">Error cargando estadísticas</div>'; }
+}
+document.getElementById('stats_team_filter').addEventListener('change', renderStats);
+
+/* ═══════════════════════════════════════════════════════════
+   TABLÓN DE ANUNCIOS
+   ══════════════════════════════════════════════════════════ */
+const annModalBg = document.getElementById('annModalBg');
+let editingAnnId = null;
+
+function openAnnModal(ann=null){
+  editingAnnId = ann?.id||null;
+  document.getElementById('annModalTitle').textContent = ann ? 'Editar anuncio' : 'Nuevo anuncio';
+  document.getElementById('ann_id').value = ann?.id||'';
+  document.getElementById('ann_title').value = ann?.title||'';
+  document.getElementById('ann_body').value = ann?.body||'';
+  document.getElementById('ann_team').value = ann?.team||'Golden Moms';
+  document.getElementById('ann_pinned').checked = ann?.pinned||false;
+  document.getElementById('btnDeleteAnn').style.display = ann ? '' : 'none';
+  annModalBg.style.display='flex';
+  document.getElementById('ann_title').focus();
+}
+function closeAnnModal(){ annModalBg.style.display='none'; editingAnnId=null; }
+
+document.getElementById('btnNewAnn').addEventListener('click',()=>openAnnModal());
+document.getElementById('btnCloseAnn').addEventListener('click',closeAnnModal);
+annModalBg.addEventListener('click',e=>{if(e.target===annModalBg)closeAnnModal();});
+
+document.getElementById('btnDeleteAnn').addEventListener('click', async ()=>{
+  if(!editingAnnId||!supa||!IS_CONNECTED) return;
+  if(!confirm('¿Eliminar este anuncio?')) return;
+  try{
+    const {error}=await supa.from('announcements').delete().eq('id',editingAnnId);
+    if(error) throw error;
+  } catch(err){ alert('Error: '+(err.message||err)); return; }
+  closeAnnModal(); renderBoard();
+});
+
+document.getElementById('btnSaveAnn').addEventListener('click', async ()=>{
+  const title=document.getElementById('ann_title').value.trim();
+  if(!title){ alert('El título es obligatorio.'); return; }
+  if(!supa||!IS_CONNECTED){ alert('Sin conexión.'); return; }
+  const payload={
+    title,
+    body: document.getElementById('ann_body').value.trim()||null,
+    team: document.getElementById('ann_team').value,
+    pinned: document.getElementById('ann_pinned').checked,
+  };
+  try{
+    if(editingAnnId){
+      const {error}=await supa.from('announcements').update(payload).eq('id',editingAnnId);
+      if(error) throw error;
+    } else {
+      const {error}=await supa.from('announcements').insert([payload]);
+      if(error) throw error;
+    }
+  } catch(err){ alert('Error: '+(err.message||err)); return; }
+  closeAnnModal(); renderBoard();
+});
+
+async function renderBoard(){
+  const list=document.getElementById('boardList');
+  list.innerHTML='';
+  if(!supa||!IS_CONNECTED){ list.innerHTML='<div class="empty-state">Sin conexión</div>'; return; }
+  try{
+    const {data,error}=await supa.from('announcements').select('*').order('pinned',{ascending:false}).order('created_at',{ascending:false});
+    if(error) throw error;
+    if(!data?.length){ list.innerHTML='<div class="empty-state"><span class="empty-state-icon">📢</span>Sin anuncios. ¡Publica el primero!</div>'; return; }
+    for(const ann of data){
+      const card=document.createElement('div');card.className='ann-card'+(ann.pinned?' pinned':'');
+      if(ann.pinned){
+        const pin=document.createElement('div');pin.className='ann-pin-badge';pin.textContent='📌 Destacado';card.appendChild(pin);
+      }
+      const title=document.createElement('div');title.className='ann-title';title.textContent=ann.title;card.appendChild(title);
+      if(ann.body){const body=document.createElement('div');body.className='ann-body';body.textContent=ann.body;card.appendChild(body);}
+      const meta=document.createElement('div');meta.className='ann-meta';
+      const d=safeDate(ann.created_at);
+      const teamBadge=document.createElement('span');
+      teamBadge.className='ev-team-badge '+teamBadgeClass(ann.team==='Todos'?TEAMS.GM:ann.team);
+      teamBadge.textContent=ann.team;
+      meta.appendChild(teamBadge);
+      if(d){ const dt=document.createElement('span');dt.textContent=d.toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'});meta.appendChild(dt); }
+      const editBtn=document.createElement('button');editBtn.className='ann-edit-btn';editBtn.textContent='✏️ Editar';
+      editBtn.addEventListener('click',()=>openAnnModal(ann));meta.appendChild(editBtn);
+      card.appendChild(meta);
+      list.appendChild(card);
+    }
+  } catch(err){ console.error('renderBoard',err); list.innerHTML='<div class="empty-state">Error cargando anuncios</div>'; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CUOTAS
+   ══════════════════════════════════════════════════════════ */
+const feeModalBg=document.getElementById('feeModalBg');
+let editingFeeId=null;
+let feePaymentsState={}; // player_id → boolean
+
+async function openFeeModal(fee=null){
+  editingFeeId=fee?.id||null;
+  feePaymentsState={};
+  document.getElementById('feeModalTitle').textContent=fee?'Editar cuota':'Nueva cuota';
+  document.getElementById('fee_id').value=fee?.id||'';
+  document.getElementById('fee_title').value=fee?.title||'';
+  document.getElementById('fee_amount').value=fee?.amount||'';
+  document.getElementById('fee_due').value=fee?.due_date||'';
+  document.getElementById('fee_team').value=fee?.team||'Golden Moms';
+  document.getElementById('btnDeleteFee').style.display=fee?'':'none';
+
+  // Load payment statuses
+  const pgrid=document.getElementById('fee_payments_grid');
+  pgrid.innerHTML='<div style="color:var(--muted);font-size:12px;padding:8px">Cargando jugadoras…</div>';
+  feeModalBg.style.display='flex';
+
+  if(!supa||!IS_CONNECTED){ pgrid.innerHTML='<div style="color:var(--muted)">Sin conexión</div>'; return; }
+  try{
+    // Load players
+    if(!allPlayers.length){
+      const {data}=await supa.from('players').select('id,apodo,nombre,numero_camiseta,equipos').order('apodo',{ascending:true});
+      allPlayers=data||[];
+    }
+    const teamFilter=document.getElementById('fee_team').value;
+    let filtered=allPlayers;
+    if(teamFilter!=='Todos') filtered=filtered.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(teamFilter));
+
+    // Load existing payments if editing
+    if(fee?.id){
+      const {data:payments}=await supa.from('fee_payments').select('player_id,paid').eq('fee_id',fee.id);
+      for(const pay of (payments||[])){ feePaymentsState[pay.player_id]=pay.paid; }
+    }
+
+    renderFeePaymentsGrid(filtered);
+  } catch(err){ pgrid.innerHTML='<div style="color:var(--danger)">Error cargando jugadoras</div>'; }
+}
+
+function renderFeePaymentsGrid(players){
+  const pgrid=document.getElementById('fee_payments_grid');
+  pgrid.innerHTML='';
+  for(const p of players){
+    const paid=feePaymentsState[p.id]||false;
+    const row=document.createElement('div');row.className='fee-player-row';
+    const av=document.createElement('div');av.className='att-avatar';av.style.width='28px';av.style.height='28px';av.style.fontSize='11px';
+    av.textContent=(p.apodo||p.nombre||'?')[0].toUpperCase();
+    const nm=document.createElement('div');nm.className='fee-player-name';nm.textContent=p.apodo||p.nombre||'—';
+    const toggle=document.createElement('button');toggle.type='button';
+    toggle.className='fee-toggle '+(paid?'paid':'unpaid');
+    toggle.textContent=paid?'✅ Pagó':'❌ Debe';
+    toggle.dataset.pid=p.id;
+    toggle.addEventListener('click',()=>{
+      feePaymentsState[p.id]=!feePaymentsState[p.id];
+      toggle.className='fee-toggle '+(feePaymentsState[p.id]?'paid':'unpaid');
+      toggle.textContent=feePaymentsState[p.id]?'✅ Pagó':'❌ Debe';
+    });
+    row.appendChild(av);row.appendChild(nm);row.appendChild(toggle);
+    pgrid.appendChild(row);
+  }
+}
+
+document.getElementById('fee_team').addEventListener('change', ()=>{
+  if(!allPlayers.length) return;
+  const t=document.getElementById('fee_team').value;
+  const filtered=t==='Todos'?allPlayers:allPlayers.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(t));
+  renderFeePaymentsGrid(filtered);
+});
+
+function closeFeeModal(){ feeModalBg.style.display='none'; editingFeeId=null; feePaymentsState={}; }
+document.getElementById('btnNewFee').addEventListener('click',()=>openFeeModal());
+document.getElementById('btnCloseFee').addEventListener('click',closeFeeModal);
+feeModalBg.addEventListener('click',e=>{ if(e.target===feeModalBg) closeFeeModal(); });
+
+document.getElementById('btnDeleteFee').addEventListener('click', async ()=>{
+  if(!editingFeeId||!supa||!IS_CONNECTED) return;
+  if(!confirm('¿Eliminar esta cuota y todos sus pagos?')) return;
+  try{
+    await supa.from('fee_payments').delete().eq('fee_id',editingFeeId);
+    const {error}=await supa.from('fees').delete().eq('id',editingFeeId);
+    if(error) throw error;
+  } catch(err){ alert('Error: '+(err.message||err)); return; }
+  closeFeeModal(); renderFees();
+});
+
+document.getElementById('btnSaveFee').addEventListener('click', async ()=>{
+  const title=document.getElementById('fee_title').value.trim();
+  if(!title){ alert('El título es obligatorio.'); return; }
+  if(!supa||!IS_CONNECTED){ alert('Sin conexión.'); return; }
+  const amount=document.getElementById('fee_amount').value;
+  const payload={
+    title,
+    amount: amount?parseFloat(amount):null,
+    due_date: document.getElementById('fee_due').value||null,
+    team: document.getElementById('fee_team').value,
+  };
+  try{
+    let feeId=editingFeeId;
+    if(editingFeeId){
+      const {error}=await supa.from('fees').update(payload).eq('id',editingFeeId);
+      if(error) throw error;
+    } else {
+      const {data,error}=await supa.from('fees').insert([payload]).select('id');
+      if(error) throw error;
+      feeId=data?.[0]?.id;
+    }
+    // Upsert payments
+    if(feeId){
+      const upserts=Object.entries(feePaymentsState).map(([player_id,paid])=>({
+        fee_id:feeId, player_id, paid,
+        paid_at: paid ? new Date().toISOString() : null
+      }));
+      if(upserts.length){
+        const {error}=await supa.from('fee_payments').upsert(upserts,{onConflict:'fee_id,player_id'});
+        if(error) console.warn('fee_payments upsert:',error);
+      }
+    }
+  } catch(err){ alert('Error: '+(err.message||err)); return; }
+  closeFeeModal(); renderFees();
+});
+
+async function renderFees(){
+  const list=document.getElementById('feesList');
+  list.innerHTML='';
+  if(!supa||!IS_CONNECTED){ list.innerHTML='<div class="empty-state">Sin conexión</div>'; return; }
+  try{
+    const {data:fees,error}=await supa.from('fees').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    if(!fees?.length){ list.innerHTML='<div class="empty-state"><span class="empty-state-icon">💰</span>No hay cuotas. ¡Crea la primera!</div>'; return; }
+
+    for(const fee of fees){
+      // Load payments for this fee
+      const {data:payments}=await supa.from('fee_payments').select('player_id,paid');
+      const paidSet=new Set((payments||[]).filter(p=>p.paid).map(p=>p.player_id));
+      const totalPayers=(payments||[]).length;
+      const paidCount=paidSet.size;
+      const pct=totalPayers>0?Math.round(paidCount/totalPayers*100):0;
+
+      const card=document.createElement('div');card.className='fee-card';
+
+      const header=document.createElement('div');header.className='fee-header';
+      const left=document.createElement('div');
+      const title=document.createElement('div');title.className='fee-title';title.textContent=fee.title;
+      const meta=document.createElement('div');meta.className='fee-meta';
+      const parts=[];
+      if(fee.amount) parts.push('$'+Number(fee.amount).toLocaleString('es-CL'));
+      if(fee.due_date) parts.push('Vence: '+safeDateOnly(fee.due_date)?.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})||fee.due_date);
+      parts.push(fee.team);
+      meta.textContent=parts.join(' · ');
+      left.appendChild(title);left.appendChild(meta);
+
+      const right=document.createElement('div');right.style.display='flex';right.style.alignItems='center';right.style.gap='10px';
+      const progWrap=document.createElement('div');progWrap.className='fee-progress-wrap';
+      progWrap.innerHTML=`<div class="fee-progress-bg"><div class="fee-progress-fill" style="width:${pct}%"></div></div><div class="fee-pct">${paidCount}/${totalPayers}</div>`;
+      const editBtn=document.createElement('button');editBtn.className='fee-edit-btn';editBtn.textContent='✏️ Editar';
+      editBtn.addEventListener('click',e=>{e.stopPropagation();openFeeModal(fee);});
+      right.appendChild(progWrap);right.appendChild(editBtn);
+
+      header.appendChild(left);header.appendChild(right);
+
+      // Collapsible body with per-player status
+      const body=document.createElement('div');body.className='fee-body fee-collapsed';
+      if(payments?.length){
+        // Load player names
+        if(!allPlayers.length){
+          const {data:pl}=await supa.from('players').select('id,apodo,nombre').order('apodo',{ascending:true});
+          allPlayers=pl||[];
+        }
+        const playerMap=Object.fromEntries(allPlayers.map(p=>[p.id,p]));
+        for(const pay of (payments||[])){
+          const pl=playerMap[pay.player_id];
+          if(!pl) continue;
+          const row=document.createElement('div');row.className='fee-player-row';
+          const nm=document.createElement('span');nm.className='fee-player-name';nm.textContent=pl.apodo||pl.nombre||'—';
+          const status=document.createElement('span');
+          status.className='fee-toggle '+(pay.paid?'paid':'unpaid');
+          status.textContent=pay.paid?'✅ Pagó':'❌ Debe';
+          // Toggle payment inline
+          status.style.cursor='pointer';
+          status.addEventListener('click', async ()=>{
+            const newPaid=!pay.paid;
+            try{
+              await supa.from('fee_payments').upsert([{fee_id:fee.id,player_id:pay.player_id,paid:newPaid,paid_at:newPaid?new Date().toISOString():null}],{onConflict:'fee_id,player_id'});
+              pay.paid=newPaid;
+              status.className='fee-toggle '+(newPaid?'paid':'unpaid');
+              status.textContent=newPaid?'✅ Pagó':'❌ Debe';
+            } catch(e){ console.warn(e); }
+          });
+          row.appendChild(nm);row.appendChild(status);body.appendChild(row);
+        }
+      }
+      // Toggle expand
+      header.addEventListener('click',()=>{
+        body.classList.toggle('fee-collapsed');
+      });
+      card.appendChild(header);card.appendChild(body);
+      list.appendChild(card);
+    }
+  } catch(err){ console.error('renderFees',err); list.innerHTML='<div class="empty-state">Error cargando cuotas</div>'; }
+}
+
 </script>
 
 <script>
