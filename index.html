@@ -1002,12 +1002,27 @@ function escapeHTML(str){
   if(str == null) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+function pad(n){ return n.toString().padStart(2,'0'); }
+
+// Para fechas CON hora (events.datetime → timestamp with time zone)
+// new Date(iso) es correcto porque viene con offset explícito.
 function safeDate(iso){
   if(!iso) return null;
   const d = new Date(iso);
   return isNaN(d.getTime()) ? null : d;
 }
-function pad(n){ return n.toString().padStart(2,'0'); }
+
+// Para fechas SIN hora (fecha_nacimiento, proximo_cumple → tipo `date` en PG).
+// "2025-03-14" → new Date("2025-03-14") = UTC midnight → en Chile aparece como 13 mar.
+// Parseamos manualmente para quedarnos en hora local.
+function safeDateOnly(str){
+  if(!str) return null;
+  // Si tiene hora (timestamp), usar safeDate normal
+  if(str.includes('T') || str.includes(' ')) return safeDate(str);
+  const [y, m, d] = str.split('-').map(Number);
+  if(!y || !m || !d) return null;
+  return new Date(y, m - 1, d); // constructor local, sin UTC
+}
 
 function localInputToISOWithOffset(inp){
   if(!inp) return null;
@@ -1209,13 +1224,13 @@ function openPlayerModal(player){
   p_numero.value    = player?.numero_camiseta != null ? player.numero_camiseta : '';
   p_fecha_nac.value = player?.fecha_nacimiento ? player.fecha_nacimiento.slice(0,10) : '';
   p_rol.value       = player?.rol       || 'jugadora';
-  p_estado.value    = player?.estado    || '';
+  p_estado.value    = player?.Estado    || '';
   p_celular.value   = player?.celular   || '';
   p_email.value     = player?.email     || '';
-  p_tel_emerg.value = player?.telefono_emergencia || '';
-  p_rut.value       = player?.rut       || '';
-  p_curso.value     = player?.curso_hijos || '';
-  p_seguro.value    = player?.seguro_medico || '';
+  p_tel_emerg.value = player?.Telefono_emergencia || '';
+  p_rut.value       = player?.Rut       || '';
+  p_curso.value     = player?.Curso_hijos || '';
+  p_seguro.value    = player?.Seguro_Medico || '';
   const equipos = Array.isArray(player?.equipos) ? player.equipos : [];
   p_eq_gm.checked = equipos.includes(TEAMS.GM);
   p_eq_dr.checked = equipos.includes(TEAMS.DR);
@@ -1258,14 +1273,14 @@ document.getElementById('btnSavePlayer').addEventListener('click', async () => {
     numero_camiseta: isNaN(numero)?null:numero,
     fecha_nacimiento: p_fecha_nac.value||null,
     rol: p_rol.value||'jugadora',
-    estado: p_estado.value||null,
+    Estado: p_estado.value||null,
     equipos,
     celular: p_celular.value.trim()||null,
     email: p_email.value.trim()||null,
-    telefono_emergencia: p_tel_emerg.value.trim()||null,
-    rut: p_rut.value.trim()||null,
-    curso_hijos: p_curso.value.trim()||null,
-    seguro_medico: p_seguro.value.trim()||null,
+    Telefono_emergencia: p_tel_emerg.value.trim()||null,
+    Rut: p_rut.value.trim()||null,
+    Curso_hijos: p_curso.value.trim()||null,
+    Seguro_Medico: p_seguro.value.trim()||null,
   };
   try{
     if(editingPlayerId){
@@ -1526,7 +1541,7 @@ async function renderBirthdays(){
     for(const p of (vw||[])){ if(!seen.has(p.id)&&uniq.length<5){ seen.add(p.id); uniq.push(p); } }
     if(uniq.length){
       for(const p of uniq){
-        const bd=safeDate(p.proximo_cumple); if(!bd) continue;
+        const bd=safeDateOnly(p.proximo_cumple); if(!bd) continue;
         const item=document.createElement('div'); item.className='birth-item';
         const av=document.createElement('div'); av.className='birth-avatar';
         av.textContent=(p.apodo||p.nombre||'?')[0].toUpperCase(); item.appendChild(av);
@@ -1539,7 +1554,7 @@ async function renderBirthdays(){
         if(isToday){ const b=document.createElement('div'); b.className='birth-today-badge'; b.textContent='¡Hoy! 🎂'; item.appendChild(b); }
         upB.appendChild(item);
       }
-      const todayList=uniq.filter(p=>p.proximo_cumple&&localDateYMD(safeDate(p.proximo_cumple)||new Date(0))===todayYMD);
+      const todayList=uniq.filter(p=>p.proximo_cumple&&localDateYMD(safeDateOnly(p.proximo_cumple)||new Date(0))===todayYMD);
       if(todayList.length){
         birthTodayEl.innerHTML='';
         for(const p of todayList){
@@ -1617,7 +1632,7 @@ async function renderMatches(){
       const hasScore=gf!==null&&ga!==null;
       const resultKey=!hasScore?'':'draw'+(gf>ga?'win':gf<ga?'loss':'draw').replace('drawwin','win').replace('drawloss','loss');
       const rc=hasScore?(gf>ga?'win':gf<ga?'loss':'draw'):'';
-      const date=safeDate(ev?.datetime||m.date);
+      const date=safeDate(ev?.datetime) || safeDateOnly(m.date);
       const title=ev?.title||m.opponent||'Partido';
       const team=ev?.team||m.team||TEAMS.GM;
       const opp=ev?.opponent||m.opponent||'';
