@@ -2219,19 +2219,12 @@ document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
     const pending= players.filter(p=>!attStatuses[p.id]).map(p=>p.apodo||p.nombre);
     // Hardcode app URL — window.location can be unreliable when copied to clipboard
     const appUrl = 'https://nmillana.github.io/GoldenMoms2/';
-    let msg = '📋 *Asistencia — ' + eventTitle + '*
-';
-    if(yes.length)     msg += '
-✅ Asisten (' + yes.length + '): ' + yes.join(', ');
-    if(duda.length)    msg += '
-🤔 Duda (' + duda.length + '): ' + duda.join(', ');
-    if(no.length)      msg += '
-❌ No asisten (' + no.length + '): ' + no.join(', ');
-    if(pending.length) msg += '
-⏳ Sin responder (' + pending.length + '): ' + pending.join(', ');
-    msg += '
-
-👉 Confirma tu asistencia en la app: ' + appUrl;
+    let msg = '📋 *Asistencia — ' + eventTitle + '*\n';
+    if(yes.length)     msg += '\n✅ Asisten (' + yes.length + '): ' + yes.join(', ');
+    if(duda.length)    msg += '\n🤔 Duda (' + duda.length + '): ' + duda.join(', ');
+    if(no.length)      msg += '\n❌ No asisten (' + no.length + '): ' + no.join(', ');
+    if(pending.length) msg += '\n⏳ Sin responder (' + pending.length + '): ' + pending.join(', ');
+    msg += '\n\n👉 Confirma tu asistencia en la app: ' + appUrl;
 
     // Share on WA group: copy + open (do before closing modal so toast is visible)
     if(yes.length+no.length+duda.length > 0){
@@ -2513,7 +2506,7 @@ async function renderBoard(){
       const editBtn=document.createElement('button');editBtn.className='ann-edit-btn';editBtn.textContent='✏️ Editar';
       editBtn.addEventListener('click',()=>openAnnModal(ann));meta.appendChild(editBtn);
       // WhatsApp share
-      const waText = `📢 *${ann.title}*${ann.body?'\n\n'+ann.body:''}\n\n_Golden Moms_`;
+      const waText = '📢 *' + ann.title + '*' + (ann.body ? '\n\n' + ann.body : '') + '\n\n_Golden Moms_';
       const waBtn = document.createElement('button');
       waBtn.className='btn-wa';
       waBtn.innerHTML = WA_ICON + ' Compartir al grupo';
