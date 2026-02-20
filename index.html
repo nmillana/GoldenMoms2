@@ -737,6 +737,18 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 }
 .fee-edit-btn:hover { border-color: var(--lime-soft); color: var(--lime); }
 
+
+/* ── WhatsApp ─────────────────────────────────────────── */
+.btn-wa {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 13px; border-radius: 99px;
+  background: #dcfce7; border: 1px solid #86efac;
+  color: #16a34a; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.13s; text-decoration: none;
+  font-family: var(--font-body);
+}
+.btn-wa:hover { background: #bbf7d0; border-color: #4ade80; }
+.btn-wa svg  { width: 14px; height: 14px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -894,7 +906,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
       <div class="modal-actions" style="margin-top:14px">
         <span id="attCounter" style="margin-right:auto;font-size:13px;color:var(--muted);font-weight:600"></span>
         <button class="btn" id="btnCloseAtt">Cerrar</button>
-        <button class="btn p" id="btnSaveAtt">💾 Guardar</button>
+        <button class="btn p" id="btnSaveAtt">💾 Guardar y avisar</button>
       </div>
     </div>
   </div>
@@ -2153,7 +2165,23 @@ document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
     }));
     const {error} = await supa.from('attendance').upsert(upserts, {onConflict:'event_id,player_id'});
     if(error) throw error;
+
+    // Build WA message with attendance summary
+    const eventTitle = document.getElementById('attModalTitle').textContent;
+    const yes = allPlayers.filter(p=>attStatuses[p.id]==='Asiste').map(p=>p.apodo||p.nombre);
+    const no  = allPlayers.filter(p=>attStatuses[p.id]==='No asiste').map(p=>p.apodo||p.nombre);
+    const duda= allPlayers.filter(p=>attStatuses[p.id]==='Duda').map(p=>p.apodo||p.nombre);
+    let msg = `✅ *Asistencia — ${eventTitle}*\n`;
+    if(yes.length)  msg += `\n✅ Asisten (${yes.length}): ${yes.join(', ')}`;
+    if(duda.length) msg += `\n🤔 Duda (${duda.length}): ${duda.join(', ')}`;
+    if(no.length)   msg += `\n❌ No asisten (${no.length}): ${no.join(', ')}`;
+
     attModalBg.style.display='none';
+
+    // Ask if want to share on WA
+    if(yes.length+no.length+duda.length > 0 && confirm('¿Compartir resumen de asistencia por WhatsApp?')){
+      window.open(waGroupLink(msg), '_blank');
+    }
   } catch(err){ alert('Error guardando asistencia: '+(err.message||err)); }
 });
 
@@ -2428,6 +2456,13 @@ async function renderBoard(){
       if(d){ const dt=document.createElement('span');dt.textContent=d.toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'});meta.appendChild(dt); }
       const editBtn=document.createElement('button');editBtn.className='ann-edit-btn';editBtn.textContent='✏️ Editar';
       editBtn.addEventListener('click',()=>openAnnModal(ann));meta.appendChild(editBtn);
+      // WhatsApp share
+      const waText = `📢 *${ann.title}*${ann.body?'\n\n'+ann.body:''}\n\n_Golden Moms_`;
+      const waBtn = document.createElement('a');
+      waBtn.className='btn-wa'; waBtn.target='_blank'; waBtn.rel='noopener noreferrer';
+      waBtn.href = waGroupLink(waText);
+      waBtn.innerHTML = WA_ICON + ' Compartir al grupo';
+      meta.appendChild(waBtn);
       card.appendChild(meta);
       list.appendChild(card);
     }
@@ -2602,9 +2637,9 @@ async function renderFees(){
       // Collapsible body with per-player status
       const body=document.createElement('div');body.className='fee-body fee-collapsed';
       if(payments?.length){
-        // Load player names
+        // Load player names (with celular for WA reminders)
         if(!allPlayers.length){
-          const {data:pl}=await supa.from('players').select('id,apodo,nombre').order('apodo',{ascending:true});
+          const {data:pl}=await supa.from('players').select('id,apodo,nombre,celular').order('apodo',{ascending:true});
           allPlayers=pl||[];
         }
         const playerMap=Object.fromEntries(allPlayers.map(p=>[p.id,p]));
@@ -2625,9 +2660,20 @@ async function renderFees(){
               pay.paid=newPaid;
               status.className='fee-toggle '+(newPaid?'paid':'unpaid');
               status.textContent=newPaid?'✅ Pagó':'❌ Debe';
+              waReminder.style.display = newPaid ? 'none' : '';
             } catch(e){ console.warn(e); }
           });
-          row.appendChild(nm);row.appendChild(status);body.appendChild(row);
+          // WA reminder — only visible if unpaid
+          const waReminder = document.createElement('a');
+          waReminder.className='btn-wa'; waReminder.target='_blank'; waReminder.rel='noopener noreferrer';
+          const playerName = pl.apodo||pl.nombre||'';
+          const playerPhone = pl.celular ? pl.celular.replace(/\D/g,'') : '';
+          const feeMsg = `Hola ${playerName} 👋 Te recordamos que tienes pendiente la cuota *${fee.title}*${fee.amount?' por $'+Number(fee.amount).toLocaleString('es-CL'):''} del equipo Golden Moms 💚`;
+          // If we have their number, send direct; otherwise open chat selector
+          waReminder.href = playerPhone ? `https://wa.me/56${playerPhone.replace(/^56/,'')}?text=${encodeURIComponent(feeMsg)}` : waLink(feeMsg);
+          waReminder.innerHTML = WA_ICON + 'Recordar';
+          waReminder.style.display = pay.paid ? 'none' : '';
+          row.appendChild(nm);row.appendChild(status);row.appendChild(waReminder);body.appendChild(row);
         }
       }
       // Toggle expand
@@ -2638,6 +2684,33 @@ async function renderFees(){
       list.appendChild(card);
     }
   } catch(err){ console.error('renderFees',err); list.innerHTML='<div class="empty-state">Error cargando cuotas</div>'; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   WHATSAPP HELPERS
+   ══════════════════════════════════════════════════════════ */
+const WA_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.121 1.532 5.849L.073 23.927l6.244-1.635A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.707.972.989-3.614-.234-.373A9.818 9.818 0 1112 21.818z"/></svg>`;
+
+const WA_GROUP = 'https://chat.whatsapp.com/CJlsdVUqSjJAiaXZBaSi41';
+
+function waLink(text) {
+  return 'https://wa.me/?text=' + encodeURIComponent(text);
+}
+
+function waGroupLink(text) {
+  // Opens group chat with pre-filled message (user taps send)
+  return WA_GROUP + '?text=' + encodeURIComponent(text);
+}
+
+function makeWaBtn(text, label='WhatsApp') {
+  const a = document.createElement('a');
+  a.className = 'btn-wa';
+  a.href = waLink(text);
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.innerHTML = WA_ICON + label;
+  return a;
 }
 
 </script>
