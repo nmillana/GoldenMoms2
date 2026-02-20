@@ -594,37 +594,43 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 .view-enter { animation: fadeUp 0.18s ease both; }
 
 /* ── Asistencia rápida ───────────────────────────────── */
+.att-section-label {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--muted-2);
+  padding: 8px 0 4px; display: flex; align-items: center; gap: 6px;
+}
+.att-section-label::after { content:''; flex:1; height:1px; background:var(--line); }
 .att-row {
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px; border-radius: var(--r-sm);
+  padding: 9px 12px; border-radius: var(--r-sm);
   border: 1px solid var(--line); background: var(--surface);
-  transition: background 0.12s, border-color 0.12s;
-  cursor: pointer; user-select: none;
+  transition: all 0.13s; user-select: none;
 }
-.att-row:hover { border-color: var(--line-2); }
-.att-row.att-yes { background: var(--win-bg); border-color: #86efac; }
-.att-row.att-no  { background: var(--loss-bg); border-color: #fca5a5; }
-.att-row.att-maybe { background: #fffbeb; border-color: #fde68a; }
+.att-row.att-yes   { background: var(--win-bg);  border-color: #86efac; }
+.att-row.att-no    { background: var(--loss-bg); border-color: #fca5a5; }
+.att-row.att-maybe { background: #fffbeb;         border-color: #fde68a; }
+.att-row.att-pending { background: var(--surface); border-color: var(--line); opacity: 0.7; }
 .att-avatar {
-  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
   background: var(--lime-pale); border: 1.5px solid var(--lime-soft);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px; color: var(--lime);
+  font-weight: 800; font-size: 12px; color: var(--lime);
   font-family: var(--font-head);
 }
-.att-name { font-weight: 600; font-size: 14px; flex: 1; }
-.att-num  { font-size: 11px; color: var(--muted); font-weight: 600; }
-.att-btns { display: flex; gap: 4px; }
-.att-btn  {
-  width: 34px; height: 34px; border-radius: var(--r-sm);
-  border: 1px solid var(--line); background: var(--surface);
-  font-size: 16px; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.12s;
+.att-name { font-weight: 600; font-size: 14px; flex: 1; min-width: 0; }
+.att-num  { font-size: 11px; color: var(--muted-2); font-weight: 600; }
+/* Big tap buttons — easy on mobile */
+.att-tap-group { display: flex; gap: 3px; }
+.att-tap {
+  min-width: 38px; height: 34px; border-radius: var(--r-sm);
+  border: 1px solid var(--line); background: var(--surface-2);
+  font-size: 17px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.13s; padding: 0 6px;
 }
-.att-btn:hover    { transform: scale(1.1); }
-.att-btn.act-yes  { background: var(--win-bg); border-color: #86efac; }
-.att-btn.act-no   { background: var(--loss-bg); border-color: #fca5a5; }
-.att-btn.act-duda { background: #fffbeb; border-color: #fde68a; }
+.att-tap:hover    { transform: scale(1.08); box-shadow: var(--sh-1); }
+.att-tap.act-yes  { background: var(--win-bg);  border-color: #4ade80; box-shadow: 0 0 0 2px #bbf7d0; }
+.att-tap.act-no   { background: var(--loss-bg); border-color: #f87171; box-shadow: 0 0 0 2px #fecaca; }
+.att-tap.act-duda { background: #fffbeb;         border-color: #fcd34d; box-shadow: 0 0 0 2px #fef3c7; }
 
 /* ── Resultado partido desde calendario ──────────────── */
 .ev-result-btn {
@@ -2115,10 +2121,18 @@ async function renderAttList(team) {
   const filtered = team === TEAMS.GM ? allPlayers
     : allPlayers.filter(p => Array.isArray(p.equipos) && p.equipos.includes(team));
 
-  for(const p of filtered) {
+  // Split into groups: confirmed, absent, pending (no answer)
+  const yes    = filtered.filter(p => attStatuses[p.id] === 'Asiste');
+  const no     = filtered.filter(p => attStatuses[p.id] === 'No asiste');
+  const duda   = filtered.filter(p => attStatuses[p.id] === 'Duda');
+  const pending= filtered.filter(p => !attStatuses[p.id]);
+
+  function makePlayerRow(p) {
     const status = attStatuses[p.id] || null;
     const row = document.createElement('div');
-    row.className = 'att-row' + (status==='Asiste'?' att-yes':status==='No asiste'?' att-no':status==='Duda'?' att-maybe':'');
+    row.className = 'att-row' +
+      (status==='Asiste'?' att-yes' : status==='No asiste'?' att-no' :
+       status==='Duda'?' att-maybe' : ' att-pending');
     row.dataset.pid = p.id;
 
     const av = document.createElement('div'); av.className='att-avatar';
@@ -2128,37 +2142,51 @@ async function renderAttList(team) {
     const num = document.createElement('div'); num.className='att-num';
     if(p.numero_camiseta) num.textContent = '#'+p.numero_camiseta;
 
-    const btns = document.createElement('div'); btns.className='att-btns';
+    const taps = document.createElement('div'); taps.className='att-tap-group';
     [['✅','Asiste','act-yes'],['❌','No asiste','act-no'],['🤔','Duda','act-duda']].forEach(([emoji,val,cls])=>{
-      const b = document.createElement('button'); b.className='att-btn'+(status===val?' '+cls:'');
-      b.textContent=emoji; b.title=val;
+      const b = document.createElement('button');
+      b.className = 'att-tap' + (status===val?' '+cls:'');
+      b.textContent = emoji; b.title = val;
       b.addEventListener('click', e=>{
         e.stopPropagation();
         attStatuses[p.id] = attStatuses[p.id]===val ? null : val;
         renderAttList(team); updateAttCounter();
       });
-      btns.appendChild(b);
+      taps.appendChild(b);
     });
 
-    row.addEventListener('click', ()=>{
-      // Quick tap cycles: null→Asiste→No asiste→null
-      const cur = attStatuses[p.id];
-      attStatuses[p.id] = cur===null||!cur ? 'Asiste' : cur==='Asiste' ? 'No asiste' : null;
-      renderAttList(team); updateAttCounter();
-    });
-    row.appendChild(av); row.appendChild(nm); row.appendChild(num); row.appendChild(btns);
-    list.appendChild(row);
+    row.appendChild(av); row.appendChild(nm); row.appendChild(num); row.appendChild(taps);
+    return row;
   }
+
+  function addSection(label, players) {
+    if(!players.length) return;
+    const sep = document.createElement('div');
+    sep.className = 'att-section-label';
+    sep.textContent = label + ' (' + players.length + ')';
+    list.appendChild(sep);
+    players.forEach(p => list.appendChild(makePlayerRow(p)));
+  }
+
+  addSection('✅ Asisten', yes);
+  addSection('🤔 Duda', duda);
+  addSection('❌ No asisten', no);
+  addSection('⏳ Sin respuesta', pending);
+
   updateAttCounter();
 }
 
 function updateAttCounter(){
   const vals = Object.values(attStatuses);
-  const yes = vals.filter(v=>v==='Asiste').length;
-  const no  = vals.filter(v=>v==='No asiste').length;
-  const duda= vals.filter(v=>v==='Duda').length;
-  document.getElementById('attCounter').textContent =
-    `✅ ${yes}  ❌ ${no}${duda?' 🤔 '+duda:''}`;
+  const yes  = vals.filter(v=>v==='Asiste').length;
+  const no   = vals.filter(v=>v==='No asiste').length;
+  const duda = vals.filter(v=>v==='Duda').length;
+  const total= allPlayers.length;
+  const pend = total - yes - no - duda;
+  let txt = `✅ ${yes}  ❌ ${no}`;
+  if(duda) txt += `  🤔 ${duda}`;
+  if(pend > 0) txt += `  ⏳ ${pend}`;
+  document.getElementById('attCounter').textContent = txt;
 }
 
 const attModalBg = document.getElementById('attModalBg');
@@ -2180,13 +2208,20 @@ document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
 
     // Build WA message with attendance summary
     const eventTitle = document.getElementById('attModalTitle').textContent;
-    const yes = allPlayers.filter(p=>attStatuses[p.id]==='Asiste').map(p=>p.apodo||p.nombre);
-    const no  = allPlayers.filter(p=>attStatuses[p.id]==='No asiste').map(p=>p.apodo||p.nombre);
-    const duda= allPlayers.filter(p=>attStatuses[p.id]==='Duda').map(p=>p.apodo||p.nombre);
-    let msg = `✅ *Asistencia — ${eventTitle}*\n`;
-    if(yes.length)  msg += `\n✅ Asisten (${yes.length}): ${yes.join(', ')}`;
-    if(duda.length) msg += `\n🤔 Duda (${duda.length}): ${duda.join(', ')}`;
-    if(no.length)   msg += `\n❌ No asisten (${no.length}): ${no.join(', ')}`;
+    const attTeam = attEventId ? (cachedEvents.find(e=>e.id===attEventId)?.team||TEAMS.GM) : TEAMS.GM;
+    const teamPlayers = attTeam === TEAMS.GM ? allPlayers
+      : allPlayers.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(attTeam));
+    const yes    = teamPlayers.filter(p=>attStatuses[p.id]==='Asiste').map(p=>p.apodo||p.nombre);
+    const no     = teamPlayers.filter(p=>attStatuses[p.id]==='No asiste').map(p=>p.apodo||p.nombre);
+    const duda   = teamPlayers.filter(p=>attStatuses[p.id]==='Duda').map(p=>p.apodo||p.nombre);
+    const pending= teamPlayers.filter(p=>!attStatuses[p.id]).map(p=>p.apodo||p.nombre);
+    const appUrl = window.location.href.split('?')[0];
+    let msg = `📋 *Asistencia — ${eventTitle}*\n`;
+    if(yes.length)     msg += `\n✅ Asisten (${yes.length}): ${yes.join(', ')}`;
+    if(duda.length)    msg += `\n🤔 Duda (${duda.length}): ${duda.join(', ')}`;
+    if(no.length)      msg += `\n❌ No asisten (${no.length}): ${no.join(', ')}`;
+    if(pending.length) msg += `\n⏳ Sin responder (${pending.length}): ${pending.join(', ')}`;
+    msg += `\n\n👉 Confirma tu asistencia en la app: ${appUrl}`;
 
     // Share on WA group: copy + open (do before closing modal so toast is visible)
     if(yes.length+no.length+duda.length > 0){
