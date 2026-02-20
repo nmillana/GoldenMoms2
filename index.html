@@ -749,6 +749,18 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 }
 .btn-wa:hover { background: #bbf7d0; border-color: #4ade80; }
 .btn-wa svg  { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ── Toast ───────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--ink); color: #fff;
+  padding: 10px 20px; border-radius: 99px;
+  font-size: 13px; font-weight: 600;
+  box-shadow: var(--sh-3); z-index: 9999;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s;
+  opacity: 0; pointer-events: none; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 </style>
 </head>
 <body>
@@ -1208,17 +1220,17 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
     <div class="form-row">
       <div class="form-group">
         <label class="form-label" for="p_celular">Celular</label>
-        <input id="p_celular" class="input" type="tel" placeholder="+56 9 1234 5678"/>
+        <input id="p_celular" class="input" type="text" placeholder="+56 9 1234 5678"/>
       </div>
       <div class="form-group">
         <label class="form-label" for="p_email">Email</label>
-        <input id="p_email" class="input" type="email" placeholder="correo@ejemplo.com"/>
+        <input id="p_email" class="input" type="text" placeholder="correo@ejemplo.com"/>
       </div>
     </div>
     <div class="form-row" style="margin-top:12px">
       <div class="form-group">
         <label class="form-label" for="p_tel_emerg">Teléfono emergencia</label>
-        <input id="p_tel_emerg" class="input" type="tel" placeholder="+56 9 0000 0000"/>
+        <input id="p_tel_emerg" class="input" type="text" placeholder="+56 9 0000 0000"/>
       </div>
       <div class="form-group">
         <label class="form-label" for="p_rut">RUT</label>
@@ -2176,12 +2188,11 @@ document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
     if(duda.length) msg += `\n🤔 Duda (${duda.length}): ${duda.join(', ')}`;
     if(no.length)   msg += `\n❌ No asisten (${no.length}): ${no.join(', ')}`;
 
-    attModalBg.style.display='none';
-
-    // Ask if want to share on WA
-    if(yes.length+no.length+duda.length > 0 && confirm('¿Compartir resumen de asistencia por WhatsApp?')){
-      window.open(waGroupLink(msg), '_blank');
+    // Share on WA group: copy + open (do before closing modal so toast is visible)
+    if(yes.length+no.length+duda.length > 0){
+      await waGroupSend(msg);
     }
+    attModalBg.style.display='none';
   } catch(err){ alert('Error guardando asistencia: '+(err.message||err)); }
 });
 
@@ -2458,10 +2469,10 @@ async function renderBoard(){
       editBtn.addEventListener('click',()=>openAnnModal(ann));meta.appendChild(editBtn);
       // WhatsApp share
       const waText = `📢 *${ann.title}*${ann.body?'\n\n'+ann.body:''}\n\n_Golden Moms_`;
-      const waBtn = document.createElement('a');
-      waBtn.className='btn-wa'; waBtn.target='_blank'; waBtn.rel='noopener noreferrer';
-      waBtn.href = waGroupLink(waText);
+      const waBtn = document.createElement('button');
+      waBtn.className='btn-wa';
       waBtn.innerHTML = WA_ICON + ' Compartir al grupo';
+      waBtn.addEventListener('click', () => waGroupSend(waText));
       meta.appendChild(waBtn);
       card.appendChild(meta);
       list.appendChild(card);
@@ -2637,10 +2648,10 @@ async function renderFees(){
       // Collapsible body with per-player status
       const body=document.createElement('div');body.className='fee-body fee-collapsed';
       if(payments?.length){
-        // Load player names (with celular for WA reminders)
-        if(!allPlayers.length){
+        // Load player names (with celular for WA reminders) — always reload with celular
+        {
           const {data:pl}=await supa.from('players').select('id,apodo,nombre,celular').order('apodo',{ascending:true});
-          allPlayers=pl||[];
+          if(pl?.length) allPlayers=pl;
         }
         const playerMap=Object.fromEntries(allPlayers.map(p=>[p.id,p]));
         for(const pay of (payments||[])){
@@ -2670,8 +2681,19 @@ async function renderFees(){
           const playerPhone = pl.celular ? pl.celular.replace(/\D/g,'') : '';
           const feeMsg = `Hola ${playerName} 👋 Te recordamos que tienes pendiente la cuota *${fee.title}*${fee.amount?' por $'+Number(fee.amount).toLocaleString('es-CL'):''} del equipo Golden Moms 💚`;
           // If we have their number, send direct; otherwise open chat selector
-          waReminder.href = playerPhone ? `https://wa.me/56${playerPhone.replace(/^56/,'')}?text=${encodeURIComponent(feeMsg)}` : waLink(feeMsg);
-          waReminder.innerHTML = WA_ICON + 'Recordar';
+          if(playerPhone){
+            // Direct chat with pre-filled message (works for individual wa.me links)
+            const cleanPhone = playerPhone.replace(/^\+?56/,'').replace(/\D/g,'');
+            waReminder.href = `https://wa.me/56${cleanPhone}?text=${encodeURIComponent(feeMsg)}`;
+          } else {
+            // No phone: copy message and open group
+            waReminder.href = '#';
+            waReminder.addEventListener('click', e=>{
+              e.preventDefault();
+              waGroupSend(feeMsg);
+            });
+          }
+          waReminder.innerHTML = WA_ICON + (playerPhone ? ' Recordar' : ' Recordar (grupo)');
           waReminder.style.display = pay.paid ? 'none' : '';
           row.appendChild(nm);row.appendChild(status);row.appendChild(waReminder);body.appendChild(row);
         }
@@ -2699,8 +2721,28 @@ function waLink(text) {
 }
 
 function waGroupLink(text) {
-  // Opens group chat with pre-filled message (user taps send)
-  return WA_GROUP + '?text=' + encodeURIComponent(text);
+  // ?text= no funciona en links de grupo — copiamos al portapapeles y abrimos el grupo
+  try { navigator.clipboard.writeText(text); } catch(e) {}
+  return WA_GROUP;
+}
+
+function showToast(msg, duration=2800) {
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+async function waGroupSend(text) {
+  // Copy to clipboard then open group
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('📋 Mensaje copiado — pegalo en el grupo');
+  } catch(e) {
+    showToast('Abriendo grupo de WhatsApp…');
+  }
+  setTimeout(() => window.open(WA_GROUP, '_blank'), 400);
 }
 
 function makeWaBtn(text, label='WhatsApp') {
@@ -2720,5 +2762,7 @@ if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(console.warn));
 }
 </script>
+
+<div class="toast" id="toast"></div>
 </body>
 </html>
