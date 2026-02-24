@@ -93,6 +93,56 @@ body   {
 a      { color: inherit; text-decoration: none; }
 button { font-family: var(--font-body); cursor: pointer; }
 
+/* ── Campana de notificaciones ──────────────────────── */
+.bell-btn {
+  position: relative; width: 36px; height: 36px;
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  background: var(--surface); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: all 0.14s; flex-shrink: 0;
+}
+.bell-btn:hover { background: var(--lime-pale); border-color: var(--lime-soft); }
+.bell-badge {
+  position: absolute; top: -5px; right: -5px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--danger); color: #fff;
+  font-size: 10px; font-weight: 800; font-family: var(--font-head);
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--surface); pointer-events: none;
+}
+.bell-badge.hidden { display: none; }
+
+/* Dropdown de notificaciones */
+.notif-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 320px; background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: var(--r-lg);
+  box-shadow: var(--sh-3); z-index: 500;
+  display: none; overflow: hidden;
+}
+.notif-dropdown.open { display: block; animation: modalIn 0.15s ease both; }
+.notif-header {
+  padding: 12px 16px; border-bottom: 1px solid var(--line);
+  font-family: var(--font-head); font-size: 13px; font-weight: 800; color: var(--ink);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.notif-list { max-height: 360px; overflow-y: auto; }
+.notif-item {
+  padding: 11px 16px; border-bottom: 1px solid var(--line);
+  cursor: pointer; transition: background 0.12s;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--lime-pale); }
+.notif-icon {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  background: #fff3cd; border: 1px solid #fde68a;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+.notif-title { font-weight: 700; font-size: 13px; color: var(--ink); }
+.notif-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.notif-empty { padding: 20px 16px; text-align: center; font-size: 13px; color: var(--muted-2); }
+
 /* ── Top bar — blanco, muy limpio ────────────────────── */
 .top {
   position: sticky; top: 0; z-index: 100;
@@ -790,6 +840,20 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   </div>
   <div class="top-right">
     <div id="connStatus">Conectando…</div>
+    <div style="position:relative">
+      <button class="bell-btn" id="bellBtn" title="Notificaciones">🔔
+        <span class="bell-badge hidden" id="bellBadge">0</span>
+      </button>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header">
+          <span>🔔 Pendientes</span>
+          <span id="notifCount" style="font-size:11px;color:var(--muted);font-weight:600"></span>
+        </div>
+        <div class="notif-list" id="notifList">
+          <div class="notif-empty">Sin pendientes ✅</div>
+        </div>
+      </div>
+    </div>
     <nav class="nav" role="tablist" aria-label="Navegación">
       <button class="tab active" data-view="dash">Dashboard</button>
       <button class="tab" data-view="events">Eventos</button>
@@ -828,6 +892,17 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
         <div class="kpi-value" id="kLastMatch" style="font-size:38px">—</div>
         <div class="kpi-sub" id="kLastMatchMeta"></div>
         <span class="kpi-accent">🏆</span>
+      </div>
+    </div>
+
+    <!-- Pendientes -->
+    <div id="pendingBanner" style="display:none;margin-bottom:12px">
+      <div class="card" style="border-left:3px solid #f59e0b;background:#fffbeb">
+        <div class="dash-card-title" style="color:#92400e">
+          <span class="dash-card-icon" style="background:#fef3c7;border-color:#fde68a">⏳</span>
+          Tenés eventos pendientes de confirmar
+        </div>
+        <div id="pendingList" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
       </div>
     </div>
 
@@ -1420,12 +1495,13 @@ async function loadConvocatoria(team){
     const convPlayers = convData || [];
     // Also update global cache if needed
     if(!allPlayers.length) allPlayers = convPlayers;
+    // Only show active players (not reposo) in convocatoria
+    const activeConv = convPlayers.filter(p => !p.estado || p.estado === 'activo');
     const filtered = team === TEAMS.GM
-      ? convPlayers
-      : convPlayers.filter(p => {
+      ? activeConv
+      : activeConv.filter(p => {
           const eq = p.equipos;
           if(!eq) return false;
-          // Handle both array and string formats
           if(Array.isArray(eq)) return eq.includes(team);
           if(typeof eq === 'string'){
             try{ return JSON.parse(eq).includes(team); } catch(e){ return eq.includes(team); }
@@ -2102,7 +2178,7 @@ function showView(v){
   }
   const target=document.getElementById('v-'+v);
   if(target){ target.style.display='block'; requestAnimationFrame(()=>target.classList.add('view-enter')); }
-  if(v==='dash')    renderDash();
+  if(v==='dash')    { renderDash(); loadNotifications(); }
   if(v==='events')  renderMonth();
   if(v==='matches') renderMatches();
   if(v==='roster')  renderRoster(currentRosterFilter);
@@ -2959,6 +3035,148 @@ async function exportRosterExcel() {
 }
 
 document.getElementById('btnExportRoster').addEventListener('click', exportRosterExcel);
+
+/* ═══════════════════════════════════════════════════════════
+   NOTIFICACIONES — PENDIENTES DE CONFIRMAR ASISTENCIA
+   ══════════════════════════════════════════════════════════ */
+async function loadNotifications() {
+  if(!supa || !IS_CONNECTED) return;
+  try {
+    const now = new Date();
+    // Fetch upcoming events (next 14 days) that have attendance records
+    const future = new Date(now); future.setDate(future.getDate() + 14);
+    const { data:events } = await supa.from('events')
+      .select('id, title, datetime, team, type')
+      .gte('datetime', now.toISOString())
+      .lte('datetime', future.toISOString())
+      .order('datetime', {ascending:true});
+
+    if(!events?.length){ updateBell([]); return; }
+
+    // For each event, check if current user has responded
+    // Since we have no auth, check if there's ANY attendance record (meaning someone opened it)
+    // We flag events where total responded < total players in team
+    const pending = [];
+    for(const ev of events){
+      const { data:att } = await supa.from('attendance')
+        .select('player_id, status')
+        .eq('event_id', ev.id);
+
+      const responded = (att||[]).length;
+      // Get player count for this team
+      const { count } = await supa.from('players')
+        .select('*', {count:'exact', head:true})
+        .eq('estado', 'activo');  // rough proxy
+
+      const d = new Date(ev.datetime);
+      const dateStr = d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
+      const timeStr = d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+
+      // Show as pending if no attendance has been logged yet
+      if(responded === 0){
+        pending.push({
+          id: ev.id,
+          title: ev.title,
+          dateStr, timeStr,
+          team: ev.team,
+          type: ev.type,
+          event: ev
+        });
+      }
+    }
+    updateBell(pending);
+  } catch(err){ console.warn('loadNotifications', err); }
+}
+
+function updateBell(pending) {
+  const badge  = document.getElementById('bellBadge');
+  const list   = document.getElementById('notifList');
+  const count  = document.getElementById('notifCount');
+  const banner = document.getElementById('pendingBanner');
+  const pList  = document.getElementById('pendingList');
+
+  if(!badge || !list) return;
+
+  if(!pending.length){
+    badge.classList.add('hidden');
+    if(banner) banner.style.display = 'none';
+    list.innerHTML = '<div class="notif-empty">Sin pendientes ✅</div>';
+    return;
+  }
+
+  // Update badge
+  badge.textContent = pending.length;
+  badge.classList.remove('hidden');
+  if(count) count.textContent = pending.length + ' evento' + (pending.length>1?'s':'');
+
+  // Update dropdown list
+  list.innerHTML = '';
+  pending.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'notif-item';
+    item.innerHTML =
+      '<div class="notif-icon">⏳</div>' +
+      '<div>' +
+        '<div class="notif-title">' + (p.title||'Evento') + '</div>' +
+        '<div class="notif-sub">' + p.dateStr + ' · ' + p.timeStr + ' · ' + p.team + '</div>' +
+        '<div class="notif-sub" style="color:#92400e;margin-top:3px;font-weight:700">Sin asistencia registrada</div>' +
+      '</div>';
+    item.addEventListener('click', () => {
+      closeNotifDropdown();
+      // Navigate to events and open attendance modal
+      document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
+      const evTab = document.querySelector('.nav .tab[data-view="events"]');
+      if(evTab) evTab.classList.add('active');
+      showView('events');
+      setTimeout(() => {
+        if(p.type === 'Entrenamiento') openAttModal(p.event);
+        else openResultModal(p.event);
+      }, 400);
+    });
+    list.appendChild(item);
+  });
+
+  // Update dashboard banner
+  if(banner && pList){
+    banner.style.display = '';
+    pList.innerHTML = '';
+    pending.slice(0,3).forEach(p => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #fde68a;cursor:pointer;font-size:13px';
+      row.innerHTML = '<span style="font-size:15px">📅</span><span style="font-weight:700;flex:1">' + p.title + '</span><span style="color:#92400e;font-size:12px">' + p.dateStr + ' · ' + p.timeStr + '</span>';
+      row.addEventListener('click', () => item.click());
+      // Actually open the event
+      row.addEventListener('click', () => {
+        document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
+        const evTab = document.querySelector('.nav .tab[data-view="events"]');
+        if(evTab) evTab.classList.add('active');
+        showView('events');
+        setTimeout(() => {
+          if(p.type === 'Entrenamiento') openAttModal(p.event);
+        }, 400);
+      });
+      pList.appendChild(row);
+    });
+    const last = pList.lastChild;
+    if(last) last.style.borderBottom = 'none';
+  }
+}
+
+function closeNotifDropdown(){
+  document.getElementById('notifDropdown')?.classList.remove('open');
+}
+
+// Bell toggle
+document.getElementById('bellBtn')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('notifDropdown')?.classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('#bellBtn') && !e.target.closest('#notifDropdown')){
+    closeNotifDropdown();
+  }
+});
+
 </script>
 
 
