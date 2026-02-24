@@ -1562,11 +1562,11 @@ function openPlayerModal(player){
   p_numero.value    = player?.numero_camiseta != null ? player.numero_camiseta : '';
   p_fecha_nac.value = player?.fecha_nacimiento ? player.fecha_nacimiento.slice(0,10) : '';
   p_rol.value       = player?.rol       || 'jugadora';
-  p_estado.value    = player?.Estado    || '';
+  p_estado.value    = player?.estado    || '';
   p_celular.value   = player?.celular   || '';
   p_email.value     = player?.email     || '';
-  p_tel_emerg.value = player?.Telefono_emergencia || '';
-  p_rut.value       = player?.Rut       || '';
+  p_tel_emerg.value = player?.telefono_emergencia || '';
+  p_rut.value       = player?.rut       || '';
 
   const equipos = Array.isArray(player?.equipos) ? player.equipos : [];
   p_eq_gm.checked = equipos.includes(TEAMS.GM);
@@ -1610,12 +1610,12 @@ document.getElementById('btnSavePlayer').addEventListener('click', async () => {
     numero_camiseta: isNaN(numero)?null:numero,
     fecha_nacimiento: p_fecha_nac.value||null,
     rol: p_rol.value||'jugadora',
-    Estado: p_estado.value||null,
+    estado: p_estado.value||null,
     equipos,
     celular: p_celular.value.trim()||null,
     email: p_email.value.trim()||null,
-    Telefono_emergencia: p_tel_emerg.value.trim()||null,
-    Rut: p_rut.value.trim()||null,
+    telefono_emergencia: p_tel_emerg.value.trim()||null,
+    rut: p_rut.value.trim()||null,
   };
   try{
     if(editingPlayerId){
