@@ -1255,19 +1255,6 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
       </div>
     </div>
 
-    <div class="form-divider"></div>
-    <div class="form-section-title">Colegio / Seguro</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label" for="p_curso">Curso hijo/a</label>
-        <input id="p_curso" class="input" placeholder="Ej: 3° Básico B"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="p_seguro">Seguro médico</label>
-        <input id="p_seguro" class="input" placeholder="Ej: Fonasa / Isapre"/>
-      </div>
-    </div>
-
     <div class="modal-actions">
       <button class="btn danger" id="btnDeletePlayer" style="margin-right:auto">🗑 Eliminar</button>
       <button class="btn" id="btnCancelPlayer">Cancelar</button>
@@ -1557,8 +1544,6 @@ const p_celular      = document.getElementById('p_celular');
 const p_email        = document.getElementById('p_email');
 const p_tel_emerg    = document.getElementById('p_tel_emerg');
 const p_rut          = document.getElementById('p_rut');
-const p_curso        = document.getElementById('p_curso');
-const p_seguro       = document.getElementById('p_seguro');
 const p_img_preview  = document.getElementById('p_img_preview');
 const p_eq_gm        = document.getElementById('p_eq_gm');
 const p_eq_dr        = document.getElementById('p_eq_dr');
@@ -1582,8 +1567,7 @@ function openPlayerModal(player){
   p_email.value     = player?.email     || '';
   p_tel_emerg.value = player?.Telefono_emergencia || '';
   p_rut.value       = player?.Rut       || '';
-  p_curso.value     = player?.Curso_hijos || '';
-  p_seguro.value    = player?.Seguro_Medico || '';
+
   const equipos = Array.isArray(player?.equipos) ? player.equipos : [];
   p_eq_gm.checked = equipos.includes(TEAMS.GM);
   p_eq_dr.checked = equipos.includes(TEAMS.DR);
@@ -1632,8 +1616,6 @@ document.getElementById('btnSavePlayer').addEventListener('click', async () => {
     email: p_email.value.trim()||null,
     Telefono_emergencia: p_tel_emerg.value.trim()||null,
     Rut: p_rut.value.trim()||null,
-    Curso_hijos: p_curso.value.trim()||null,
-    Seguro_Medico: p_seguro.value.trim()||null,
   };
   try{
     if(editingPlayerId){
