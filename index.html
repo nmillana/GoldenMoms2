@@ -924,7 +924,8 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
       <div class="modal-actions" style="margin-top:14px">
         <span id="attCounter" style="margin-right:auto;font-size:13px;color:var(--muted);font-weight:600"></span>
         <button class="btn" id="btnCloseAtt">Cerrar</button>
-        <button class="btn p" id="btnSaveAtt">💾 Guardar y avisar</button>
+        <button class="btn" id="btnSaveAtt">💾 Guardar</button>
+        <a class="btn-wa" id="btnShareAtt" style="display:none" target="_blank" rel="noopener noreferrer"></a>
       </div>
     </div>
   </div>
@@ -2128,6 +2129,9 @@ function openAttModal(event) {
   attStatuses = {};
   attFilteredPlayers = [];
   selectedPlayerIds = new Set();
+  attWaMsg = '';
+  const sb=document.getElementById('btnShareAtt'); if(sb) sb.style.display='none';
+  const gb=document.getElementById('btnSaveAtt'); if(gb){ gb.disabled=false; gb.textContent='💾 Guardar'; gb.classList.remove('p'); }
 
   document.getElementById('attModalTitle').textContent = event.title || 'Pase de lista';
   const d = safeDate(event.datetime);
@@ -2224,12 +2228,21 @@ function updateAttCounter(){
 }
 
 const attModalBg = document.getElementById('attModalBg');
-document.getElementById('btnCloseAtt').addEventListener('click', ()=>{ attModalBg.style.display='none'; });
+document.getElementById('btnCloseAtt').addEventListener('click', ()=>{
+  attModalBg.style.display='none';
+  const sb=document.getElementById('btnShareAtt'); if(sb) sb.style.display='none';
+  const gb=document.getElementById('btnSaveAtt'); if(gb){ gb.disabled=false; gb.textContent='💾 Guardar'; gb.classList.remove('p'); }
+});
 attModalBg.addEventListener('click', e=>{ if(e.target===attModalBg) attModalBg.style.display='none'; });
+
+// Stores the last built WA message for the share button
+let attWaMsg = '';
 
 document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
   if(!supa||!IS_CONNECTED||!attEventId){ alert('Sin conexión.'); return; }
   if(!allPlayers.length){ alert('No hay jugadoras cargadas.'); return; }
+  const btn = document.getElementById('btnSaveAtt');
+  btn.disabled = true; btn.textContent = 'Guardando…';
   try{
     const upserts = allPlayers.map(p=>({
       event_id: attEventId,
@@ -2240,29 +2253,51 @@ document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
     const {error} = await supa.from('attendance').upsert(upserts, {onConflict:'event_id,player_id'});
     if(error) throw error;
 
-    // Build WA message with attendance summary
+    // Build WA message
     const eventTitle = document.getElementById('attModalTitle').textContent;
-    // Use attFilteredPlayers (set during renderAttList) for accurate pending list
     const players = attFilteredPlayers.length ? attFilteredPlayers : allPlayers;
     const yes    = players.filter(p=>attStatuses[p.id]==='Asiste').map(p=>p.apodo||p.nombre);
     const no     = players.filter(p=>attStatuses[p.id]==='No asiste').map(p=>p.apodo||p.nombre);
     const duda   = players.filter(p=>attStatuses[p.id]==='Duda').map(p=>p.apodo||p.nombre);
     const pending= players.filter(p=>!attStatuses[p.id]).map(p=>p.apodo||p.nombre);
-    // Build deep link to this specific event
     const appUrl = 'https://nmillana.github.io/GoldenMoms2/?att=' + attEventId;
-    let msg = '📋 *Asistencia — ' + eventTitle + '*\n';
-    if(yes.length)     msg += '\n✅ Asisten (' + yes.length + '): ' + yes.join(', ');
-    if(duda.length)    msg += '\n🤔 Duda (' + duda.length + '): ' + duda.join(', ');
-    if(no.length)      msg += '\n❌ No asisten (' + no.length + '): ' + no.join(', ');
-    if(pending.length) msg += '\n⏳ Sin responder (' + pending.length + '): ' + pending.join(', ');
-    msg += '\n\n👉 Confirma tu asistencia en la app: ' + appUrl;
+    attWaMsg = '📋 *Asistencia — ' + eventTitle + '*\n';
+    if(yes.length)     attWaMsg += '\n✅ Asisten (' + yes.length + '): ' + yes.join(', ');
+    if(duda.length)    attWaMsg += '\n🤔 Duda (' + duda.length + '): ' + duda.join(', ');
+    if(no.length)      attWaMsg += '\n❌ No asisten (' + no.length + '): ' + no.join(', ');
+    if(pending.length) attWaMsg += '\n⏳ Sin responder (' + pending.length + '): ' + pending.join(', ');
+    attWaMsg += '\n\n👉 Confirma tu asistencia en la app: ' + appUrl;
 
-    // Share on WA group: copy + open (do before closing modal so toast is visible)
-    if(yes.length+no.length+duda.length > 0){
-      await waGroupSend(msg);
+    // Show share button as a real <a> link — works on iOS Safari
+    // wa.me/?text= with group URL isn't possible, but we show the link to the group
+    // with text pre-copied via the native share sheet
+    btn.textContent = '✅ Guardado';
+    btn.classList.add('p');
+
+    const shareBtn = document.getElementById('btnShareAtt');
+    // Use native Web Share API on iOS if available (best option)
+    if(navigator.share){
+      shareBtn.style.display = '';
+      shareBtn.innerHTML = WA_ICON + ' Compartir';
+      shareBtn.href = '#';
+      shareBtn.onclick = (e) => {
+        e.preventDefault();
+        navigator.share({ text: attWaMsg })
+          .then(() => { attModalBg.style.display='none'; })
+          .catch(() => {});
+      };
+    } else {
+      // Fallback: direct wa.me link (works on Android, desktop)
+      shareBtn.style.display = '';
+      shareBtn.innerHTML = WA_ICON + ' Compartir';
+      shareBtn.href = 'https://wa.me/?text=' + encodeURIComponent(attWaMsg);
+      shareBtn.onclick = () => { setTimeout(()=>{ attModalBg.style.display='none'; }, 500); };
     }
-    attModalBg.style.display='none';
-  } catch(err){ alert('Error guardando asistencia: '+(err.message||err)); }
+    showToast('✅ Asistencia guardada');
+  } catch(err){
+    btn.disabled = false; btn.textContent = '💾 Guardar';
+    alert('Error guardando asistencia: '+(err.message||err));
+  }
 });
 
 /* ═══════════════════════════════════════════════════════════
