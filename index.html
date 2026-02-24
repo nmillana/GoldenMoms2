@@ -632,6 +632,16 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 .att-tap.act-no   { background: var(--loss-bg); border-color: #f87171; box-shadow: 0 0 0 2px #fecaca; }
 .att-tap.act-duda { background: #fffbeb;         border-color: #fcd34d; box-shadow: 0 0 0 2px #fef3c7; }
 
+/* ── Cumpleaños en calendario ────────────────────────── */
+.ev-birth {
+  border-radius: var(--r-xs); padding: 3px 7px;
+  font-size: 10px; font-weight: 700; line-height: 1.3;
+  background: #fff0f6; color: #d63384;
+  border: 1px solid #f9c0d8;
+  display: flex; align-items: center; gap: 4px;
+}
+.ev-birth-dot { font-size: 11px; }
+
 /* ── Resultado partido desde calendario ──────────────── */
 .ev-result-btn {
   display: inline-flex; align-items: center; gap: 3px;
@@ -1452,9 +1462,12 @@ async function loadAttendanceForEvent(eventId){
 async function saveAttendance(eventId){
   if(!supa || !IS_CONNECTED || !eventId) return;
   try{
+    // Only upsert players explicitly selected — don't set others to 'No asiste'
     const upserts = [];
     for(const p of allPlayers){
-      upserts.push({ event_id: eventId, player_id: p.id, status: selectedPlayerIds.has(p.id) ? 'Asiste' : 'No asiste', updated_at: new Date().toISOString() });
+      if(selectedPlayerIds.has(p.id)){
+        upserts.push({ event_id: eventId, player_id: p.id, status: 'Asiste', updated_at: new Date().toISOString() });
+      }
     }
     if(upserts.length) await supa.from('attendance').upsert(upserts, { onConflict: 'event_id,player_id' });
   } catch(err){ console.warn('saveAttendance', err); }
@@ -1594,7 +1607,7 @@ document.getElementById('btnDeletePlayer').addEventListener('click', async () =>
     if(error) throw error;
     if(count===0) console.warn('delete player: ninguna fila');
   } catch(err){ alert('Error: '+(err.message||err)); return; }
-  allPlayers=[];
+  allPlayers=[]; cachedBirthdays=[];
   closePlayerModal(); renderRoster(); renderKPIs();
 });
 
@@ -1632,7 +1645,7 @@ document.getElementById('btnSavePlayer').addEventListener('click', async () => {
       if(error) throw error;
     }
   } catch(err){ alert('Error: '+(err.message||err)); console.error(err); return; }
-  allPlayers=[];
+  allPlayers=[]; cachedBirthdays=[];
   closePlayerModal(); renderRoster(); renderKPIs();
 });
 
@@ -1640,8 +1653,9 @@ document.getElementById('btnSavePlayer').addEventListener('click', async () => {
    CALENDARIO
    ══════════════════════════════════════════════════════════ */
 let monthCursor  = new Date();
-let cachedEvents = [];
-let activeTeams  = new Set(ALL_TEAMS);
+let cachedEvents   = [];
+let cachedBirthdays = []; // [{id, apodo, nombre, mmdd}]
+let activeTeams    = new Set(ALL_TEAMS);
 
 const monthTitleEl = document.getElementById('monthTitle');
 const monthGrid    = document.getElementById('monthGrid');
@@ -1677,10 +1691,41 @@ function renderMonthTitle(){
   monthTitleEl.textContent = m.charAt(0).toUpperCase()+m.slice(1);
 }
 
+async function fetchBirthdays(){
+  if(cachedBirthdays.length) return; // already loaded
+  if(!supa||!IS_CONNECTED) return;
+  try{
+    const {data} = await supa.from('players')
+      .select('id,apodo,nombre,fecha_nacimiento')
+      .not('fecha_nacimiento','is',null);
+    cachedBirthdays = (data||[]).map(p => {
+      const d = safeDateOnly(p.fecha_nacimiento);
+      if(!d) return null;
+      // Store as MM-DD for year-independent matching
+      const mmdd = pad(d.getMonth()+1) + '-' + pad(d.getDate());
+      return { id:p.id, apodo:p.apodo, nombre:p.nombre, mmdd, fullDate:d };
+    }).filter(Boolean);
+  } catch(e){ console.warn('fetchBirthdays', e); }
+}
+
+function birthdaysOnDay(day){
+  const mmdd = pad(day.getMonth()+1) + '-' + pad(day.getDate());
+  return cachedBirthdays.filter(b => b.mmdd === mmdd);
+}
+
+function makeBirthChip(players){
+  const chip = document.createElement('div'); chip.className='ev-birth';
+  chip.innerHTML = '<span class="ev-birth-dot">🎂</span>';
+  const names = players.map(p=>p.apodo||p.nombre).join(', ');
+  const nm = document.createElement('span'); nm.textContent = names; chip.appendChild(nm);
+  return chip;
+}
+
 async function renderMonth(){
   renderMonthTitle();
   const { start, end } = getMonthRange(monthCursor);
   cachedEvents = await fetchEventsRange(start, end);
+  await fetchBirthdays();
   const visible = cachedEvents.filter(e => activeTeams.has(e.team||TEAMS.GM));
   const isMobile = window.matchMedia('(max-width:500px)').matches;
   monthGrid.style.display = isMobile ? 'none' : '';
@@ -1738,6 +1783,8 @@ function drawMonthGrid(start, end, visible){
     cell.appendChild(head); cell.appendChild(plus);
     for(const e of visible.filter(e=>localDateYMD(safeDate(e.datetime)||new Date(0))===ymd))
       cell.appendChild(makeEventChip(e));
+    const bdays = birthdaysOnDay(day);
+    if(bdays.length) cell.appendChild(makeBirthChip(bdays));
     monthGrid.appendChild(cell);
     if(day.getDay()===0) monthGrid.appendChild(makeWeekSep());
   }
@@ -1758,6 +1805,8 @@ function drawMonthList(start, end, visible){
     const col=document.createElement('div'); col.style.flex='1';
     if(evs.length) for(const e of evs) col.appendChild(makeEventChip(e));
     else { const em=document.createElement('div'); em.style.cssText='color:var(--muted);font-size:12px;padding:8px 0'; em.textContent='Sin eventos'; col.appendChild(em); }
+    const bdays2 = birthdaysOnDay(day);
+    if(bdays2.length) col.appendChild(makeBirthChip(bdays2));
     const plus=document.createElement('button'); plus.className='day-add'; plus.style.opacity='1';
     plus.textContent='+'; plus.title='Nuevo evento';
     plus.addEventListener('click',()=>openModal({date:day}));
@@ -2244,14 +2293,19 @@ document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
   const btn = document.getElementById('btnSaveAtt');
   btn.disabled = true; btn.textContent = 'Guardando…';
   try{
-    const upserts = allPlayers.map(p=>({
-      event_id: attEventId,
-      player_id: p.id,
-      status: attStatuses[p.id] || 'No asiste',
-      updated_at: new Date().toISOString()
-    }));
-    const {error} = await supa.from('attendance').upsert(upserts, {onConflict:'event_id,player_id'});
-    if(error) throw error;
+    // Only save players the user explicitly marked — don't overwrite others' responses
+    const upserts = allPlayers
+      .filter(p => attStatuses[p.id])  // skip players with no status (null/undefined)
+      .map(p=>({
+        event_id: attEventId,
+        player_id: p.id,
+        status: attStatuses[p.id],
+        updated_at: new Date().toISOString()
+      }));
+    if(upserts.length){
+      const {error} = await supa.from('attendance').upsert(upserts, {onConflict:'event_id,player_id'});
+      if(error) throw error;
+    }
 
     // Build WA message
     const eventTitle = document.getElementById('attModalTitle').textContent;
@@ -2268,31 +2322,20 @@ document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
     if(pending.length) attWaMsg += '\n⏳ Sin responder (' + pending.length + '): ' + pending.join(', ');
     attWaMsg += '\n\n👉 Confirma tu asistencia en la app: ' + appUrl;
 
-    // Show share button as a real <a> link — works on iOS Safari
-    // wa.me/?text= with group URL isn't possible, but we show the link to the group
-    // with text pre-copied via the native share sheet
     btn.textContent = '✅ Guardado';
     btn.classList.add('p');
 
     const shareBtn = document.getElementById('btnShareAtt');
-    // Use native Web Share API on iOS if available (best option)
-    if(navigator.share){
-      shareBtn.style.display = '';
-      shareBtn.innerHTML = WA_ICON + ' Compartir';
-      shareBtn.href = '#';
-      shareBtn.onclick = (e) => {
-        e.preventDefault();
-        navigator.share({ text: attWaMsg })
-          .then(() => { attModalBg.style.display='none'; })
-          .catch(() => {});
-      };
-    } else {
-      // Fallback: direct wa.me link (works on Android, desktop)
-      shareBtn.style.display = '';
-      shareBtn.innerHTML = WA_ICON + ' Compartir';
-      shareBtn.href = 'https://wa.me/?text=' + encodeURIComponent(attWaMsg);
-      shareBtn.onclick = () => { setTimeout(()=>{ attModalBg.style.display='none'; }, 500); };
-    }
+    shareBtn.innerHTML = WA_ICON + ' Compartir';
+    shareBtn.style.display = '';
+    shareBtn.href = '#';
+    shareBtn.onclick = (e) => {
+      e.preventDefault();
+      navigator.share({ text: attWaMsg })
+        .then(() => { attModalBg.style.display='none'; })
+        .catch(() => {});
+    };
+
     showToast('✅ Asistencia guardada');
   } catch(err){
     btn.disabled = false; btn.textContent = '💾 Guardar';
