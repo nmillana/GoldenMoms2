@@ -2075,14 +2075,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       showView(view);
     });
   });
-  const persisted=(()=>{ try{ return localStorage.getItem('gm_view'); } catch(e){ return null; } })();
-  const initialView=persisted||'dash';
-  document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
-  const toActivate=document.querySelector(`.nav .tab[data-view="${initialView}"]`);
-  if(toActivate) toActivate.classList.add('active');
-  showView(initialView);
-  closeModal();
-  closePlayerModal();
+
+  // Check for deep link: ?att=EVENT_ID → open attendance modal directly
+  const urlParams = new URLSearchParams(window.location.search);
+  const attParam  = urlParams.get('att');
+
+  if(attParam && supa && IS_CONNECTED) {
+    // Navigate to events view first
+    document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
+    const evTab = document.querySelector('.nav .tab[data-view="events"]');
+    if(evTab) evTab.classList.add('active');
+    showView('events');
+    closeModal(); closePlayerModal();
+
+    // Fetch the event and open attendance modal
+    try {
+      const { data: ev, error } = await supa.from('events').select('*').eq('id', attParam).maybeSingle();
+      if(ev && !error) {
+        // Small delay to let the calendar render first
+        setTimeout(() => openAttModal(ev), 350);
+      } else {
+        showToast('⚠️ No se encontró el evento');
+        const persisted=(()=>{ try{ return localStorage.getItem('gm_view'); } catch(e){ return null; } })();
+        showView(persisted||'dash');
+      }
+    } catch(err) {
+      console.warn('Deep link error:', err);
+    }
+    // Clean URL without reloading
+    history.replaceState({}, '', window.location.pathname);
+  } else {
+    const persisted=(()=>{ try{ return localStorage.getItem('gm_view'); } catch(e){ return null; } })();
+    const initialView=persisted||'dash';
+    document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
+    const toActivate=document.querySelector(`.nav .tab[data-view="${initialView}"]`);
+    if(toActivate) toActivate.classList.add('active');
+    showView(initialView);
+    closeModal();
+    closePlayerModal();
+  }
 });
 
 /* ═══════════════════════════════════════════════════════════
@@ -2217,8 +2248,8 @@ document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
     const no     = players.filter(p=>attStatuses[p.id]==='No asiste').map(p=>p.apodo||p.nombre);
     const duda   = players.filter(p=>attStatuses[p.id]==='Duda').map(p=>p.apodo||p.nombre);
     const pending= players.filter(p=>!attStatuses[p.id]).map(p=>p.apodo||p.nombre);
-    // Hardcode app URL — window.location can be unreliable when copied to clipboard
-    const appUrl = 'https://nmillana.github.io/GoldenMoms2/';
+    // Build deep link to this specific event
+    const appUrl = 'https://nmillana.github.io/GoldenMoms2/?att=' + attEventId;
     let msg = '📋 *Asistencia — ' + eventTitle + '*\n';
     if(yes.length)     msg += '\n✅ Asisten (' + yes.length + '): ' + yes.join(', ');
     if(duda.length)    msg += '\n🤔 Duda (' + duda.length + '): ' + duda.join(', ');
