@@ -1176,7 +1176,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   <!-- ═══════════ ESTADÍSTICAS ═══════════ -->
   <section id="v-stats" style="display:none">
     <div class="section-header">
-      <div><div class="section-title">Estadísticas</div><div class="section-sub">Rendimiento individual de la temporada</div></div>
+      <div><div class="section-title">Tabla de Posiciones</div><div class="section-sub">Rendimiento en partidos de la temporada</div></div>
       <select id="stats_team_filter" class="input" style="width:auto;min-width:160px">
         <option value="all">Todos los equipos</option>
         <option value="Golden Moms">💚 Golden Moms</option>
@@ -1184,7 +1184,29 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
         <option value="Power">🧡 Power</option>
       </select>
     </div>
-    <div id="statsGrid" style="display:flex;flex-direction:column;gap:8px"></div>
+    <!-- Season summary KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px" id="standingsKpis"></div>
+    <!-- Standings table -->
+    <div class="standings-wrap">
+      <table class="standings-table" id="standingsTable">
+        <thead><tr>
+          <th>#</th><th>Equipo / Rival</th>
+          <th title="Partidos Jugados">PJ</th>
+          <th title="Ganados">G</th>
+          <th title="Empatados">E</th>
+          <th title="Perdidos">P</th>
+          <th title="Goles a favor">GF</th>
+          <th title="Goles en contra">GC</th>
+          <th title="Diferencia de goles">DIF</th>
+          <th title="Puntos">PTS</th>
+          <th>Últimos 5</th>
+        </tr></thead>
+        <tbody id="standingsBody"></tbody>
+      </table>
+    </div>
+    <!-- Top scorers -->
+    <div class="standings-group-title" style="margin-top:20px">⚽ Goleadoras</div>
+    <div id="topScorers" style="display:flex;flex-direction:column;gap:6px"></div>
   </section>
 
   <!-- ═══════════ TABLÓN ═══════════ -->
@@ -1299,6 +1321,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
         <select id="f_type" class="input">
           <option value="Entrenamiento">Entrenamiento</option>
           <option value="Partido">Partido</option>
+          <option value="Evento">Evento</option>
         </select>
       </div>
     </div>
@@ -1462,7 +1485,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 /* ═══════════════════════════════════════════════════════════
    CONSTANTES
    ══════════════════════════════════════════════════════════ */
-const EVENT_TYPES = { TRAIN: 'Entrenamiento', MATCH: 'Partido' };
+const EVENT_TYPES = { TRAIN: 'Entrenamiento', MATCH: 'Partido', EVENT: 'Evento' };
 const TEAMS = { GM: 'Golden Moms', DR: 'Dreams', PW: 'Power' };
 const ALL_TEAMS = [TEAMS.GM, TEAMS.DR, TEAMS.PW];
 
@@ -1652,19 +1675,25 @@ async function loadAttendanceForEvent(eventId){
   if(!supa || !IS_CONNECTED || !eventId) return;
   try{
     const { data } = await supa.from('attendance').select('player_id, status').eq('event_id', eventId);
-    for(const row of (data||[])){ if(row.status === 'Asiste') selectedPlayerIds.add(row.player_id); }
+    for(const row of (data||[])){
+      if(row.status === 'Asiste') selectedPlayerIds.add(row.player_id);
+      // Also load existing statuses into attStatuses so Duda shows correctly
+      if(row.status) attStatuses[row.player_id] = row.status;
+    }
   } catch(err){ console.warn('loadAttendanceForEvent', err); }
 }
 
 async function saveAttendance(eventId){
   if(!supa || !IS_CONNECTED || !eventId) return;
   try{
+    // Fetch current statuses to not overwrite confirmed ones
+    const { data: existing } = await supa.from('attendance').select('player_id,status').eq('event_id', eventId);
+    const confirmedSet = new Set((existing||[]).filter(r=>r.status==='Asiste'||r.status==='No asiste').map(r=>r.player_id));
     const upserts = [];
-    for(const p of allPlayers){
-      if(selectedPlayerIds.has(p.id)){
-        // Mark selected players as 'Duda' (pending) so notification fires
-        // Their status will be updated when they confirm via the app
-        upserts.push({ event_id: eventId, player_id: p.id, status: 'Duda', updated_at: new Date().toISOString() });
+    for(const pid of selectedPlayerIds){
+      // Only mark as Duda if not already confirmed
+      if(!confirmedSet.has(pid)){
+        upserts.push({ event_id: eventId, player_id: pid, status: 'Duda', updated_at: new Date().toISOString() });
       }
     }
     if(upserts.length) await supa.from('attendance').upsert(upserts, { onConflict: 'event_id,player_id' });
@@ -1929,7 +1958,7 @@ async function renderMonth(){
 
 function makeEventChip(e){
   const ev = document.createElement('div');
-  ev.className = 'ev '+(e.type===EVENT_TYPES.TRAIN?'ev-train':'ev-match');
+  ev.className = 'ev '+(e.type===EVENT_TYPES.TRAIN?'ev-train':e.type===EVENT_TYPES.EVENT?'ev-event':'ev-match');
   const badge = document.createElement('div');
   badge.className = 'ev-team-badge '+teamBadgeClass(e.team||TEAMS.GM);
   badge.textContent = e.team||TEAMS.GM; ev.appendChild(badge);
@@ -1940,7 +1969,7 @@ function makeEventChip(e){
     time.textContent = d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}); ev.appendChild(time);
   }
   // Attendance button for training events
-  if(e.type === EVENT_TYPES.TRAIN){
+  if(e.type === EVENT_TYPES.TRAIN || e.type === EVENT_TYPES.EVENT){
     const attBtn = document.createElement('div');
     attBtn.className='ev-result-btn'; attBtn.textContent='✅ Lista';
     attBtn.addEventListener('click', ev2=>{ ev2.stopPropagation(); openAttModal(e); });
@@ -2387,8 +2416,11 @@ function openAttModal(event) {
 
   attModalBg.style.display = 'flex';
   loadAttendanceForEvent(event.id).then(() => {
-    // Pre-populate attStatuses from selectedPlayerIds
-    for(const pid of selectedPlayerIds) attStatuses[pid] = 'Asiste';
+    // attStatuses already loaded from DB in loadAttendanceForEvent
+    // Only fill missing ones from selectedPlayerIds
+    for(const pid of selectedPlayerIds){
+      if(!attStatuses[pid]) attStatuses[pid] = 'Asiste';
+    }
     renderAttList(event.team || TEAMS.GM);
   });
 }
@@ -2643,91 +2675,105 @@ document.getElementById('btnSaveResult').addEventListener('click', async ()=>{
    ESTADÍSTICAS INDIVIDUALES
    ══════════════════════════════════════════════════════════ */
 async function renderStats() {
-  const grid = document.getElementById('statsGrid');
   const filterTeam = document.getElementById('stats_team_filter').value;
-  grid.innerHTML = '<div class="empty-state"><span class="empty-state-icon">⏳</span>Calculando…</div>';
-  if(!supa||!IS_CONNECTED){ grid.innerHTML='<div class="empty-state">Sin conexión</div>'; return; }
+  const tbody = document.getElementById('standingsBody');
+  const kpisEl = document.getElementById('standingsKpis');
+  const scorersEl = document.getElementById('topScorers');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--muted)">⏳ Cargando…</td></tr>';
+  if(!supa||!IS_CONNECTED){ tbody.innerHTML='<tr><td colspan="11" class="empty-state">Sin conexión</td></tr>'; return; }
   try{
-    // Load players
-    const {data:players} = await supa.from('players').select('id,apodo,nombre,numero_camiseta,foto,equipos').order('apodo',{ascending:true});
-    // Load attendance with event info (only entrenos for attendance %)
-    const {data:att} = await supa.from('attendance').select('player_id,status,events(type)');
-    // Load goals
-    const {data:goals} = await supa.from('goals').select('player_id');
-    // Load scorer_ids from matches
-    const {data:matches} = await supa.from('matches').select('scorer_ids');
+    // Load matches with result
+    let matchQ = supa.from('matches').select('*').order('date',{ascending:false});
+    if(filterTeam!=='all') matchQ = matchQ.eq('team', filterTeam);
+    const {data:matches} = await matchQ;
 
-    grid.innerHTML='';
+    // Load goals / scorers
+    const {data:allGoals} = await supa.from('goals').select('player_id,match_id');
+    const {data:players} = await supa.from('players').select('id,apodo,nombre,equipos').order('apodo',{ascending:true});
+    const playerMap = Object.fromEntries((players||[]).map(p=>[p.id,p]));
 
-    // Build stats per player
-    const attByPlayer = {};
-    const trainTotal = (att||[]).filter(a=>a.events?.type==='Entrenamiento').length;
-    for(const a of (att||[])){
-      if(!attByPlayer[a.player_id]) attByPlayer[a.player_id]={total:0,asiste:0};
-      if(a.events?.type==='Entrenamiento'){
-        attByPlayer[a.player_id].total++;
-        if(a.status==='Asiste') attByPlayer[a.player_id].asiste++;
+    // Group matches by team (rival name acts as "opponent team")
+    // Build per-team row: our teams vs rivals
+    const teams = filterTeam==='all' ? ['Golden Moms','Dreams','Power'] : [filterTeam];
+    const rows = [];
+
+    for(const team of teams){
+      const tm = (matches||[]).filter(m=>m.team===team && m.our_score!=null && m.opponent_score!=null);
+      if(!tm.length) continue;
+      let pj=0,g=0,e=0,p=0,gf=0,gc=0;
+      const form = [];
+      for(const m of tm){
+        pj++; gf+=m.our_score; gc+=m.opponent_score;
+        if(m.our_score>m.opponent_score){ g++; form.push('W'); }
+        else if(m.our_score===m.opponent_score){ e++; form.push('D'); }
+        else { p++; form.push('L'); }
       }
+      const pts=g*3+e;
+      const dif=gf-gc;
+      rows.push({team,pj,g,e,p,gf,gc,dif,pts,form:form.slice(0,5)});
     }
-    const goalsByPlayer = {};
-    for(const g of (goals||[])){ if(g.player_id) goalsByPlayer[g.player_id]=(goalsByPlayer[g.player_id]||0)+1; }
-    // Also count from matches.scorer_ids
-    for(const m of (matches||[])){ for(const id of (m.scorer_ids||[])){ goalsByPlayer[id]=(goalsByPlayer[id]||0)+1; } }
 
-    let filtered = (players||[]);
-    if(filterTeam!=='all') filtered=filtered.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(filterTeam));
+    // Sort by pts desc, dif desc, gf desc
+    rows.sort((a,b)=>b.pts-a.pts||b.dif-a.dif||b.gf-a.gf);
 
-    // Sort by goals desc, then attendance desc
-    filtered.sort((a,b)=>{
-      const gd=(goalsByPlayer[b.id]||0)-(goalsByPlayer[a.id]||0);
-      if(gd!==0) return gd;
-      const ad=(attByPlayer[b.id]?.asiste||0)-(attByPlayer[a.id]?.asiste||0);
-      return ad;
+    // Team colors
+    const teamColor = {'Golden Moms':'#22c55e','Dreams':'#a855f7','Power':'#f97316'};
+
+    tbody.innerHTML='';
+    if(!rows.length){
+      tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--muted-2)">Sin partidos registrados con resultado</td></tr>';
+    }
+    rows.forEach((r,i)=>{
+      const tr=document.createElement('tr');
+      if(i===0) tr.className='top-1';
+      else if(i<3) tr.className='top-3';
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
+      const diffHtml = r.dif>0?'<span class="st-diff-pos">+'+r.dif+'</span>':r.dif<0?'<span class="st-diff-neg">'+r.dif+'</span>':'0';
+      const formHtml = r.form.map(f=>f==='W'?'<div class="st-form-w">G</div>':f==='D'?'<div class="st-form-d">E</div>':'<div class="st-form-l">P</div>').join('');
+      tr.innerHTML = '<td>'+medal+'</td>'+
+        '<td><span class="st-team-badge" style="background:'+( teamColor[r.team]||'#999')+'"></span><span class="st-team-name">'+r.team+'</span></td>'+
+        '<td>'+r.pj+'</td><td>'+r.g+'</td><td>'+r.e+'</td><td>'+r.p+'</td>'+
+        '<td>'+r.gf+'</td><td>'+r.gc+'</td><td>'+diffHtml+'</td>'+
+        '<td><span class="st-pts">'+r.pts+'</span></td>'+
+        '<td><div class="st-form">'+formHtml+'</div></td>';
+      tbody.appendChild(tr);
     });
 
-    if(!filtered.length){ grid.innerHTML='<div class="empty-state"><span class="empty-state-icon">👥</span>Sin jugadoras</div>'; return; }
-
-    // Header
-    const header = document.createElement('div');
-    header.className='stats-row'; header.style.background='var(--surface-2)'; header.style.fontWeight='700'; header.style.fontSize='10px'; header.style.color='var(--muted)'; header.style.textTransform='uppercase'; header.style.letterSpacing='0.5px';
-    header.innerHTML='<div></div><div>Jugadora</div><div style="text-align:center">Goles</div><div style="text-align:center">Asistencia</div><div>% entrenamientos</div>';
-    grid.appendChild(header);
-
-    for(const p of filtered){
-      const goles = goalsByPlayer[p.id]||0;
-      const att_data = attByPlayer[p.id]||{total:0,asiste:0};
-      const pct = att_data.total>0 ? Math.round(att_data.asiste/att_data.total*100) : null;
-
-      const row = document.createElement('div'); row.className='stats-row';
-
-      // Avatar
-      const avWrap = document.createElement('div');
-      if(p.foto){
-        const img=document.createElement('img');img.className='stats-avatar';img.style.width='40px';img.style.height='40px';img.style.borderRadius='50%';img.style.objectFit='cover';img.src=p.foto;img.alt='';avWrap.appendChild(img);
-      } else {
-        const av=document.createElement('div');av.className='stats-avatar';av.textContent=(p.apodo||p.nombre||'?')[0].toUpperCase();avWrap.appendChild(av);
-      }
-
-      const info=document.createElement('div');
-      const nm=document.createElement('div');nm.className='stats-name';nm.textContent=p.apodo||p.nombre||'—';
-      const sub=document.createElement('div');sub.className='stats-sub';sub.textContent=p.nombre&&p.apodo?p.nombre:(p.numero_camiseta?'#'+p.numero_camiseta:'');
-      info.appendChild(nm);info.appendChild(sub);
-
-      const golesKpi=document.createElement('div');golesKpi.className='stats-kpi';
-      golesKpi.innerHTML=`<div class="stats-kpi-n">${goles}</div><div class="stats-kpi-l">Goles</div>`;
-
-      const attKpi=document.createElement('div');attKpi.className='stats-kpi';
-      attKpi.innerHTML=`<div class="stats-kpi-n">${att_data.asiste}</div><div class="stats-kpi-l">Presencias</div>`;
-
-      const barWrap=document.createElement('div');barWrap.className='stats-bar-wrap';
-      if(pct!==null){
-        barWrap.innerHTML=`<div class="stats-bar-bg"><div class="stats-bar-fill" style="width:${pct}%"></div></div><div class="stats-pct">${pct}%</div>`;
-      } else { barWrap.innerHTML='<div class="stats-pct" style="color:var(--muted-2)">—</div>'; }
-
-      row.appendChild(avWrap);row.appendChild(info);row.appendChild(golesKpi);row.appendChild(attKpi);row.appendChild(barWrap);
-      grid.appendChild(row);
+    // Season KPIs
+    if(kpisEl){
+      const allM = (matches||[]).filter(m=>m.our_score!=null);
+      const totPJ=allM.length, totG=allM.filter(m=>m.our_score>m.opponent_score).length;
+      const totGF=allM.reduce((s,m)=>s+m.our_score,0), totGC=allM.reduce((s,m)=>s+m.opponent_score,0);
+      kpisEl.innerHTML=[
+        {label:'Partidos',val:totPJ,icon:'📅'},
+        {label:'Victorias',val:totG,icon:'🏆'},
+        {label:'Goles a favor',val:totGF,icon:'⚽'},
+        {label:'Goles en contra',val:totGC,icon:'🥅'},
+      ].map(k=>'<div class="kpi-card" style="padding:12px 8px;text-align:center"><div style="font-size:18px">'+k.icon+'</div><div class="kpi-value" style="font-size:24px;margin:2px 0">'+k.val+'</div><div class="kpi-label">'+k.label+'</div></div>').join('');
     }
-  } catch(err){ console.error('renderStats',err); grid.innerHTML='<div class="empty-state">Error cargando estadísticas</div>'; }
+
+    // Top scorers
+    if(scorersEl){
+      const goalsByPlayer={};
+      for(const g of (allGoals||[])){ goalsByPlayer[g.player_id]=(goalsByPlayer[g.player_id]||0)+1; }
+      for(const m of (matches||[])){
+        for(const id of (m.scorer_ids||[])){ goalsByPlayer[id]=(goalsByPlayer[id]||0)+1; }
+      }
+      const scorerRows=Object.entries(goalsByPlayer).map(([id,g])=>({p:playerMap[id],g})).filter(r=>r.p).sort((a,b)=>b.g-a.g).slice(0,10);
+      scorersEl.innerHTML='';
+      if(!scorerRows.length){ scorersEl.innerHTML='<div class="empty-state" style="padding:12px;font-size:13px">Sin goles registrados</div>'; }
+      scorerRows.forEach((r,i)=>{
+        const row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);font-size:13px';
+        row.innerHTML='<span style="width:20px;text-align:center;font-weight:800;color:var(--muted)">'+(i+1)+'</span>'+
+          '<div class="stats-avatar" style="width:32px;height:32px;font-size:12px">'+( r.p.apodo||r.p.nombre||'?')[0].toUpperCase()+'</div>'+
+          '<span style="flex:1;font-weight:700">'+(r.p.apodo||r.p.nombre||'—')+'</span>'+
+          '<span style="font-weight:800;font-size:15px;color:var(--lime)">'+r.g+' ⚽</span>';
+        scorersEl.appendChild(row);
+      });
+    }
+  } catch(err){ console.error('renderStats',err); tbody.innerHTML='<tr><td colspan="11" class="empty-state">Error cargando datos</td></tr>'; }
 }
 document.getElementById('stats_team_filter').addEventListener('change', renderStats);
 
@@ -3344,8 +3390,11 @@ document.getElementById('treasPwdInput')?.addEventListener('keydown', e => {
 // ── Pre-load monthly cuotas if not exist ─────────────────
 async function preloadMonthlyCuotas(){
   if(!supa || !IS_CONNECTED) return;
+  // Only run if treasurer is unlocked (avoids RLS error for normal users)
+  if(!checkTreasAuth()) return;
   try{
-    const { data: existing } = await supa.from('fees').select('title').like('title','Mensualidad%');
+    const { data: existing, error: fetchErr } = await supa.from('fees').select('title').like('title','Mensualidad%');
+    if(fetchErr){ console.warn('preloadMonthlyCuotas fetch:', fetchErr.message); return; }
     const existingTitles = new Set((existing||[]).map(f=>f.title));
     const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
                     'Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -3354,13 +3403,13 @@ async function preloadMonthlyCuotas(){
     months.forEach((m, i) => {
       const title = 'Mensualidad ' + m + ' ' + year;
       if(!existingTitles.has(title)){
-        // Due date: 10th of each month
         const due = year + '-' + String(i+1).padStart(2,'0') + '-10';
         toInsert.push({ title, amount: MONTHLY_AMOUNT, due_date: due, team: 'Golden Moms' });
       }
     });
     if(toInsert.length){
-      await supa.from('fees').insert(toInsert);
+      const { error: insErr } = await supa.from('fees').insert(toInsert);
+      if(insErr) console.warn('preloadMonthlyCuotas insert:', insErr.message);
     }
   } catch(e){ console.warn('preloadMonthlyCuotas', e); }
 }
