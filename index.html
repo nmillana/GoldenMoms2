@@ -2301,7 +2301,11 @@ function showView(v){
   if(v==='roster')  renderRoster(currentRosterFilter);
   if(v==='stats')   renderStats();
   if(v==='board')   renderBoard();
-  if(v==='fees')    renderFees();
+  if(v==='fees'){
+    renderFees();
+    if(checkTreasAuth()){ hideTreasLock(); renderTreasKPIs(); renderTreasEvents(); }
+    else showTreasLock();
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -3335,20 +3339,7 @@ document.getElementById('treasPwdInput')?.addEventListener('keydown', e => {
   if(e.key === 'Enter') document.getElementById('treasUnlockBtn')?.click();
 });
 
-// Show lock when navigating to fees
-const _origShowView = showView;
-function showView(v){
-  _origShowView(v);
-  if(v === 'fees'){
-    if(checkTreasAuth()){
-      hideTreasLock();
-      renderTreasKPIs();
-      renderTreasEvents();
-    } else {
-      showTreasLock();
-    }
-  }
-}
+// Lock handled inside showView original
 
 // ── Pre-load monthly cuotas if not exist ─────────────────
 async function preloadMonthlyCuotas(){
