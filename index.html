@@ -144,6 +144,22 @@ button { font-family: var(--font-body); cursor: pointer; }
 .notif-empty { padding: 20px 16px; text-align: center; font-size: 13px; color: var(--muted-2); }
 
 .nav::-webkit-scrollbar { display: none; }
+/* ── Mobile: nav as dropdown on very small screens ── */
+#mobileNavSelect { display:none; }
+@media (max-width: 540px) {
+  .nav { display: none !important; }
+  #mobileNavSelect {
+    display: block;
+    padding: 7px 12px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-sm);
+    background: var(--surface);
+    font-size: 13px; font-weight: 600;
+    color: var(--ink);
+    min-width: 140px;
+    cursor: pointer;
+  }
+}
 /* ── Top bar — blanco, muy limpio ────────────────────── */
 .top {
   position: sticky; top: 0; z-index: 100;
@@ -889,6 +905,83 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   opacity: 0; pointer-events: none; white-space: nowrap;
 }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* ══════════════════════════════════════════════════════
+   LOGIN SCREEN
+   ══════════════════════════════════════════════════════ */
+#loginScreen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(160deg, #0f2a1a 0%, #1a4a2a 50%, #0d3320 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.login-card {
+  background: #fff; border-radius: 20px; padding: 36px 32px;
+  width: 100%; max-width: 360px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.35);
+  animation: loginFadeIn .4s ease;
+}
+@keyframes loginFadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+.login-logo {
+  display: flex; align-items: center; gap: 10px;
+  justify-content: center; margin-bottom: 8px;
+}
+.login-logo img { width: 52px; height: 52px; border-radius: 50%; }
+.login-logo-text { font-family: var(--font-head); font-size: 22px; font-weight: 900; color: var(--ink); }
+.login-logo-text span { color: var(--lime); }
+.login-welcome { text-align:center; font-size:13px; color:var(--muted); margin-bottom:24px; }
+.login-label { font-size:11px; font-weight:700; color:var(--muted-2); text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:4px; }
+.login-input { width:100%; padding:11px 14px; border:1.5px solid var(--line-2); border-radius:var(--r-sm); font-size:15px; color:var(--ink); outline:none; margin-bottom:12px; box-sizing:border-box; }
+.login-input:focus { border-color:var(--lime); }
+.login-btn { width:100%; padding:13px; background:var(--lime); border:none; border-radius:var(--r-sm); font-family:var(--font-head); font-size:15px; font-weight:800; color:#fff; cursor:pointer; margin-top:4px; letter-spacing:.3px; }
+.login-btn:hover { background:#65a30d; }
+.login-btn:active { transform:scale(.98); }
+.login-err { font-size:12px; color:var(--danger); text-align:center; min-height:18px; margin-top:-6px; margin-bottom:6px; }
+.login-hint { font-size:11px; color:var(--muted-2); text-align:center; margin-top:14px; }
+.player-avatar-login {
+  width:72px; height:72px; border-radius:50%; background:var(--lime-pale);
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px; font-weight:800; color:var(--lime-dark);
+  margin:0 auto 12px; font-family:var(--font-head);
+  border: 3px solid var(--lime);
+}
+
+/* ── User pill in topbar ── */
+.user-pill {
+  display:flex; align-items:center; gap:6px;
+  background:var(--surface-2); border:1px solid var(--line-2);
+  border-radius:99px; padding:3px 10px 3px 4px;
+  font-size:12px; font-weight:600; color:var(--ink); cursor:pointer;
+}
+.user-pill-av {
+  width:24px; height:24px; border-radius:50%; background:var(--lime);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; color:#fff;
+}
+.user-pill:hover { background:var(--line); }
+
+/* ── Player dashboard card ── */
+.player-dash-card {
+  background:linear-gradient(135deg,#1a4a2a,#2d7a4f);
+  border-radius:var(--r-lg); padding:20px 22px; margin-bottom:16px; color:#fff;
+}
+.player-dash-name { font-family:var(--font-head); font-size:22px; font-weight:900; }
+.player-dash-role { font-size:12px; opacity:.75; margin-top:2px; }
+.player-dash-items { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+.player-dash-item {
+  background:rgba(255,255,255,.12); border-radius:10px; padding:10px 14px;
+  display:flex; align-items:center; gap:10px; cursor:pointer;
+}
+.player-dash-item:hover { background:rgba(255,255,255,.2); }
+.player-dash-item-icon { font-size:18px; }
+.player-dash-item-text { flex:1; }
+.player-dash-item-title { font-size:13px; font-weight:700; }
+.player-dash-item-sub { font-size:11px; opacity:.75; }
+.player-dash-item-badge {
+  background:#f59e0b; border-radius:99px; padding:2px 8px;
+  font-size:11px; font-weight:800; color:#fff; min-width:20px; text-align:center;
+}
+
 </style>
 </head>
 <body>
@@ -915,6 +1008,19 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
         </div>
       </div>
     </div>
+    <div class="user-pill" id="userPill" style="display:none" onclick="showLogoutMenu()">
+      <div class="user-pill-av" id="userPillAv">?</div>
+      <span id="userPillName">Usuario</span>
+    </div>
+    <select id="mobileNavSelect" aria-label="Navegación móvil">
+        <option value="dash">🏠 Dashboard</option>
+        <option value="events">📅 Eventos</option>
+        <option value="roster">👥 Plantel</option>
+        <option value="matches">🏆 Partidos</option>
+        <option value="stats">📊 Estadísticas</option>
+        <option value="board">📌 Tablón</option>
+        <option value="fees">💰 Cuotas</option>
+      </select>
     <nav class="nav" role="tablist" aria-label="Navegación">
       <button class="tab active" data-view="dash">Dashboard</button>
       <button class="tab" data-view="events">Eventos</button>
@@ -957,7 +1063,16 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
     </div>
 
     <!-- Pendientes -->
-    <div id="pendingBanner" style="display:none;margin-bottom:12px">
+    <!-- Player personal dashboard (shown only when logged in as jugadora) -->
+    <div id="playerDashCard" class="player-dash-card" style="display:none">
+      <div class="player-dash-name" id="pdName">Hola 👋</div>
+      <div class="player-dash-role" id="pdRole"></div>
+      <div class="player-dash-items" id="pdItems">
+        <!-- Filled by renderPlayerDash() -->
+      </div>
+    </div>
+
+        <div id="pendingBanner" style="display:none;margin-bottom:12px">
       <div class="card" style="border-left:3px solid #f59e0b;background:#fffbeb">
         <div class="dash-card-title" style="color:#92400e">
           <span class="dash-card-icon" style="background:#fef3c7;border-color:#fde68a">⏳</span>
@@ -1318,13 +1433,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
     </div>
     <div id="feesList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px"></div>
 
-    <!-- Eventos extra / gastos -->
-    <div class="treas-section-title">💸 Eventos con cobro especial</div>
-    <div class="section-header" style="margin-bottom:10px;margin-top:0">
-      <div class="section-sub">Eventos con monto personalizado por jugadora</div>
-      <button class="btn" id="btnNewTreasEvent">＋ Nuevo evento</button>
-    </div>
-    <div id="treasEventsList" style="display:flex;flex-direction:column;gap:10px"></div>
+
 
     <!-- Egresos -->
     <div class="treas-section-title" style="margin-top:24px">📤 Registro de Egresos</div>
@@ -1820,16 +1929,32 @@ async function loadAttendanceForEvent(eventId){
 async function saveAttendance(eventId){
   if(!supa || !IS_CONNECTED || !eventId) return;
   try{
+    // Get the event's team so we can load the right players
+    const { data: evData } = await supa.from('events').select('team,type').eq('id', eventId).maybeSingle();
+    const evTeam = evData?.team || TEAMS.GM;
+
+    // Determine which players to mark: selectedPlayerIds if any, else ALL active players of that team
+    let targetIds = [...selectedPlayerIds];
+    if(!targetIds.length){
+      const { data: teamPlayers } = await supa.from('players')
+        .select('id,equipos').eq('estado','activo');
+      const allActive = (teamPlayers||[]).filter(p=>{
+        if(evTeam === TEAMS.GM) return true;
+        const eq = p.equipos;
+        if(Array.isArray(eq)) return eq.includes(evTeam);
+        try{ return JSON.parse(eq||'[]').includes(evTeam); }catch(e){ return false; }
+      });
+      targetIds = allActive.map(p=>p.id);
+    }
+
+    if(!targetIds.length) return;
+
     // Fetch current statuses to not overwrite confirmed ones
     const { data: existing } = await supa.from('attendance').select('player_id,status').eq('event_id', eventId);
     const confirmedSet = new Set((existing||[]).filter(r=>r.status==='Asiste'||r.status==='No asiste').map(r=>r.player_id));
-    const upserts = [];
-    for(const pid of selectedPlayerIds){
-      // Only mark as Duda if not already confirmed
-      if(!confirmedSet.has(pid)){
-        upserts.push({ event_id: eventId, player_id: pid, status: 'Duda', updated_at: new Date().toISOString() });
-      }
-    }
+    const upserts = targetIds
+      .filter(pid => !confirmedSet.has(pid))
+      .map(pid => ({ event_id: eventId, player_id: pid, status: 'Duda', updated_at: new Date().toISOString() }));
     if(upserts.length) await supa.from('attendance').upsert(upserts, { onConflict: 'event_id,player_id' });
   } catch(err){ console.warn('saveAttendance', err); }
 }
@@ -1899,8 +2024,8 @@ btnSave.addEventListener('click', async () => {
       if(error) throw error;
       savedId = data?.[0]?.id;
     }
-    // Always save attendance/pending for any event type with convoked players
-    if(savedId && selectedPlayerIds.size > 0) await saveAttendance(savedId);
+    // Always create pending attendance for all convoked players
+    if(savedId) await saveAttendance(savedId);
   } catch(err){ alert('Error: '+(err.message||err)); console.error(err); return; }
   closeModal(); renderMonth(); renderDash();
 });
@@ -2459,7 +2584,7 @@ function showView(v){
   }
   const target=document.getElementById('v-'+v);
   if(target){ target.style.display='block'; requestAnimationFrame(()=>target.classList.add('view-enter')); }
-  if(v==='dash')    { renderDash(); loadNotifications(); }
+  if(v==='dash')    { renderDash(); loadNotifications(); if(currentUser) renderPlayerDash(); }
   if(v==='events')  renderMonth();
   if(v==='matches') renderMatches();
   if(v==='roster')  renderRoster(currentRosterFilter);
@@ -2521,7 +2646,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
     const toActivate=document.querySelector(`.nav .tab[data-view="${initialView}"]`);
     if(toActivate) toActivate.classList.add('active');
-    showView(initialView);
+    await initAuth();
+    if(currentUser) {
+      updateUserUI();
+      addAdminControls();
+      renderPlayerDash();
+    }
     closeModal();
     closePlayerModal();
   }
@@ -2834,14 +2964,14 @@ async function renderStats() {
     const rows = [];
 
     for(const team of teams){
-      const tm = (matches||[]).filter(m=>m.team===team && m.our_score!=null && m.opponent_score!=null);
+      const tm = (matches||[]).filter(m=>m.team===team && m.goals_for!=null && m.goals_against!=null);
       if(!tm.length) continue;
       let pj=0,g=0,e=0,p=0,gf=0,gc=0;
       const form = [];
       for(const m of tm){
-        pj++; gf+=m.our_score; gc+=m.opponent_score;
-        if(m.our_score>m.opponent_score){ g++; form.push('W'); }
-        else if(m.our_score===m.opponent_score){ e++; form.push('D'); }
+        pj++; gf+=m.goals_for; gc+=m.goals_against;
+        if(m.goals_for>m.goals_against){ g++; form.push('W'); }
+        else if(m.goals_for===m.goals_against){ e++; form.push('D'); }
         else { p++; form.push('L'); }
       }
       const pts=g*3+e;
@@ -2877,9 +3007,9 @@ async function renderStats() {
 
     // Season KPIs
     if(kpisEl){
-      const allM = (matches||[]).filter(m=>m.our_score!=null);
-      const totPJ=allM.length, totG=allM.filter(m=>m.our_score>m.opponent_score).length;
-      const totGF=allM.reduce((s,m)=>s+m.our_score,0), totGC=allM.reduce((s,m)=>s+m.opponent_score,0);
+      const allM = (matches||[]).filter(m=>m.goals_for!=null);
+      const totPJ=allM.length, totG=allM.filter(m=>m.goals_for>m.goals_against).length;
+      const totGF=allM.reduce((s,m)=>s+m.goals_for,0), totGC=allM.reduce((s,m)=>s+m.goals_against,0);
       kpisEl.innerHTML=[
         {label:'Partidos',val:totPJ,icon:'📅'},
         {label:'Victorias',val:totG,icon:'🏆'},
@@ -3360,7 +3490,7 @@ document.getElementById('btnExportRoster').addEventListener('click', exportRoste
 /* ═══════════════════════════════════════════════════════════
    NOTIFICACIONES — PENDIENTES DE CONFIRMAR ASISTENCIA
    ══════════════════════════════════════════════════════════ */
-async function loadNotifications() {
+async function loadNotificationsAdmin() {
   if(!supa || !IS_CONNECTED) return;
   try {
     const now = new Date();
@@ -4029,7 +4159,7 @@ async function renderExpenses(){
     card.innerHTML='<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">'+
       '<div><div class="treas-event-title">'+exp.title+'</div>'+
       '<div class="treas-event-meta">'+(exp.date||'')+(exp.team?' · '+exp.team:'')+(exp.notes?' · '+exp.notes:'')+'</div>'+
-      '<div style="font-size:12px;margin-top:3px"><span style="color:#16a34a;font-weight:700">$'+paidAmt.toLocaleString('es-CL')+' cobrado</span> / <span style="color:var(--muted)">$'+totalAmt.toLocaleString('es-CL')+' total</span></div>'+
+      '<div class="exp-sum-line" style="font-size:12px;margin-top:3px"><span style="color:#16a34a;font-weight:700">$'+paidAmt.toLocaleString('es-CL')+' cobrado</span> / <span style="color:var(--muted)">$'+totalAmt.toLocaleString('es-CL')+' total</span></div>'+
       '</div>'+
       '<button class="fee-edit-btn" onclick="openExpenseModal(\''+exp.id+'\')">✏️ Editar</button></div>';
     if(pays?.length){
@@ -4172,6 +4302,387 @@ Listener('click', ()=> openTreasEventModal());
 
 // Init: check session auth when fees tab opens
 // (handled in overridden showView above)
+
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH — Login por jugadora
+   ══════════════════════════════════════════════════════════ */
+const AUTH_KEY = 'gm_player_session';
+let currentUser = null; // { player_id, username, role, apodo, nombre, numero_camiseta }
+
+// ── SHA-256 hash ──────────────────────────────────────────
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── Session persistence ───────────────────────────────────
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem(AUTH_KEY);
+    if(raw) currentUser = JSON.parse(raw);
+  } catch(e) { currentUser = null; }
+}
+function saveSession(user) {
+  currentUser = user;
+  try { sessionStorage.setItem(AUTH_KEY, JSON.stringify(user)); } catch(e) {}
+}
+function clearSession() {
+  currentUser = null;
+  try { sessionStorage.removeItem(AUTH_KEY); } catch(e) {}
+}
+
+// ── Login flow ────────────────────────────────────────────
+let loginFoundUser = null; // player_user row found in step 1
+
+async function initAuth() {
+  loadSession();
+  if(currentUser) {
+    hideLoginScreen();
+    updateUserUI();
+    return;
+  }
+  showLoginScreen();
+}
+
+function showLoginScreen() {
+  const el = document.getElementById('loginScreen');
+  if(el) el.style.display = 'flex';
+}
+function hideLoginScreen() {
+  const el = document.getElementById('loginScreen');
+  if(el) el.style.display = 'none';
+}
+
+// Step 1: check username
+document.getElementById('loginNextBtn')?.addEventListener('click', loginStep1);
+document.getElementById('loginUser')?.addEventListener('keydown', e => { if(e.key==='Enter') loginStep1(); });
+
+async function loginStep1() {
+  const username = (document.getElementById('loginUser')?.value||'').trim().toLowerCase();
+  const err1 = document.getElementById('loginErr1');
+  if(!username) { err1.textContent='Ingresá tu usuario'; return; }
+  if(!supa || !IS_CONNECTED) { err1.textContent='Sin conexión. Esperá un momento…'; return; }
+  err1.textContent = '';
+  document.getElementById('loginNextBtn').textContent = 'Buscando…';
+  try {
+    const { data, error } = await supa.from('player_users')
+      .select('*, players(id,apodo,nombre,numero_camiseta,foto,rol)')
+      .eq('username', username)
+      .eq('active', true)
+      .maybeSingle();
+    document.getElementById('loginNextBtn').textContent = 'Continuar →';
+    if(error || !data) { err1.textContent='Usuario no encontrado'; return; }
+    loginFoundUser = data;
+    // Show step 2
+    document.getElementById('loginStep1').style.display = 'none';
+    const step2 = document.getElementById('loginStep2');
+    step2.style.display = '';
+    const pl = data.players;
+    const name = pl?.apodo || pl?.nombre || username;
+    document.getElementById('loginAvatar').textContent = name[0].toUpperCase();
+    document.getElementById('loginPlayerName').textContent = name;
+    document.getElementById('loginPlayerRole').textContent = data.role === 'admin' ? '⭐ Administradora' : '⚽ Jugadora';
+    if(pl?.foto) {
+      const av = document.getElementById('loginAvatar');
+      av.style.backgroundImage='url('+pl.foto+')'; av.style.backgroundSize='cover'; av.textContent='';
+    }
+    setTimeout(() => document.getElementById('loginPwd')?.focus(), 100);
+  } catch(err) {
+    document.getElementById('loginNextBtn').textContent = 'Continuar →';
+    err1.textContent = 'Error al buscar usuario';
+    console.warn(err);
+  }
+}
+
+// Step 2: verify password
+document.getElementById('loginSubmitBtn')?.addEventListener('click', loginStep2);
+document.getElementById('loginPwd')?.addEventListener('keydown', e => { if(e.key==='Enter') loginStep2(); });
+document.getElementById('loginBackBtn')?.addEventListener('click', () => {
+  document.getElementById('loginStep2').style.display='none';
+  document.getElementById('loginStep1').style.display='';
+  document.getElementById('loginPwd').value='';
+  document.getElementById('loginErr2').textContent='';
+  loginFoundUser = null;
+});
+
+async function loginStep2() {
+  const pwd = document.getElementById('loginPwd')?.value||'';
+  const err2 = document.getElementById('loginErr2');
+  if(!pwd) { err2.textContent='Ingresá tu contraseña'; return; }
+  err2.textContent='';
+  document.getElementById('loginSubmitBtn').textContent='Verificando…';
+  try {
+    const hash = await sha256(pwd);
+    if(hash !== loginFoundUser.pwd_hash) {
+      err2.textContent='Contraseña incorrecta';
+      document.getElementById('loginSubmitBtn').textContent='🔓 Entrar';
+      document.getElementById('loginPwd').value='';
+      return;
+    }
+    const pl = loginFoundUser.players;
+    const user = {
+      player_id: pl.id,
+      username: loginFoundUser.username,
+      role: loginFoundUser.role,
+      apodo: pl.apodo||'',
+      nombre: pl.nombre||'',
+      numero_camiseta: pl.numero_camiseta,
+      foto: pl.foto||''
+    };
+    saveSession(user);
+    hideLoginScreen();
+    updateUserUI();
+    showView('dash');
+    renderPlayerDash();
+  } catch(err) {
+    err2.textContent='Error al verificar';
+    document.getElementById('loginSubmitBtn').textContent='🔓 Entrar';
+    console.warn(err);
+  }
+}
+
+// ── Update UI after login ─────────────────────────────────
+function updateUserUI() {
+  if(!currentUser) return;
+  const pill = document.getElementById('userPill');
+  const pillAv = document.getElementById('userPillAv');
+  const pillName = document.getElementById('userPillName');
+  if(pill) pill.style.display = 'flex';
+  const name = currentUser.apodo || currentUser.nombre || currentUser.username;
+  if(pillAv) pillAv.textContent = name[0].toUpperCase();
+  if(pillName) pillName.textContent = name;
+
+  // Hide admin-only nav items for regular players
+  const isAdmin = currentUser.role === 'admin';
+  const feesTab = document.querySelector('.nav .tab[data-view="fees"]');
+  if(feesTab) feesTab.style.display = isAdmin ? '' : 'none';
+  const mSel = document.getElementById('mobileNavSelect');
+  if(mSel){
+    [...mSel.options].forEach(o=>{ if(o.value==='fees') o.style.display = isAdmin?'':'none'; });
+  }
+}
+
+// ── Logout ────────────────────────────────────────────────
+function showLogoutMenu() {
+  if(!currentUser) return;
+  const name = currentUser.apodo || currentUser.nombre || currentUser.username;
+  if(confirm('¿Cerrar sesión de ' + name + '?')) {
+    clearSession();
+    // Reset UI
+    const pill = document.getElementById('userPill');
+    if(pill) pill.style.display = 'none';
+    document.getElementById('loginUser').value='';
+    document.getElementById('loginPwd').value='';
+    document.getElementById('loginStep1').style.display='';
+    document.getElementById('loginStep2').style.display='none';
+    document.getElementById('playerDashCard').style.display='none';
+    showLoginScreen();
+    loginFoundUser = null;
+  }
+}
+
+// ── Player personal dashboard ─────────────────────────────
+async function renderPlayerDash() {
+  const card = document.getElementById('playerDashCard');
+  const pdName = document.getElementById('pdName');
+  const pdRole = document.getElementById('pdRole');
+  const pdItems = document.getElementById('pdItems');
+  if(!card || !currentUser) return;
+
+  const name = currentUser.apodo || currentUser.nombre || 'Jugadora';
+  if(pdName) pdName.textContent = 'Hola, ' + name + ' 👋';
+  if(pdRole) pdRole.textContent = currentUser.role==='admin' ? '⭐ Administradora' : '⚽ Jugadora · #'+(currentUser.numero_camiseta||'—');
+  card.style.display = '';
+  if(pdItems) pdItems.innerHTML = '<div style="font-size:12px;opacity:.7">Cargando tus pendientes…</div>';
+
+  if(!supa || !IS_CONNECTED || !currentUser.player_id) return;
+  const items = [];
+  const pid = currentUser.player_id;
+
+  try {
+    // 1. Asistencia pendiente (mis eventos con Duda)
+    const now = new Date();
+    const { data:attRows } = await supa.from('attendance')
+      .select('event_id, status, events(id,title,datetime,type)')
+      .eq('player_id', pid)
+      .eq('status', 'Duda')
+      .gte('events.datetime', now.toISOString());
+    const pendingAtt = (attRows||[]).filter(a=>a.events);
+    if(pendingAtt.length) {
+      items.push({
+        icon:'⏳', title: pendingAtt.length + ' evento'+(pendingAtt.length>1?'s':'')+' sin confirmar',
+        sub: pendingAtt.map(a=>{
+          const d=new Date(a.events.datetime);
+          return a.events.title+' · '+d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
+        }).slice(0,3).join(' | '),
+        badge: pendingAtt.length,
+        action: () => showView('events')
+      });
+    }
+
+    // 2. Cuotas pendientes (fee_payments con paid=false)
+    const { data:feeRows } = await supa.from('fee_payments')
+      .select('paid, fees(title,amount,due_date)')
+      .eq('player_id', pid)
+      .eq('paid', false);
+    const pendingFees = (feeRows||[]).filter(f=>f.fees);
+    if(pendingFees.length) {
+      const total = pendingFees.reduce((s,f)=>s+Number(f.fees?.amount||0),0);
+      items.push({
+        icon:'💰', title: pendingFees.length + ' cuota'+(pendingFees.length>1?'s':'')+' pendiente'+(pendingFees.length>1?'s':''),
+        sub: pendingFees.map(f=>f.fees.title).slice(0,3).join(', ') + (total?'  ·  Total: $'+total.toLocaleString('es-CL'):''),
+        badge: pendingFees.length,
+        action: null
+      });
+    }
+
+    // 3. Egresos pendientes (expense_payments con paid=false)
+    const { data:expRows } = await supa.from('expense_payments')
+      .select('amount, paid, expenses(title)')
+      .eq('player_id', pid)
+      .eq('paid', false);
+    const pendingExp = (expRows||[]).filter(e=>e.expenses);
+    if(pendingExp.length) {
+      const totalExp = pendingExp.reduce((s,e)=>s+Number(e.amount||0),0);
+      items.push({
+        icon:'📤', title: pendingExp.length + ' cobro'+(pendingExp.length>1?'s':'')+' pendiente'+(pendingExp.length>1?'s':''),
+        sub: pendingExp.map(e=>e.expenses.title+' $'+Number(e.amount||0).toLocaleString('es-CL')).slice(0,3).join(' | ') + '  ·  Total: $'+totalExp.toLocaleString('es-CL'),
+        badge: pendingExp.length,
+        action: null
+      });
+    }
+
+    if(!items.length) {
+      if(pdItems) pdItems.innerHTML = '<div style="font-size:13px;opacity:.85;text-align:center;padding:8px 0">✅ Todo al día — sin pendientes</div>';
+      return;
+    }
+    if(pdItems) {
+      pdItems.innerHTML='';
+      items.forEach(item=>{
+        const div = document.createElement('div');
+        div.className = 'player-dash-item';
+        div.innerHTML =
+          '<span class="player-dash-item-icon">'+item.icon+'</span>'+
+          '<div class="player-dash-item-text">'+
+            '<div class="player-dash-item-title">'+item.title+'</div>'+
+            '<div class="player-dash-item-sub">'+item.sub+'</div>'+
+          '</div>'+
+          '<span class="player-dash-item-badge">'+item.badge+'</span>';
+        if(item.action) div.addEventListener('click', item.action);
+        pdItems.appendChild(div);
+      });
+    }
+  } catch(err) { console.warn('renderPlayerDash', err); }
+}
+
+// ── Filter notifications for current player ───────────────
+// Override loadNotifications to filter by player when logged in as jugadora
+async function loadNotifications() {
+  if(!currentUser || currentUser.role === 'admin') {
+    await loadNotificationsAdmin();
+    return;
+  }
+  // Jugadora: show only HER pending attendance
+  if(!supa || !IS_CONNECTED) return;
+  try {
+    const now = new Date();
+    const future = new Date(now); future.setDate(future.getDate()+14);
+    const { data:attRows } = await supa.from('attendance')
+      .select('event_id, status, events(id,title,datetime,team,type)')
+      .eq('player_id', currentUser.player_id)
+      .eq('status','Duda')
+      .gte('events.datetime', now.toISOString())
+      .lte('events.datetime', future.toISOString());
+    const pending = (attRows||[]).filter(a=>a.events).map(a=>{
+      const ev=a.events;
+      const d=new Date(ev.datetime);
+      return {
+        id:ev.id, title:ev.title,
+        dateStr:d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'}),
+        timeStr:d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}),
+        team:ev.team, type:ev.type, event:ev,
+        pendingCount:1, total:1
+      };
+    });
+    updateBell(pending);
+  } catch(err){ console.warn('loadNotifications player', err); }
+}
+
+// ── Admin panel: manage player_users ─────────────────────
+async function openUserManagement() {
+  if(!currentUser || currentUser.role !== 'admin') return;
+  // Load all players without accounts and show management UI
+  const { data:players } = await supa.from('players').select('id,apodo,nombre,numero_camiseta,estado').eq('estado','activo').order('apodo');
+  const { data:users } = await supa.from('player_users').select('*');
+  const userMap = Object.fromEntries((users||[]).map(u=>[u.player_id,u]));
+
+  const existing = document.getElementById('userMgmtModal');
+  if(existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id='userMgmtModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:800;display:flex;align-items:center;justify-content:center;padding:16px';
+
+  const rows = (players||[]).map(p=>{
+    const u = userMap[p.id];
+    const name = p.apodo||p.nombre||'?';
+    return '<div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px">'+
+      '<span style="font-weight:600">'+name+(p.numero_camiseta?' #'+p.numero_camiseta:'')+'</span>'+
+      (u ? '<span style="color:var(--win);font-size:11px">✅ @'+u.username+'</span>' : '<span style="color:var(--muted-2);font-size:11px">Sin cuenta</span>')+
+      '<button class="btn" style="font-size:11px;padding:4px 8px" onclick="createOrEditUser(\''+p.id+'\',\''+name.replace(/'/g,'')+'\')">'+(u?'✏️ Editar':'＋ Crear')+'</button>'+
+    '</div>';
+  }).join('');
+
+  modal.innerHTML =
+    '<div style="background:var(--surface);border-radius:var(--r-lg);padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--sh-3)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'+
+      '<div style="font-family:var(--font-head);font-weight:800;font-size:17px">👤 Gestión de usuarios</div>'+
+      '<button class="btn" onclick="document.getElementById(\'userMgmtModal\').remove()">✕</button>'+
+    '</div>'+
+    '<div>'+rows+'</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+}
+
+async function createOrEditUser(playerId, playerName) {
+  const { data:existing } = await supa.from('player_users').select('*').eq('player_id',playerId).maybeSingle();
+  const username = prompt('Usuario para '+playerName+':', existing?.username || '');
+  if(!username) return;
+  const pwd = prompt('Contraseña (dejar vacío para no cambiar):', '');
+  const role = confirm('¿Es administradora?\n(OK = Admin, Cancelar = Jugadora)') ? 'admin' : 'jugadora';
+  const upsertData = { player_id:playerId, username:username.toLowerCase().trim(), role, active:true };
+  if(pwd?.trim()) {
+    upsertData.pwd_hash = await sha256(pwd.trim());
+  } else if(!existing) {
+    // New user needs password
+    alert('Debes ingresar una contraseña para la nueva usuaria');
+    return;
+  }
+  if(existing) {
+    await supa.from('player_users').update(upsertData).eq('id',existing.id);
+  } else {
+    await supa.from('player_users').insert([upsertData]);
+  }
+  showToast('✅ Usuario guardado');
+  openUserManagement();
+}
+
+// Hook into admin topbar: add users button after login
+function addAdminControls() {
+  if(!currentUser || currentUser.role !== 'admin') return;
+  // Add "Usuarios" button to topbar
+  const existing = document.getElementById('adminUsersBtn');
+  if(existing) return;
+  const btn = document.createElement('button');
+  btn.id='adminUsersBtn'; btn.className='btn'; btn.textContent='👤 Usuarios';
+  btn.style.cssText='font-size:11px;padding:4px 10px';
+  btn.addEventListener('click', openUserManagement);
+  const pill = document.getElementById('userPill');
+  if(pill) pill.parentNode.insertBefore(btn, pill);
+}
+
 
 </script>
 
