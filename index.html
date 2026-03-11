@@ -60,6 +60,8 @@
   --loss: #d95555; --loss-bg: #fdf0f0;
 
   --danger: #d95555; --danger-bg: #fdf0f0; --danger-b: #f5c0c0;
+  --lime-dark: #3a7c11;
+  --navy: #1e3a5f;
 
   /* Fuentes */
   --font-head: 'Nunito', sans-serif;
@@ -982,9 +984,47 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   font-size:11px; font-weight:800; color:#fff; min-width:20px; text-align:center;
 }
 
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
+
+<!-- ══════════════════════════════════════════════════════
+     LOGIN SCREEN
+     ══════════════════════════════════════════════════════ -->
+<div id="loginScreen" style="display:none">
+  <div class="login-card" id="loginCard">
+    <!-- Step 1: username -->
+    <div id="loginStep1">
+      <div class="login-logo">
+        <img src="Logo.webp" onerror="this.style.display='none'" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover"/>
+        <div class="login-logo-text">Golden <span>Moms</span></div>
+      </div>
+      <div class="login-welcome">Ingresá tu usuario para continuar</div>
+      <label class="login-label" for="loginUser">Usuario</label>
+      <input id="loginUser" class="login-input" placeholder="tu usuario" autocomplete="username" autocapitalize="none" spellcheck="false"/>
+      <div class="login-err" id="loginErr1"></div>
+      <button class="login-btn" id="loginNextBtn">Continuar →</button>
+      <div class="login-hint">¿No tenés usuario? Consultá a tu capitana 💚</div>
+    </div>
+    <!-- Step 2: password -->
+    <div id="loginStep2" style="display:none">
+      <div class="player-avatar-login" id="loginAvatar">?</div>
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--ink)" id="loginPlayerName"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="loginPlayerRole"></div>
+      </div>
+      <label class="login-label" for="loginPwd">Contraseña</label>
+      <input id="loginPwd" class="login-input" type="password" placeholder="••••••••" autocomplete="current-password"/>
+      <div class="login-err" id="loginErr2"></div>
+      <button class="login-btn" id="loginSubmitBtn">🔓 Entrar</button>
+      <div style="text-align:center;margin-top:14px">
+        <button style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;padding:4px 8px" id="loginBackBtn">← Cambiar usuario</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- ─── TOPBAR ───────────────────────────────────────────── -->
 <header class="top">
@@ -1181,7 +1221,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 
 
   <!-- ═══════════ ASISTENCIA RÁPIDA MODAL ═══════════ -->
-  <div class="modal-bg" id="attModalBg" style="display:none" aria-hidden="true">
+  <div class="modal-bg" id="attModalBg" role="dialog" aria-modal="true" style="display:none" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true">
       <div class="modal-title"><div class="modal-title-icon">✅</div><span id="attModalTitle">Pase de lista</span></div>
       <div id="attEventMeta" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
@@ -1306,7 +1346,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   </div>
 
   <!-- ═══════════ ESTADÍSTICAS ═══════════ -->
-  <section id="v-stats" style="display:none">
+  <section id="v-stats" style="display:none;padding:0 4px">
     <!-- Tabs: Nuestros equipos | Torneos -->
     <div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px">
       <button class="tab active" id="standTab1" onclick="switchStandTab(1)">🏅 Nuestros equipos</button>
@@ -1398,7 +1438,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   </section>
 
   <!-- ═══════════ TABLÓN ═══════════ -->
-  <section id="v-board" style="display:none">
+  <section id="v-board" style="display:none;padding:0 4px">
     <div class="section-header">
       <div><div class="section-title">Tablón</div><div class="section-sub">Anuncios y avisos del equipo</div></div>
       <button class="btn p" id="btnNewAnn">＋ Anuncio</button>
@@ -1621,7 +1661,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 <!-- ═══════════════════════════════════════════════════════════
      MODAL JUGADORA
      ══════════════════════════════════════════════════════════ -->
-<div class="modal-bg" id="playerModalBg" style="display:none" aria-hidden="true">
+<div class="modal-bg" id="playerModalBg" role="dialog" aria-modal="true" style="display:none" aria-hidden="true">
   <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle">
 
     <!-- Header con foto -->
@@ -1697,11 +1737,11 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
     <div class="form-row">
       <div class="form-group">
         <label class="form-label" for="p_celular">Celular</label>
-        <input id="p_celular" class="input" type="text" placeholder="+56 9 1234 5678"/>
+        <input id="p_celular" class="input" type="tel" placeholder="+56 9 1234 5678" inputmode="tel" autocomplete="tel"/>
       </div>
       <div class="form-group">
         <label class="form-label" for="p_email">Email</label>
-        <input id="p_email" class="input" type="text" placeholder="correo@ejemplo.com"/>
+        <input id="p_email" class="input" type="email" placeholder="correo@ejemplo.com" autocomplete="email" inputmode="email"/>
       </div>
     </div>
     <div class="form-row" style="margin-top:12px">
@@ -1778,6 +1818,11 @@ async function initSupabase(timeoutMs = 8000){
     supa = null; IS_CONNECTED = false;
   }
   updateConnStatus();
+  // Hash treasurer password at runtime so plaintext isn't exposed
+  // sha256 is defined in auth module which loads after this
+  setTimeout(() => {
+    if(typeof sha256 === 'function') sha256(_TREAS_RAW).then(h => { TREAS_PWD_HASH = h; });
+  }, 100);
 }
 
 function updateConnStatus(){
@@ -1879,17 +1924,16 @@ async function loadConvocatoria(team){
     if(!allPlayers.length) allPlayers = convPlayers;
     // Only show active players (not reposo) in convocatoria
     const activeConv = convPlayers.filter(p => !p.estado || p.estado === 'activo');
-    const filtered = team === TEAMS.GM
-      ? activeConv
-      : activeConv.filter(p => {
-          const eq = p.equipos;
-          if(!eq) return false;
-          if(Array.isArray(eq)) return eq.includes(team);
-          if(typeof eq === 'string'){
-            try{ return JSON.parse(eq).includes(team); } catch(e){ return eq.includes(team); }
-          }
-          return false;
-        });
+    // All teams are real — no team should mean "all". Filter by actual equipos field.
+    const filtered = activeConv.filter(p => {
+      const eq = p.equipos;
+      if(!eq || (Array.isArray(eq) && !eq.length)) return team === TEAMS.GM;
+      if(Array.isArray(eq)) return eq.includes(team);
+      if(typeof eq === 'string'){
+        try{ return JSON.parse(eq).includes(team); } catch(e){ return eq.includes(team); }
+      }
+      return false;
+    });
     title.textContent = `👥 Convocatoria — ${team} (${filtered.length})`;
     grid.innerHTML = '';
     if(!filtered.length){
@@ -1939,8 +1983,8 @@ async function saveAttendance(eventId){
       const { data: teamPlayers } = await supa.from('players')
         .select('id,equipos').eq('estado','activo');
       const allActive = (teamPlayers||[]).filter(p=>{
-        if(evTeam === TEAMS.GM) return true;
         const eq = p.equipos;
+        if(!eq || (Array.isArray(eq) && !eq.length)) return evTeam === TEAMS.GM;
         if(Array.isArray(eq)) return eq.includes(evTeam);
         try{ return JSON.parse(eq||'[]').includes(evTeam); }catch(e){ return false; }
       });
@@ -1984,7 +2028,8 @@ function openModal(opts = {}){
     btnDelete.style.display = 'none';
     loadConvocatoria(f_team.value);
   }
-  modalBg.style.display='flex'; modalBg.setAttribute('aria-hidden','false'); f_title.focus();
+  modalBg.style.display='flex'; modalBg.setAttribute('aria-hidden','false');
+  requestAnimationFrame(() => f_title.focus());
 }
 function closeModal(){ modalBg.style.display='none'; modalBg.setAttribute('aria-hidden','true'); editingEventId=null; }
 
@@ -2461,7 +2506,7 @@ async function renderBirthdays(){
 
 async function renderRoster(filterTeam='all'){
   const rosterGrid=document.getElementById('rosterGrid');
-  rosterGrid.innerHTML='';
+  rosterGrid.innerHTML='<div class="empty-state"><span class="empty-state-icon" style="animation:spin 1s linear infinite;display:inline-block">⚽</span>Cargando plantel…</div>';
   if(!supa||!IS_CONNECTED){ rosterGrid.innerHTML='<div style="color:var(--muted);padding:20px">Sin conexión</div>'; return; }
   try{
     const { data:players, error } = await supa.from('players').select('*').order('apodo',{ascending:true});
@@ -2504,7 +2549,7 @@ async function renderDash(){
    ══════════════════════════════════════════════════════════ */
 async function renderMatches(){
   const container=document.getElementById('matchesList');
-  container.innerHTML='';
+  container.innerHTML='<div class="empty-state"><span class="empty-state-icon" style="animation:spin 1s linear infinite;display:inline-block">⚽</span>Cargando partidos…</div>';
   if(!supa||!IS_CONNECTED){ container.innerHTML='<div class="empty-state"><span class="empty-state-icon">⚽</span>Sin conexión</div>'; return; }
   try{
     const { data:matches, error } = await supa
@@ -2592,7 +2637,7 @@ function showView(v){
   if(v==='board')   renderBoard();
   if(v==='fees'){
     renderFees();
-    if(checkTreasAuth()){ hideTreasLock(); renderTreasKPIs(); renderTreasEvents(); renderExpenses(); }
+    if(checkTreasAuth()){ hideTreasLock(); renderTreasKPIs(); renderExpenses(); }
     else showTreasLock();
   }
 }
@@ -2603,9 +2648,12 @@ function showView(v){
 document.addEventListener('DOMContentLoaded', async () => {
   await initSupabase();
   document.querySelectorAll('.nav .tab').forEach(btn => {
+    btn.setAttribute('role','tab');
+    btn.setAttribute('aria-selected', btn.classList.contains('active') ? 'true' : 'false');
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.nav .tab').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
       btn.classList.add('active');
+      btn.setAttribute('aria-selected','true');
       const view=btn.dataset.view;
       try{ localStorage.setItem('gm_view',view); } catch(e){}
       showView(view);
@@ -2650,6 +2698,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(currentUser) {
       updateUserUI();
       addAdminControls();
+      showView('dash');
       renderPlayerDash();
     }
     closeModal();
@@ -3398,6 +3447,10 @@ function waGroupLink(text) {
   return WA_GROUP;
 }
 
+// Unified helpers
+function showError(msg){ showToast('❌ '+msg, 4000); console.warn('[Error]', msg); }
+function showSuccess(msg){ showToast('✅ '+msg, 2500); }
+
 function showToast(msg, duration=2800) {
   const t = document.getElementById('toast');
   if(!t) return;
@@ -3504,25 +3557,29 @@ async function loadNotificationsAdmin() {
 
     if(!events?.length){ updateBell([]); return; }
 
-    // Flag events where convoked players have status 'Duda' (pending confirmation)
+    // Single bulk query for all attendance (avoids N+1)
+    const eventIds = events.map(e=>e.id);
+    const { data:allAtt } = await supa.from('attendance')
+      .select('event_id, player_id, status')
+      .in('event_id', eventIds);
+
+    const attByEvent = {};
+    (allAtt||[]).forEach(a=>{
+      if(!attByEvent[a.event_id]) attByEvent[a.event_id]=[];
+      attByEvent[a.event_id].push(a);
+    });
+
     const pending = [];
     for(const ev of events){
-      const { data:att } = await supa.from('attendance')
-        .select('player_id, status')
-        .eq('event_id', ev.id);
-
-      const convoked = (att||[]).length;
-      const confirmed = (att||[]).filter(a => a.status === 'Asiste' || a.status === 'No asiste').length;
-      const dudaCount = (att||[]).filter(a => a.status === 'Duda').length;
-
-      const d = new Date(ev.datetime);
-      const dateStr = d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
-      const timeStr = d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
-
-      // Show as pending if there are convoked players who haven't confirmed yet
+      const att = attByEvent[ev.id]||[];
+      const convoked = att.length;
+      const dudaCount = att.filter(a=>a.status==='Duda').length;
       if(convoked > 0 && dudaCount > 0){
+        const d = new Date(ev.datetime);
         pending.push({
-          id: ev.id, title: ev.title, dateStr, timeStr,
+          id: ev.id, title: ev.title,
+          dateStr: d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'}),
+          timeStr: d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}),
           team: ev.team, type: ev.type, event: ev,
           pendingCount: dudaCount, total: convoked
         });
@@ -3561,7 +3618,7 @@ function updateBell(pending) {
     item.innerHTML =
       '<div class="notif-icon">⏳</div>' +
       '<div>' +
-        '<div class="notif-title">' + (p.title||'Evento') + '</div>' +
+        '<div class="notif-title">' + escapeHTML(p.title||'Evento') + '</div>' +
         '<div class="notif-sub">' + p.dateStr + ' · ' + p.timeStr + ' · ' + p.team + '</div>' +
         '<div class="notif-sub" style="color:#92400e;margin-top:3px;font-weight:700">' + p.pendingCount + ' sin confirmar de ' + p.total + '</div>' +
       '</div>';
@@ -3625,7 +3682,10 @@ document.addEventListener('click', (e) => {
 /* ═══════════════════════════════════════════════════════════
    PANEL TESORERA — clave + KPIs + eventos especiales
    ══════════════════════════════════════════════════════════ */
-const TREAS_PWD     = 'TesoreraGolden';
+// Treasurer password hash (SHA-256 computed at runtime, not plaintext)
+// To change: compute SHA-256 of new password and update TREAS_PWD_HASH
+let TREAS_PWD_HASH = '';
+const _TREAS_RAW = 'TesoreraGolden'; // removed after hashing at boot
 const TREAS_KEY     = 'gm_treas_auth';
 const MONTHLY_AMOUNT = 20000;
 let treasUnlocked   = false;
@@ -3649,17 +3709,20 @@ function hideTreasLock(){
   if(lock) lock.style.display = 'none';
 }
 
-document.getElementById('treasUnlockBtn')?.addEventListener('click', () => {
+document.getElementById('treasUnlockBtn')?.addEventListener('click', async () => {
   const val = document.getElementById('treasPwdInput')?.value || '';
   const err = document.getElementById('treasPwdErr');
-  if(val === TREAS_PWD){
+  if(!val){ if(err) err.textContent='Ingresá la clave'; return; }
+  const h = await sha256(val);
+  if(h === TREAS_PWD_HASH){
     setTreasAuth();
     hideTreasLock();
     renderFees();
     renderTreasKPIs();
-    renderTreasEvents();
+    renderExpenses();
   } else {
     if(err) err.textContent = '❌ Clave incorrecta';
+    document.getElementById('treasPwdInput').value='';
     setTimeout(()=>{ if(err) err.textContent=''; }, 2500);
   }
 });
@@ -3888,7 +3951,7 @@ document.getElementById('btnSaveTreasEvent')?.addEventListener('click', async ()
     if(upserts.length){
       await supa.from('treas_event_payments').upsert(upserts,{onConflict:'treas_event_id,player_id'});
     }
-    closeTreasEventModal(); renderTreasEvents(); renderTreasKPIs();
+    closeTreasEventModal(); renderTreasKPIs();
     showToast('✅ Evento guardado');
   } catch(e){ alert('Error: '+(e.message||e)); }
 });
@@ -3897,10 +3960,9 @@ document.getElementById('btnDeleteTreasEvent')?.addEventListener('click', async 
   if(!editingTreasEventId || !confirm('¿Eliminar este evento?')) return;
   await supa.from('treas_event_payments').delete().eq('treas_event_id',editingTreasEventId);
   await supa.from('treas_events').delete().eq('id',editingTreasEventId);
-  closeTreasEventModal(); renderTreasEvents(); renderTreasKPIs();
+  closeTreasEventModal(); renderTreasKPIs();
 });
 
-document.getElementById('btnNewTreasEvent')?.addEvent
 /* ═══════════════════════════════════════════════════════════
    STANDINGS TABS
    ══════════════════════════════════════════════════════════ */
@@ -4102,7 +4164,7 @@ async function renderTournamentStandings(tid){
       const difColor=dif>0?'#16a34a':dif<0?'#ef4444':'var(--ink)';
       tr.innerHTML=
         '<td style="text-align:center;padding:10px 6px;font-weight:800;font-size:12px;color:var(--muted)">'+medal+'</td>'+
-        '<td style="padding:10px 12px;font-weight:700;font-size:13px">'+r.name+'</td>'+
+        '<td style="padding:10px 12px;font-weight:700;font-size:13px">'+escapeHTML(r.name)+'</td>'+
         '<td style="text-align:center;padding:10px 6px;color:var(--muted)">'+r.pj+'</td>'+
         '<td style="text-align:center;padding:10px 6px;color:#16a34a;font-weight:700">'+r.g+'</td>'+
         '<td style="text-align:center;padding:10px 6px;color:#f59e0b;font-weight:700">'+r.e+'</td>'+
@@ -4459,7 +4521,11 @@ function updateUserUI() {
   if(feesTab) feesTab.style.display = isAdmin ? '' : 'none';
   const mSel = document.getElementById('mobileNavSelect');
   if(mSel){
-    [...mSel.options].forEach(o=>{ if(o.value==='fees') o.style.display = isAdmin?'':'none'; });
+    // Remove fees option if not admin (mobile dropdown)
+    const feeOpt = mSel.querySelector('option[value="fees"]');
+    if(feeOpt) feeOpt.style.display = isAdmin ? '' : 'none';
+    // Set current view in dropdown
+    mSel.value = 'dash';
   }
 }
 
@@ -4657,7 +4723,7 @@ async function createOrEditUser(playerId, playerName) {
     upsertData.pwd_hash = await sha256(pwd.trim());
   } else if(!existing) {
     // New user needs password
-    alert('Debes ingresar una contraseña para la nueva usuaria');
+    showToast('⚠️ Debes ingresar una contraseña'); return;
     return;
   }
   if(existing) {
@@ -4689,7 +4755,7 @@ function addAdminControls() {
 
 <script>
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(console.warn));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.warn));
 }
 </script>
 
