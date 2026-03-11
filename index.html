@@ -1818,11 +1818,7 @@ async function initSupabase(timeoutMs = 8000){
     supa = null; IS_CONNECTED = false;
   }
   updateConnStatus();
-  // Hash treasurer password at runtime so plaintext isn't exposed
-  // sha256 is defined in auth module which loads after this
-  setTimeout(() => {
-    if(typeof sha256 === 'function') sha256(_TREAS_RAW).then(h => { TREAS_PWD_HASH = h; });
-  }, 100);
+
 }
 
 function updateConnStatus(){
@@ -3644,7 +3640,7 @@ function updateBell(pending) {
     pending.slice(0,3).forEach(p => {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #fde68a;cursor:pointer;font-size:13px';
-      row.innerHTML = '<span style="font-size:15px">📅</span><span style="font-weight:700;flex:1">' + p.title + '</span><span style="color:#92400e;font-size:12px">' + p.dateStr + ' · ' + p.timeStr + '</span>';
+      row.innerHTML = '<span style="font-size:15px">📅</span><span style="font-weight:700;flex:1">' + escapeHTML(p.title||'') + '</span><span style="color:#92400e;font-size:12px">' + p.dateStr + ' · ' + p.timeStr + '</span>';
       row.addEventListener('click', () => item.click());
       // Actually open the event
       row.addEventListener('click', () => {
@@ -3682,10 +3678,10 @@ document.addEventListener('click', (e) => {
 /* ═══════════════════════════════════════════════════════════
    PANEL TESORERA — clave + KPIs + eventos especiales
    ══════════════════════════════════════════════════════════ */
-// Treasurer password hash (SHA-256 computed at runtime, not plaintext)
-// To change: compute SHA-256 of new password and update TREAS_PWD_HASH
-let TREAS_PWD_HASH = '';
-const _TREAS_RAW = 'TesoreraGolden'; // removed after hashing at boot
+// Treasurer password hash — SHA-256 of 'TesoreraGolden'
+// To change password: compute SHA-256 of new password and replace the hash below
+// Tool: https://emn178.github.io/online-tools/sha256.html
+const TREAS_PWD_HASH = '9e9d62dd2039594c7365e0faf3f5f016f4d855bd62fa33fe702ea79488e95d81';
 const TREAS_KEY     = 'gm_treas_auth';
 const MONTHLY_AMOUNT = 20000;
 let treasUnlocked   = false;
@@ -3811,7 +3807,7 @@ async function renderTreasEvents(){
 
       const head = document.createElement('div'); head.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:8px';
       const ht = document.createElement('div');
-      ht.innerHTML='<div class="treas-event-title">'+ev.title+'</div><div class="treas-event-meta">'+(ev.date||'')+(ev.notes?' · '+ev.notes:'')+'</div>';
+      ht.innerHTML='<div class="treas-event-title">'+escapeHTML(ev.title||'')+'</div><div class="treas-event-meta">'+(ev.date||'')+(ev.notes?' · '+escapeHTML(ev.notes):'')+'</div>';
       const editB = document.createElement('button'); editB.className='fee-edit-btn'; editB.textContent='✏️ Editar';
       editB.addEventListener('click', () => openTreasEventModal(ev));
       head.appendChild(ht); head.appendChild(editB); card.appendChild(head);
@@ -4219,7 +4215,7 @@ async function renderExpenses(){
     const paidAmt=(pays||[]).filter(p=>p.paid).reduce((s,p)=>s+Number(p.amount||0),0);
     const totalAmt=Number(exp.total_amount)||0;
     card.innerHTML='<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">'+
-      '<div><div class="treas-event-title">'+exp.title+'</div>'+
+      '<div><div class="treas-event-title">'+escapeHTML(exp.title||'')+'</div>'+
       '<div class="treas-event-meta">'+(exp.date||'')+(exp.team?' · '+exp.team:'')+(exp.notes?' · '+exp.notes:'')+'</div>'+
       '<div class="exp-sum-line" style="font-size:12px;margin-top:3px"><span style="color:#16a34a;font-weight:700">$'+paidAmt.toLocaleString('es-CL')+' cobrado</span> / <span style="color:var(--muted)">$'+totalAmt.toLocaleString('es-CL')+' total</span></div>'+
       '</div>'+
@@ -4245,7 +4241,7 @@ async function renderExpenses(){
           waLink.style.display=np?'none':'';
           renderTreasKPIs();
         });
-        row.innerHTML='<span class="treas-player-name">'+pname+'</span><span style="font-size:12px;color:var(--muted);margin-right:6px">$'+Number(pay.amount||0).toLocaleString('es-CL')+'</span>';
+        row.innerHTML='<span class="treas-player-name">'+escapeHTML(pname)+'</span><span style="font-size:12px;color:var(--muted);margin-right:6px">$'+Number(pay.amount||0).toLocaleString('es-CL')+'</span>';
         row.appendChild(toggle); row.appendChild(waLink); card.appendChild(row);
       }
     }
@@ -4429,7 +4425,7 @@ async function loginStep1() {
   document.getElementById('loginNextBtn').textContent = 'Buscando…';
   try {
     const { data, error } = await supa.from('player_users')
-      .select('*, players(id,apodo,nombre,numero_camiseta,foto,rol)')
+      .select('*, players(id,apodo,nombre,numero_camiseta,foto,rol,email)')
       .eq('username', username)
       .eq('active', true)
       .maybeSingle();
@@ -4475,14 +4471,38 @@ async function loginStep2() {
   err2.textContent='';
   document.getElementById('loginSubmitBtn').textContent='Verificando…';
   try {
-    const hash = await sha256(pwd);
-    if(hash !== loginFoundUser.pwd_hash) {
-      err2.textContent='Contraseña incorrecta';
-      document.getElementById('loginSubmitBtn').textContent='🔓 Entrar';
-      document.getElementById('loginPwd').value='';
-      return;
-    }
     const pl = loginFoundUser.players;
+    const email = pl?.email || loginFoundUser.email || '';
+
+    // ── Opción A: Supabase Auth (si la jugadora tiene email registrado) ──
+    if(email && supa.auth) {
+      const { data: authData, error: authError } = await supa.auth.signInWithPassword({
+        email,
+        password: pwd,
+      });
+      if(authError) {
+        // If Supabase Auth fails, fall through to hash verification
+        // (for users not yet migrated to Supabase Auth)
+        const hash = await sha256(pwd);
+        if(hash !== loginFoundUser.pwd_hash) {
+          err2.textContent = 'Contraseña incorrecta';
+          document.getElementById('loginSubmitBtn').textContent = '🔓 Entrar';
+          document.getElementById('loginPwd').value = '';
+          return;
+        }
+      }
+    } else {
+      // ── Opción B: Hash local (fallback para usuarios sin email) ──
+      const hash = await sha256(pwd);
+      if(hash !== loginFoundUser.pwd_hash) {
+        err2.textContent = 'Contraseña incorrecta';
+        document.getElementById('loginSubmitBtn').textContent = '🔓 Entrar';
+        document.getElementById('loginPwd').value = '';
+        return;
+      }
+    }
+
+    // ── Login exitoso ──
     const user = {
       player_id: pl.id,
       username: loginFoundUser.username,
@@ -4498,8 +4518,8 @@ async function loginStep2() {
     showView('dash');
     renderPlayerDash();
   } catch(err) {
-    err2.textContent='Error al verificar';
-    document.getElementById('loginSubmitBtn').textContent='🔓 Entrar';
+    err2.textContent = 'Error de conexión, intentá de nuevo';
+    document.getElementById('loginSubmitBtn').textContent = '🔓 Entrar';
     console.warn(err);
   }
 }
