@@ -861,6 +861,9 @@ function showView(v){
   }
   const target=document.getElementById('v-'+v);
   if(target){ target.style.display='block'; requestAnimationFrame(()=>target.classList.add('view-enter')); }
+  // Keep mobile dropdown in sync
+  const mSel = document.getElementById('mobileNavSelect');
+  if(mSel && mSel.value !== v) mSel.value = v;
   if(v==='dash')    { renderDash(); loadNotifications(); if(currentUser) renderPlayerDash(); }
   if(v==='events')  renderMonth();
   if(v==='matches') renderMatches();
@@ -879,6 +882,11 @@ function showView(v){
    ══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async () => {
   await initSupabase();
+  // Mobile dropdown navigation
+  document.getElementById('mobileNavSelect')?.addEventListener('change', e => {
+    showView(e.target.value);
+  });
+
   document.querySelectorAll('.nav .tab').forEach(btn => {
     btn.setAttribute('role','tab');
     btn.setAttribute('aria-selected', btn.classList.contains('active') ? 'true' : 'false');
