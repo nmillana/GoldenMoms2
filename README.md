@@ -1,4 +1,4 @@
-# GoldenMoms
+
 # Golden Moms — Estructura de Módulos JS
 
 ## Archivos en raíz
