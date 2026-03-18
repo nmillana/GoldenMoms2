@@ -645,13 +645,13 @@ function animateNumber(id, target){
 
 async function renderWeekEvents(){
   const now=new Date();
-  const ws=new Date(now); ws.setDate(ws.getDate()-((ws.getDay()+6)%7)); ws.setHours(0,0,0,0);
-  const we=new Date(ws); we.setDate(we.getDate()+6); we.setHours(23,59,59,999);
+  const todayStart=new Date(now); todayStart.setHours(0,0,0,0);
+  const next14=new Date(todayStart); next14.setDate(next14.getDate()+14); next14.setHours(23,59,59,999);
   const todayYMD=localDateYMD(now);
   let evs=[];
   if(supa&&IS_CONNECTED){
     const { data } = await supa.from('events').select('*')
-      .gte('datetime',ws.toISOString()).lte('datetime',we.toISOString())
+      .gte('datetime',todayStart.toISOString()).lte('datetime',next14.toISOString())
       .order('datetime',{ascending:true});
     evs=data||[];
   }
@@ -697,8 +697,23 @@ async function renderBirthdays(){
   upB.innerHTML=''; birthTodayEl.innerHTML='';
   if(!supa||!IS_CONNECTED){ upB.innerHTML='<div class="empty-state">Sin conexión</div>'; return; }
   try{
-    const { data:vw, error } = await supa.from('vw_upcoming_birthdays').select('*').order('proximo_cumple',{ascending:true}).limit(10);
-    if(error) throw error;
+    // Try view first; fallback to players table if view doesn't exist
+    let vw = null;
+    const { data:vwData, error:vwErr } = await supa.from('vw_upcoming_birthdays').select('*').order('proximo_cumple',{ascending:true}).limit(10);
+    if(!vwErr){ vw = vwData; }
+    else {
+      // Fallback: compute from players.fecha_nacimiento
+      const { data:pl } = await supa.from('players').select('id,apodo,nombre,fecha_nacimiento').eq('estado','activo').not('fecha_nacimiento','is',null);
+      const today = new Date(); const todayMD = (today.getMonth()+1)*100+today.getDate();
+      vw = (pl||[]).map(p=>{
+        const bd = new Date(p.fecha_nacimiento+'T00:00:00');
+        const bMD = (bd.getMonth()+1)*100+bd.getDate();
+        const daysAhead = bMD >= todayMD ? Math.round((bMD-todayMD)) : 365 - Math.round((todayMD-bMD));
+        const nextBday = new Date(today.getFullYear(), bd.getMonth(), bd.getDate());
+        if(nextBday < today) nextBday.setFullYear(today.getFullYear()+1);
+        return { ...p, proximo_cumple: nextBday.toISOString().split('T')[0], edad: today.getFullYear()-bd.getFullYear()-(bMD>todayMD?1:0), days_ahead: daysAhead };
+      }).sort((a,b)=>a.days_ahead-b.days_ahead).slice(0,10);
+    }
     const seen=new Set(); const uniq=[];
     for(const p of (vw||[])){ if(!seen.has(p.id)&&uniq.length<5){ seen.add(p.id); uniq.push(p); } }
     if(uniq.length){
@@ -2243,6 +2258,7 @@ function switchStandTab(n){
 let currentTournamentId = null;
 let tournamentTeamsCache = [];
 let currentGroup = 'all'; // 'all' or 'A','B','C',...
+let tournamentFinished = false; // true when tournament is marked as finished
 
 async function loadTournaments(){
   if(!supa||!IS_CONNECTED) return;
@@ -2274,6 +2290,16 @@ document.getElementById('btnNewTournament')?.addEventListener('click', async ()=
   currentTournamentId = data?.[0]?.id;
   await loadTournaments();
   showToast('✅ Torneo creado');
+});
+
+document.getElementById('btnFinishTournament')?.addEventListener('click', async ()=>{
+  if(!currentTournamentId) return;
+  const newFinished = !tournamentFinished;
+  const msg = newFinished ? '¿Marcar este torneo como finalizado? Se mostrarán las medallas 🥇🥈🥉' : '¿Reabrir el torneo?';
+  if(!confirm(msg)) return;
+  await supa.from('tournaments').update({finished: newFinished}).eq('id', currentTournamentId);
+  renderTournamentStandings(currentTournamentId);
+  showToast(newFinished ? '🏆 Torneo finalizado' : '🔓 Torneo reabierto');
 });
 
 document.getElementById('btnDeleteTournament')?.addEventListener('click', async ()=>{
@@ -2371,12 +2397,28 @@ function showMatchResultModal(existing=null){
   document.getElementById('matchResultModal')?.remove();
 
   const teams = tournamentTeamsCache;
-  // If in a specific group, pre-filter; show all anyway since cross-group matches happen
-  const opts = teams.map(t=>{
-    const grp = t.grupo||'A';
-    const label = teams.some(x=>(x.grupo||'A')!==grp) ? escapeHTML(t.name)+' ('+grp+')' : escapeHTML(t.name);
-    return '<option value="'+t.id+'">'+label+'</option>';
-  }).join('');
+  const allGroups = [...new Set(teams.map(t=>t.grupo||'A'))].sort();
+  const multiGrp = allGroups.length > 1;
+
+  // Build group filter selector if multi-group
+  const groupFilterHtml = multiGrp
+    ? '<div style="margin-bottom:12px">'+
+        '<label style="font-size:11px;font-weight:700;color:var(--muted-2);text-transform:uppercase;display:block;margin-bottom:4px">Filtrar por grupo</label>'+
+        '<select id="mrGroupFilter" class="input" style="width:100%">'+
+          '<option value="all">Todos los grupos</option>'+
+          allGroups.map(g=>'<option value="'+g+'">Grupo '+g+'</option>').join('')+
+        '</select>'+
+      '</div>'
+    : '';
+
+  function getFilteredOpts(filterGrp){
+    const filtered = filterGrp==='all' ? teams : teams.filter(t=>(t.grupo||'A')===filterGrp);
+    return filtered.map(t=>{
+      const label = multiGrp ? escapeHTML(t.name)+' ('+( t.grupo||'A')+')' : escapeHTML(t.name);
+      return '<option value="'+t.id+'">'+label+'</option>';
+    }).join('');
+  }
+  const opts = getFilteredOpts('all');
 
   const modal = document.createElement('div');
   modal.id='matchResultModal';
@@ -2384,6 +2426,7 @@ function showMatchResultModal(existing=null){
   modal.innerHTML=
     '<div style="background:var(--surface);border-radius:var(--r-lg);padding:24px;width:100%;max-width:380px;box-shadow:var(--sh-3)">'+
     '<div style="font-family:var(--font-head);font-weight:800;font-size:16px;margin-bottom:16px;color:var(--ink)">⚽ '+(existing?'Editar resultado':'Cargar resultado')+'</div>'+
+    groupFilterHtml+
     '<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-bottom:16px">'+
       '<div>'+
         '<label style="font-size:11px;font-weight:700;color:var(--muted-2);text-transform:uppercase;display:block;margin-bottom:4px">Local</label>'+
@@ -2416,6 +2459,13 @@ function showMatchResultModal(existing=null){
 
   document.getElementById('mrCancelBtn').onclick = ()=> modal.remove();
   modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+
+  // Group filter change → update team dropdowns
+  document.getElementById('mrGroupFilter')?.addEventListener('change', e=>{
+    const newOpts = getFilteredOpts(e.target.value);
+    document.getElementById('mrHome').innerHTML = newOpts;
+    document.getElementById('mrAway').innerHTML = newOpts;
+  });
 
   document.getElementById('mrDeleteBtn')?.addEventListener('click', async ()=>{
     if(!existing||!confirm('¿Eliminar este resultado?')) return;
@@ -2484,7 +2534,7 @@ function buildStandingsTable(teams, results){
       const tr=document.createElement('tr');
       const dif=r.gf-r.gc;
       tr.style.background=i===0?'#f0fdf4':i%2===0?'#fafafa':'#fff';
-      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+      const medal=tournamentFinished?(i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)):(i+1);
       const difStr=dif>0?'+'+dif:String(dif);
       const difColor=dif>0?'#16a34a':dif<0?'#ef4444':'var(--ink)';
       tr.innerHTML=
@@ -2529,12 +2579,19 @@ async function renderTournamentStandings(tid){
 
   tournamentTeamsCache = teams||[];
 
-  // Update header
+  // Update header & finished state
+  tournamentFinished = tournament?.finished || false;
   if(tournament){
     const hn = document.getElementById('tournamentHeaderName');
     const hs = document.getElementById('tournamentHeaderStats');
     if(hn) hn.textContent = tournament.name;
-    if(hs) hs.textContent = (teams?.length||0)+' equipos · '+(results?.length||0)+' partidos';
+    if(hs) hs.textContent = (teams?.length||0)+' equipos · '+(results?.length||0)+' partidos'+(tournamentFinished?' · 🏆 Finalizado':'');
+    // Update finish button
+    const finBtn = document.getElementById('btnFinishTournament');
+    if(finBtn){
+      finBtn.textContent = tournamentFinished ? '🔓 Reabrir torneo' : '🏆 Finalizar torneo';
+      finBtn.style.background = tournamentFinished ? 'rgba(255,255,255,.1)' : 'rgba(255,215,0,.25)';
+    }
   }
 
   // ── Detect groups ──────────────────────────────────────
