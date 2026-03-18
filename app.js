@@ -1434,6 +1434,7 @@ let feePaymentsState={}; // player_id → boolean
 async function openFeeModal(fee=null){
   editingFeeId=fee?.id||null;
   feePaymentsState={};
+  feeExcludedPlayers=new Set();
   document.getElementById('feeModalTitle').textContent=fee?'Editar cuota':'Nueva cuota';
   document.getElementById('fee_id').value=fee?.id||'';
   document.getElementById('fee_title').value=fee?.title||'';
@@ -1468,15 +1469,20 @@ async function openFeeModal(fee=null){
   } catch(err){ pgrid.innerHTML='<div style="color:var(--danger)">Error cargando jugadoras</div>'; }
 }
 
+// Track which players are excluded from this fee
+let feeExcludedPlayers = new Set();
+
 function renderFeePaymentsGrid(players){
   const pgrid=document.getElementById('fee_payments_grid');
   pgrid.innerHTML='';
   for(const p of players){
+    if(feeExcludedPlayers.has(p.id)) continue; // skip excluded
     const paid=feePaymentsState[p.id]||false;
     const row=document.createElement('div');row.className='fee-player-row';
+    row.dataset.pid=p.id;
     const av=document.createElement('div');av.className='att-avatar';av.style.width='28px';av.style.height='28px';av.style.fontSize='11px';
     av.textContent=(p.apodo||p.nombre||'?')[0].toUpperCase();
-    const nm=document.createElement('div');nm.className='fee-player-name';nm.textContent=p.apodo||p.nombre||'—';
+    const nm=document.createElement('div');nm.className='fee-player-name';nm.style.flex='1';nm.textContent=p.apodo||p.nombre||'—';
     const toggle=document.createElement('button');toggle.type='button';
     toggle.className='fee-toggle '+(paid?'paid':'unpaid');
     toggle.textContent=paid?'✅ Pagó':'❌ Debe';
@@ -1486,7 +1492,17 @@ function renderFeePaymentsGrid(players){
       toggle.className='fee-toggle '+(feePaymentsState[p.id]?'paid':'unpaid');
       toggle.textContent=feePaymentsState[p.id]?'✅ Pagó':'❌ Debe';
     });
-    row.appendChild(av);row.appendChild(nm);row.appendChild(toggle);
+    // Remove player button
+    const removeBtn=document.createElement('button');removeBtn.type='button';
+    removeBtn.style.cssText='background:none;border:none;color:var(--muted-2);font-size:15px;cursor:pointer;padding:2px 4px;margin-left:4px;line-height:1;border-radius:4px';
+    removeBtn.title='Quitar de esta cuota';
+    removeBtn.textContent='✕';
+    removeBtn.addEventListener('click',()=>{
+      feeExcludedPlayers.add(p.id);
+      delete feePaymentsState[p.id];
+      row.remove();
+    });
+    row.appendChild(av);row.appendChild(nm);row.appendChild(toggle);row.appendChild(removeBtn);
     pgrid.appendChild(row);
   }
 }
@@ -1537,6 +1553,13 @@ document.getElementById('btnSaveFee').addEventListener('click', async ()=>{
     }
     // Upsert payments
     if(feeId){
+      // Delete payments for excluded players
+      if(feeExcludedPlayers.size > 0){
+        await supa.from('fee_payments')
+          .delete()
+          .eq('fee_id', feeId)
+          .in('player_id', [...feeExcludedPlayers]);
+      }
       const upserts=Object.entries(feePaymentsState).map(([player_id,paid])=>({
         fee_id:feeId, player_id, paid,
         paid_at: paid ? new Date().toISOString() : null
@@ -2615,45 +2638,98 @@ async function renderExpenses(){
   const {data:expenses}=await supa.from('expenses').select('*').order('created_at',{ascending:false});
   if(!expenses?.length){ list.innerHTML='<div class="empty-state"><span class="empty-state-icon">📤</span>Sin egresos registrados</div>'; return; }
   for(const exp of expenses){
-    const {data:pays}=await supa.from('expense_payments').select('*,players(apodo,nombre)').eq('expense_id',exp.id);
-    const card=document.createElement('div'); card.className='treas-event-card';
+    const {data:pays}=await supa.from('expense_payments').select('*,players(apodo,nombre,celular)').eq('expense_id',exp.id);
     const paidAmt=(pays||[]).filter(p=>p.paid).reduce((s,p)=>s+Number(p.amount||0),0);
     const totalAmt=Number(exp.total_amount)||0;
-    card.innerHTML='<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">'+
-      '<div><div class="treas-event-title">'+escapeHTML(exp.title||'')+'</div>'+
-      '<div class="treas-event-meta">'+(exp.date||'')+(exp.team?' · '+exp.team:'')+(exp.notes?' · '+exp.notes:'')+'</div>'+
-      '<div class="exp-sum-line" style="font-size:12px;margin-top:3px"><span style="color:#16a34a;font-weight:700">$'+paidAmt.toLocaleString('es-CL')+' cobrado</span> / <span style="color:var(--muted)">$'+totalAmt.toLocaleString('es-CL')+' total</span></div>'+
-      '</div>'+
-      '<button class="fee-edit-btn" onclick="openExpenseModal(\''+exp.id+'\')">✏️ Editar</button></div>';
+    const paidCount=(pays||[]).filter(p=>p.paid).length;
+    const totalPayers=(pays||[]).length;
+    const pct=totalPayers>0?Math.round(paidCount/totalPayers*100):0;
+
+    const card=document.createElement('div'); card.className='fee-card';
+
+    // ── Header (clickable to expand/collapse) ─────────
+    const header=document.createElement('div'); header.className='fee-header'; header.style.cursor='pointer';
+    const left=document.createElement('div'); left.style.flex='1';
+    const titleEl=document.createElement('div'); titleEl.className='fee-title'; titleEl.textContent=exp.title||'';
+    const meta=document.createElement('div'); meta.className='fee-meta';
+    const metaParts=[];
+    if(exp.date) metaParts.push(exp.date);
+    if(exp.team) metaParts.push(exp.team);
+    if(exp.notes) metaParts.push(exp.notes);
+    meta.textContent=metaParts.join(' · ');
+    const sumLine=document.createElement('div'); sumLine.className='fee-meta exp-sum-line'; sumLine.style.marginTop='2px';
+    sumLine.innerHTML='<span style="color:#16a34a;font-weight:700">$'+paidAmt.toLocaleString('es-CL')+' cobrado</span> / <span style="color:var(--muted)">$'+totalAmt.toLocaleString('es-CL')+' total</span>';
+    left.appendChild(titleEl); left.appendChild(meta); left.appendChild(sumLine);
+
+    const right=document.createElement('div'); right.style.cssText='display:flex;align-items:center;gap:10px;flex-shrink:0';
+    if(totalPayers>0){
+      const prog=document.createElement('div'); prog.className='fee-progress-wrap';
+      prog.innerHTML='<div class="fee-progress-bg"><div class="fee-progress-fill" style="width:'+pct+'%"></div></div><div class="fee-pct">'+paidCount+'/'+totalPayers+'</div>';
+      right.appendChild(prog);
+    }
+    const editBtn=document.createElement('button'); editBtn.className='fee-edit-btn'; editBtn.textContent='✏️ Editar';
+    editBtn.addEventListener('click',e=>{ e.stopPropagation(); openExpenseModal(exp.id); });
+    right.appendChild(editBtn);
+    header.appendChild(left); header.appendChild(right);
+
+    // ── Collapsible body ────────────────────────────────
+    const body=document.createElement('div'); body.className='fee-body fee-collapsed';
+
     if(pays?.length){
       for(const pay of pays){
-        const pname=(pay.players?.apodo||pay.players?.nombre||'?');
-        const row=document.createElement('div'); row.className='treas-player-row';
+        const pl=pay.players;
+        const pname=(pl?.apodo||pl?.nombre||'?');
+        const row=document.createElement('div'); row.className='fee-player-row';
+        const nm=document.createElement('span'); nm.className='fee-player-name'; nm.textContent=pname;
+        const amt=document.createElement('span'); amt.style.cssText='font-size:12px;color:var(--muted);margin-right:6px;flex-shrink:0';
+        amt.textContent='$'+Number(pay.amount||0).toLocaleString('es-CL');
         const toggle=document.createElement('span'); toggle.className='fee-toggle '+(pay.paid?'paid':'unpaid');
         toggle.textContent=pay.paid?'✅ Cobrado':'❌ Pendiente'; toggle.style.cursor='pointer';
-        const waLink=document.createElement('a'); waLink.className='btn-wa'; waLink.style.fontSize='11px';
-        waLink.textContent='📲 Recordar'; waLink.href='#';
-        waLink.addEventListener('click',async e=>{e.preventDefault();
-          const msg='Hola '+pname+' 👋 Recordamos pago pendiente *'+exp.title+'* por $'+Number(pay.amount||0).toLocaleString('es-CL')+' 💚 Golden Moms';
+        const waBtn=document.createElement('a'); waBtn.className='btn-wa'; waBtn.style.fontSize='11px';
+        waBtn.textContent='📲 Recordar'; waBtn.href='#'; waBtn.style.display=pay.paid?'none':'';
+        waBtn.addEventListener('click',async e=>{ e.preventDefault();
+          const msg='Hola '+pname+' 👋 Recordamos pago pendiente *'+escapeHTML(exp.title)+'* por $'+Number(pay.amount||0).toLocaleString('es-CL')+' 💚 Golden Moms';
           if(navigator.share) navigator.share({text:msg}).catch(()=>{});
           else navigator.clipboard?.writeText(msg).then(()=>showToast('Copiado'));
         });
-        waLink.style.display=pay.paid?'none':'';
         toggle.addEventListener('click',async()=>{
           const np=!pay.paid;
           await supa.from('expense_payments').update({paid:np,paid_at:np?new Date().toISOString():null}).eq('id',pay.id);
-          pay.paid=np; toggle.className='fee-toggle '+(np?'paid':'unpaid'); toggle.textContent=np?'✅ Cobrado':'❌ Pendiente';
-          waLink.style.display=np?'none':'';
+          pay.paid=np;
+          toggle.className='fee-toggle '+(np?'paid':'unpaid');
+          toggle.textContent=np?'✅ Cobrado':'❌ Pendiente';
+          waBtn.style.display=np?'none':'';
+          const newPaid=(pays||[]).filter(p=>p.paid).reduce((s,p)=>s+Number(p.amount||0),0);
+          sumLine.innerHTML='<span style="color:#16a34a;font-weight:700">$'+newPaid.toLocaleString('es-CL')+' cobrado</span> / <span style="color:var(--muted)">$'+totalAmt.toLocaleString('es-CL')+' total</span>';
           renderTreasKPIs();
         });
-        row.innerHTML='<span class="treas-player-name">'+escapeHTML(pname)+'</span><span style="font-size:12px;color:var(--muted);margin-right:6px">$'+Number(pay.amount||0).toLocaleString('es-CL')+'</span>';
-        row.appendChild(toggle); row.appendChild(waLink); card.appendChild(row);
+        row.appendChild(nm); row.appendChild(amt); row.appendChild(toggle); row.appendChild(waBtn);
+        body.appendChild(row);
       }
+      // Group reminder
+      const unpaidPays=(pays||[]).filter(p=>!p.paid);
+      if(unpaidPays.length){
+        const grpRow=document.createElement('div'); grpRow.style.cssText='padding:6px 0 2px;border-top:1px solid var(--line);margin-top:4px';
+        const grpBtn=document.createElement('button'); grpBtn.className='btn'; grpBtn.style.cssText='width:100%;font-size:12px;padding:6px 10px';
+        grpBtn.textContent='📢 Recordatorio grupal ('+unpaidPays.length+' pendientes)';
+        grpBtn.addEventListener('click',async()=>{
+          const {data:pl2}=await supa.from('players').select('id,apodo,nombre').in('id',unpaidPays.map(p=>p.player_id));
+          const names=(pl2||[]).map(p=>p.apodo||p.nombre||'').filter(Boolean);
+          const msg='💸 *Recordatorio — '+exp.title+'*\n\nFaltan por pagar:\n'+names.map(n=>'• '+n).join('\n')+'\n\n$'+totalAmt.toLocaleString('es-CL')+' total\n\n💚 Golden Moms';
+          if(navigator.share) navigator.share({text:msg}).catch(()=>{});
+          else navigator.clipboard?.writeText(msg).then(()=>showToast('📋 Mensaje copiado'));
+        });
+        grpRow.appendChild(grpBtn); body.appendChild(grpRow);
+      }
+    } else {
+      body.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0">Sin jugadoras asignadas — editá para dividir</div>';
     }
+
+    header.addEventListener('click',()=>{ body.classList.toggle('fee-collapsed'); });
+    card.appendChild(header); card.appendChild(body);
     list.appendChild(card);
   }
 }
-
 // Expense modal
 async function openExpenseModal(expId=null){
   editingExpenseId=expId;
