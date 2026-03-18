@@ -377,7 +377,7 @@
   </div>
 
   <!-- ═══════════ ESTADÍSTICAS ═══════════ -->
-  <section id="v-stats" style="display:none;padding:0 4px">
+  <section id="v-stats" style="display:none;padding:0 4px;overflow-x:hidden">
     <!-- Tabs: Nuestros equipos | Torneos -->
     <div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px">
       <button class="tab active" id="standTab1" onclick="switchStandTab(1)">🏅 Nuestros equipos</button>
@@ -432,27 +432,13 @@
         </div>
       </div>
 
+      <!-- Group filter tabs (hidden when only 1 group) -->
+      <div id="groupTabsBar" style="display:none;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
+
       <!-- Standings table - football style -->
       <div id="tournamentStandingsWrap" style="display:none">
-        <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--line-2);box-shadow:var(--sh-1)">
-          <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:420px">
-            <thead>
-              <tr style="background:#2d6a4f;color:#fff">
-                <th style="padding:10px 8px;font-weight:700;font-size:11px;text-align:center;width:32px">#</th>
-                <th style="padding:10px 12px;font-weight:700;font-size:11px;text-align:left">EQUIPO</th>
-                <th style="padding:10px 6px;font-weight:700;font-size:11px;text-align:center" title="Partidos Jugados">PJ</th>
-                <th style="padding:10px 6px;font-weight:700;font-size:11px;text-align:center" title="Ganados">PG</th>
-                <th style="padding:10px 6px;font-weight:700;font-size:11px;text-align:center" title="Empatados">PE</th>
-                <th style="padding:10px 6px;font-weight:700;font-size:11px;text-align:center" title="Perdidos">PP</th>
-                <th style="padding:10px 6px;font-weight:700;font-size:11px;text-align:center">GF</th>
-                <th style="padding:10px 6px;font-weight:700;font-size:11px;text-align:center">GC</th>
-                <th style="padding:10px 6px;font-weight:700;font-size:11px;text-align:center">DG</th>
-                <th style="padding:10px 10px;font-weight:700;font-size:11px;text-align:center;background:#1a3a2a">Pts</th>
-              </tr>
-            </thead>
-            <tbody id="tournamentBody"></tbody>
-          </table>
-        </div>
+        <!-- Group standings rendered here by JS -->
+        <div id="tournamentGroupsContainer"></div>
 
         <!-- Match results list -->
         <div style="margin-top:16px">
