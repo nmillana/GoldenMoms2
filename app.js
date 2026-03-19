@@ -659,29 +659,57 @@ async function renderMonth(){
   else         drawMonthGrid(start, end, visible);
 }
 
+function canEditAttendanceForEvent(event){
+  if(!event) return false;
+  if(event.type === EVENT_TYPES.TRAIN || event.type === EVENT_TYPES.EVENT) return true;
+  if(event.type !== EVENT_TYPES.MATCH) return false;
+  const eventDate = safeDate(event.datetime);
+  if(!eventDate) return true;
+  const todayStart = new Date();
+  todayStart.setHours(0,0,0,0);
+  return eventDate >= todayStart;
+}
+function canEditResultForEvent(event){
+  if(!event || event.type !== EVENT_TYPES.MATCH) return false;
+  const eventDate = safeDate(event.datetime);
+  if(!eventDate) return true;
+  const tomorrowStart = new Date();
+  tomorrowStart.setHours(0,0,0,0);
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+  return eventDate < tomorrowStart;
+}
+function openPreferredEventAction(event){
+  if(canEditAttendanceForEvent(event)){
+    openAttModal(event);
+    return;
+  }
+  if(canEditResultForEvent(event)){
+    openResultModal(event);
+    return;
+  }
+  openModal({ existing: event });
+}
 function makeEventChip(e){
   const ev = document.createElement('div');
   ev.className = 'ev '+(e.type===EVENT_TYPES.TRAIN?'ev-train':e.type===EVENT_TYPES.EVENT?'ev-event':'ev-match');
   const badge = document.createElement('div');
   badge.className = 'ev-team-badge '+teamBadgeClass(e.team||TEAMS.GM);
   badge.textContent = e.team||TEAMS.GM; ev.appendChild(badge);
-  const tDiv = document.createElement('div'); tDiv.style.fontWeight='700'; tDiv.textContent = e.title||'—'; ev.appendChild(tDiv);
+  const tDiv = document.createElement('div'); tDiv.style.fontWeight='700'; tDiv.textContent = e.title||'-'; ev.appendChild(tDiv);
   const d = safeDate(e.datetime);
   if(d){
     const time = document.createElement('div'); time.className='ev-time';
     time.textContent = d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}); ev.appendChild(time);
   }
-  // Attendance button for training events
-  if(e.type === EVENT_TYPES.TRAIN || e.type === EVENT_TYPES.EVENT){
+  if(canEditAttendanceForEvent(e)){
     const attBtn = document.createElement('div');
-    attBtn.className='ev-result-btn'; attBtn.textContent='✅ Lista';
+    attBtn.className='ev-result-btn'; attBtn.textContent='Lista';
     attBtn.addEventListener('click', ev2=>{ ev2.stopPropagation(); openAttModal(e); });
     ev.appendChild(attBtn);
   }
-  // Result button for match events
-  if(e.type === EVENT_TYPES.MATCH){
+  if(canEditResultForEvent(e)){
     const resBtn = document.createElement('div');
-    resBtn.className='ev-result-btn'; resBtn.textContent='⚽ Resultado';
+    resBtn.className='ev-result-btn'; resBtn.textContent='Resultado';
     resBtn.addEventListener('click', ev2=>{ ev2.stopPropagation(); openResultModal(e); });
     ev.appendChild(resBtn);
   }
@@ -2108,60 +2136,45 @@ function updateBell(pending) {
   if(!pending.length){
     badge.classList.add('hidden');
     if(banner) banner.style.display = 'none';
-    list.innerHTML = '<div class="notif-empty">Sin pendientes ✅</div>';
+    list.innerHTML = '<div class="notif-empty">Sin pendientes</div>';
     return;
   }
 
-  // Update badge
   badge.textContent = pending.length;
   badge.classList.remove('hidden');
   if(count) count.textContent = pending.length + ' evento' + (pending.length>1?'s':'');
 
-  // Update dropdown list
   list.innerHTML = '';
   pending.forEach(p => {
     const item = document.createElement('div');
     item.className = 'notif-item';
     item.innerHTML =
-      '<div class="notif-icon">⏳</div>' +
+      '<div class="notif-icon">!</div>' +
       '<div>' +
         '<div class="notif-title">' + escapeHTML(p.title||'Evento') + '</div>' +
-        '<div class="notif-sub">' + p.dateStr + ' · ' + p.timeStr + ' · ' + p.team + '</div>' +
+        '<div class="notif-sub">' + p.dateStr + ' | ' + p.timeStr + ' | ' + p.team + '</div>' +
         '<div class="notif-sub" style="color:#92400e;margin-top:3px;font-weight:700">' + p.pendingCount + ' sin confirmar de ' + p.total + '</div>' +
       '</div>';
-    item.addEventListener('click', () => {
+    const openPendingEvent = () => {
       closeNotifDropdown();
-      // Navigate to events and open attendance modal
-      document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
-      const evTab = document.querySelector('.nav .tab[data-view="events"]');
-      if(evTab) evTab.classList.add('active');
       showView('events');
-      setTimeout(() => {
-        if(p.type === 'Entrenamiento') openAttModal(p.event);
-        else openResultModal(p.event);
-      }, 400);
-    });
+      setTimeout(() => openPreferredEventAction(p.event), 400);
+    };
+    item.addEventListener('click', openPendingEvent);
     list.appendChild(item);
   });
 
-  // Update dashboard banner
   if(banner && pList){
     banner.style.display = '';
     pList.innerHTML = '';
     pending.slice(0,3).forEach(p => {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #fde68a;cursor:pointer;font-size:13px';
-      row.innerHTML = '<span style="font-size:15px">📅</span><span style="font-weight:700;flex:1">' + escapeHTML(p.title||'') + '</span><span style="color:#92400e;font-size:12px">' + p.dateStr + ' · ' + p.timeStr + '</span>';
-      row.addEventListener('click', () => item.click());
-      // Actually open the event
+      row.innerHTML = '<span style="font-size:15px">!</span><span style="font-weight:700;flex:1">' + escapeHTML(p.title||'') + '</span><span style="color:#92400e;font-size:12px">' + p.dateStr + ' | ' + p.timeStr + '</span>';
       row.addEventListener('click', () => {
-        document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
-        const evTab = document.querySelector('.nav .tab[data-view="events"]');
-        if(evTab) evTab.classList.add('active');
+        closeNotifDropdown();
         showView('events');
-        setTimeout(() => {
-          if(p.type === 'Entrenamiento') openAttModal(p.event);
-        }, 400);
+        setTimeout(() => openPreferredEventAction(p.event), 400);
       });
       pList.appendChild(row);
     });
