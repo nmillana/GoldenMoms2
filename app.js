@@ -105,6 +105,23 @@ function setAuthLoading(isLoading){
   const bootScreen = document.getElementById('bootScreen');
   if(bootScreen) bootScreen.hidden = !isLoading;
 }
+function resolveUserRole(playerUser, player){
+  const roles = [playerUser?.role, player?.rol].filter(Boolean).map(role => String(role).toLowerCase());
+  if(roles.includes('admin')) return 'admin';
+  if(roles.includes('capitana')) return 'capitana';
+  return 'jugadora';
+}
+function canManageAttendance(user = currentUser){
+  return user?.role === 'admin' || user?.role === 'capitana';
+}
+function isRestrictedAttendanceUser(user = currentUser){
+  return !!user && !canManageAttendance(user);
+}
+function userRoleLabel(role){
+  if(role === 'admin') return 'Administradora';
+  if(role === 'capitana') return 'Capitana';
+  return 'Jugadora';
+}
 
 function escapeHTML(str){
   if(str == null) return '';
@@ -257,7 +274,7 @@ async function openAttendanceFromLink(eventId){
       showToast('No se encontro el evento');
       return false;
     }
-    setTimeout(() => openAttModal(ev), 250);
+    setTimeout(() => openEventForCurrentUser(ev), 250);
     return true;
   } catch(err) {
     console.warn('Attendance deep link error:', err);
@@ -364,12 +381,13 @@ async function loadConvocatoria(team){
 
 async function loadAttendanceForEvent(eventId){
   selectedPlayerIds = new Set();
+  if(typeof attConvokedPlayerIds !== 'undefined') attConvokedPlayerIds = new Set();
   if(!supa || !IS_CONNECTED || !eventId) return;
   try{
     const { data } = await supa.from('attendance').select('player_id, status').eq('event_id', eventId);
     for(const row of (data||[])){
-      if(row.status === 'Asiste') selectedPlayerIds.add(row.player_id);
-      // Also load existing statuses into attStatuses so Duda shows correctly
+      selectedPlayerIds.add(row.player_id);
+      if(typeof attConvokedPlayerIds !== 'undefined') attConvokedPlayerIds.add(row.player_id);
       if(row.status) attStatuses[row.player_id] = row.status;
     }
   } catch(err){ console.warn('loadAttendanceForEvent', err); }
@@ -409,6 +427,10 @@ async function saveAttendance(eventId){
 }
 
 function openModal(opts = {}){
+  if(currentUser && !canManageAttendance()){
+    showToast('Solo capitana o administradora pueden editar eventos');
+    return;
+  }
   document.getElementById('modalTitle').textContent = opts.existing ? 'Editar evento' : 'Nuevo evento';
   editingEventId = null; selectedPlayerIds = new Set();
   if(opts.existing){
@@ -605,6 +627,25 @@ function getDaysInRange(start, end){
 }
 function makeWeekSep(){ const s=document.createElement('div'); s.className='week-sep'; return s; }
 
+async function filterEventsForCurrentUser(events){
+  if(!Array.isArray(events) || !events.length) return [];
+  if(!isRestrictedAttendanceUser() || !currentUser?.player_id || !supa || !IS_CONNECTED) return events;
+  try{
+    const eventIds = events.map(event => event.id).filter(Boolean);
+    if(!eventIds.length) return [];
+    const { data, error } = await supa.from('attendance')
+      .select('event_id')
+      .eq('player_id', currentUser.player_id)
+      .in('event_id', eventIds);
+    if(error) throw error;
+    const citedSet = new Set((data || []).map(row => row.event_id));
+    return events.filter(event => citedSet.has(event.id));
+  } catch(err){
+    console.warn('filterEventsForCurrentUser', err);
+    return [];
+  }
+}
+
 async function fetchEventsRange(start, end){
   if(!supa||!IS_CONNECTED) return [];
   try{
@@ -612,7 +653,7 @@ async function fetchEventsRange(start, end){
       .gte('datetime',start.toISOString()).lte('datetime',end.toISOString())
       .order('datetime',{ascending:true});
     if(error){ console.error(error); return []; }
-    return data||[];
+    return await filterEventsForCurrentUser(data||[]);
   } catch(err){ console.error(err); return []; }
 }
 
@@ -658,6 +699,14 @@ async function renderMonth(){
   await fetchBirthdays();
   const visible = cachedEvents.filter(e => activeTeams.has(e.team||TEAMS.GM));
   const isMobile = window.matchMedia('(max-width:500px)').matches;
+  const calNote = document.getElementById('calNote');
+  if(calNote){
+    calNote.textContent = isRestrictedAttendanceUser()
+      ? 'Mostrando solo tus citaciones - fecha local'
+      : 'Mostrando todos los equipos - fecha local';
+  }
+  const btnNewEventTop = document.getElementById('btnNewEventTop');
+  if(btnNewEventTop) btnNewEventTop.style.display = canManageAttendance() ? '' : 'none';
   monthGrid.style.display = isMobile ? 'none' : '';
   monthList.style.display = isMobile ? 'flex' : 'none';
   if(isMobile) drawMonthList(start, end, visible);
@@ -684,6 +733,10 @@ function canEditResultForEvent(event){
   return eventDate < tomorrowStart;
 }
 function openPreferredEventAction(event){
+  if(!canManageAttendance()){
+    openAttModal(event);
+    return;
+  }
   if(canEditAttendanceForEvent(event)){
     openAttModal(event);
     return;
@@ -693,6 +746,14 @@ function openPreferredEventAction(event){
     return;
   }
   openModal({ existing: event });
+}
+function openEventForCurrentUser(event){
+  if(!event) return;
+  if(canManageAttendance()){
+    openPreferredEventAction(event);
+    return;
+  }
+  openAttModal(event);
 }
 function makeEventChip(e){
   const ev = document.createElement('div');
@@ -706,19 +767,30 @@ function makeEventChip(e){
     const time = document.createElement('div'); time.className='ev-time';
     time.textContent = d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}); ev.appendChild(time);
   }
-  if(canEditAttendanceForEvent(e)){
-    const attBtn = document.createElement('div');
-    attBtn.className='ev-result-btn'; attBtn.textContent='Lista';
-    attBtn.addEventListener('click', ev2=>{ ev2.stopPropagation(); openAttModal(e); });
-    ev.appendChild(attBtn);
+  if(canManageAttendance()){
+    if(canEditAttendanceForEvent(e)){
+      const attBtn = document.createElement('div');
+      attBtn.className='ev-result-btn'; attBtn.textContent='Lista';
+      attBtn.addEventListener('click', ev2=>{ ev2.stopPropagation(); openAttModal(e); });
+      ev.appendChild(attBtn);
+    }
+    if(canEditResultForEvent(e)){
+      const resBtn = document.createElement('div');
+      resBtn.className='ev-result-btn'; resBtn.textContent='Resultado';
+      resBtn.addEventListener('click', ev2=>{ ev2.stopPropagation(); openResultModal(e); });
+      ev.appendChild(resBtn);
+    }
+  } else {
+    const viewBtn = document.createElement('div');
+    viewBtn.className='ev-result-btn';
+    viewBtn.textContent = canEditAttendanceForEvent(e) ? 'Mi respuesta' : 'Citacion';
+    viewBtn.addEventListener('click', ev2=>{ ev2.stopPropagation(); openAttModal(e); });
+    ev.appendChild(viewBtn);
   }
-  if(canEditResultForEvent(e)){
-    const resBtn = document.createElement('div');
-    resBtn.className='ev-result-btn'; resBtn.textContent='Resultado';
-    resBtn.addEventListener('click', ev2=>{ ev2.stopPropagation(); openResultModal(e); });
-    ev.appendChild(resBtn);
-  }
-  ev.addEventListener('click', () => openModal({ existing: e }));
+  ev.addEventListener('click', () => {
+    if(canManageAttendance()) openModal({ existing: e });
+    else openAttModal(e);
+  });
   return ev;
 }
 
@@ -735,10 +807,13 @@ function drawMonthGrid(start, end, visible){
     wkEl.textContent = day.toLocaleDateString('es-CL',{weekday:'short'}).replace(/\./g,'');
     const nEl = document.createElement('div'); nEl.className='day-n'; nEl.textContent=pad(day.getDate());
     numBox.appendChild(wkEl); numBox.appendChild(nEl); head.appendChild(numBox);
-    const plus = document.createElement('button'); plus.className='day-add';
-    plus.textContent='+'; plus.title='Nuevo evento';
-    plus.addEventListener('click', ()=>openModal({date:day}));
-    cell.appendChild(head); cell.appendChild(plus);
+    cell.appendChild(head);
+    if(canManageAttendance()){
+      const plus = document.createElement('button'); plus.className='day-add';
+      plus.textContent='+'; plus.title='Nuevo evento';
+      plus.addEventListener('click', ()=>openModal({date:day}));
+      cell.appendChild(plus);
+    }
     for(const e of visible.filter(e=>localDateYMD(safeDate(e.datetime)||new Date(0))===ymd))
       cell.appendChild(makeEventChip(e));
     const bdays = birthdaysOnDay(day);
@@ -765,10 +840,13 @@ function drawMonthList(start, end, visible){
     else { const em=document.createElement('div'); em.style.cssText='color:var(--muted);font-size:12px;padding:8px 0'; em.textContent='Sin eventos'; col.appendChild(em); }
     const bdays2 = birthdaysOnDay(day);
     if(bdays2.length) col.appendChild(makeBirthChip(bdays2));
-    const plus=document.createElement('button'); plus.className='day-add'; plus.style.opacity='1';
-    plus.textContent='+'; plus.title='Nuevo evento';
-    plus.addEventListener('click',()=>openModal({date:day}));
-    row.appendChild(dateBox); row.appendChild(col); row.appendChild(plus);
+    row.appendChild(dateBox); row.appendChild(col);
+    if(canManageAttendance()){
+      const plus=document.createElement('button'); plus.className='day-add'; plus.style.opacity='1';
+      plus.textContent='+'; plus.title='Nuevo evento';
+      plus.addEventListener('click',()=>openModal({date:day}));
+      row.appendChild(plus);
+    }
     monthList.appendChild(row);
     if(day.getDay()===0) monthList.appendChild(makeWeekSep());
   }
@@ -852,7 +930,7 @@ async function renderWeekEvents(){
     const { data } = await supa.from('events').select('*')
       .gte('datetime',todayStart.toISOString()).lte('datetime',next14.toISOString())
       .order('datetime',{ascending:true});
-    evs=data||[];
+    evs = await filterEventsForCurrentUser(data||[]);
   }
   // Hoy
   const todayEl=document.getElementById('todayEvents'); todayEl.innerHTML='';
@@ -1232,82 +1310,224 @@ document.addEventListener('DOMContentLoaded', async () => {
    ASISTENCIA RÁPIDA
    ══════════════════════════════════════════════════════════ */
 let attEventId = null;
-let attStatuses = {}; // player_id → 'Asiste'|'No asiste'|'Duda'
-let attFilteredPlayers = []; // jugadoras del equipo del evento actual
+let attCurrentEvent = null;
+let attStatuses = {}; // player_id ? 'Asiste'|'No asiste'|'Duda'
+let attFilteredPlayers = []; // jugadoras citadas en el evento actual
+let attConvokedPlayerIds = new Set();
+
+function getAttendanceStatusClass(status){
+  if(status === 'Asiste') return 'att-yes';
+  if(status === 'No asiste') return 'att-no';
+  if(status === 'Duda') return 'att-maybe';
+  return 'att-pending';
+}
+function getAttendanceStatusText(status){
+  if(status === 'Asiste') return 'Asiste';
+  if(status === 'No asiste') return 'No asiste';
+  if(status === 'Duda') return 'Duda';
+  return 'Sin respuesta';
+}
+function configureAttendanceModalActions(event, amCited){
+  const shareBtn = document.getElementById('btnShareAtt');
+  if(shareBtn){
+    shareBtn.style.display = 'none';
+    shareBtn.onclick = null;
+    shareBtn.href = '#';
+  }
+  const saveBtn = document.getElementById('btnSaveAtt');
+  if(!saveBtn) return;
+  saveBtn.classList.remove('p');
+  saveBtn.disabled = false;
+  saveBtn.style.display = '';
+  if(canManageAttendance()){
+    saveBtn.textContent = 'Guardar';
+    return;
+  }
+  if(amCited && canEditAttendanceForEvent(event)){
+    saveBtn.textContent = 'Guardar mi respuesta';
+    return;
+  }
+  saveBtn.style.display = 'none';
+}
+function renderAttendancePlayerPanel(players, amCited){
+  const panel = document.getElementById('attPlayerCard');
+  const nameEl = document.getElementById('attPlayerName');
+  const metaEl = document.getElementById('attPlayerMeta');
+  const statusEl = document.getElementById('attPlayerStatus');
+  const actionsEl = document.getElementById('attPlayerActions');
+  if(!panel || !nameEl || !metaEl || !statusEl || !actionsEl) return;
+
+  if(canManageAttendance() || !currentUser?.player_id){
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = '';
+  actionsEl.innerHTML = '';
+
+  if(!amCited){
+    nameEl.textContent = 'No estas citada';
+    metaEl.textContent = 'Solo veras y responderas eventos donde estes convocada.';
+    statusEl.textContent = 'Solo lectura';
+    statusEl.className = 'att-player-status is-muted';
+    return;
+  }
+
+  const me = players.find(player => String(player.id) === String(currentUser.player_id));
+  const status = attStatuses[currentUser.player_id] || 'Duda';
+  const canRespond = canEditAttendanceForEvent(attCurrentEvent);
+  nameEl.textContent = me ? (me.apodo || me.nombre || 'Tu citacion') : 'Tu citacion';
+  metaEl.textContent = canRespond
+    ? 'Responde aqui tu asistencia. Debajo puedes revisar la citacion en modo lectura.'
+    : 'La citacion ya quedo cerrada. Debajo puedes revisar el estado del grupo.';
+  statusEl.textContent = getAttendanceStatusText(status);
+  statusEl.className = 'att-player-status ' + getAttendanceStatusClass(status);
+
+  [['?','Asiste','act-yes'],['?','No asiste','act-no'],['??','Duda','act-duda']].forEach(([emoji, value, cls]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'att-player-choice' + (status === value ? ' ' + cls : '');
+    button.innerHTML = '<span>' + emoji + '</span><span>' + value + '</span>';
+    button.disabled = !canRespond;
+    button.addEventListener('click', () => {
+      if(!canRespond) return;
+      attStatuses[currentUser.player_id] = value;
+      renderAttList(attCurrentEvent?.team || TEAMS.GM);
+    });
+    actionsEl.appendChild(button);
+  });
+}
 
 function openAttModal(event) {
   attEventId = event.id;
+  attCurrentEvent = event;
   attStatuses = {};
   attFilteredPlayers = [];
+  attConvokedPlayerIds = new Set();
   selectedPlayerIds = new Set();
   attWaMsg = '';
-  const sb=document.getElementById('btnShareAtt'); if(sb) sb.style.display='none';
-  const gb=document.getElementById('btnSaveAtt'); if(gb){ gb.disabled=false; gb.textContent='💾 Guardar'; gb.classList.remove('p'); }
+  const sb = document.getElementById('btnShareAtt'); if(sb) sb.style.display = 'none';
+  const gb = document.getElementById('btnSaveAtt');
+  if(gb){
+    gb.disabled = false;
+    gb.style.display = '';
+    gb.textContent = canManageAttendance() ? 'Guardar' : 'Guardar mi respuesta';
+    gb.classList.remove('p');
+  }
 
   document.getElementById('attModalTitle').textContent = event.title || 'Pase de lista';
   const d = safeDate(event.datetime);
   document.getElementById('attEventMeta').textContent =
     (d ? d.toLocaleString('es-CL',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '') +
-    (event.team ? ' · ' + event.team : '');
+    (event.team ? ' ? ' + event.team : '');
 
-  openDialog(attModalBg, document.getElementById('btnSaveAtt'));
+  openDialog(attModalBg, document.getElementById('btnCloseAtt'));
   loadAttendanceForEvent(event.id).then(() => {
-    // attStatuses already loaded from DB in loadAttendanceForEvent
-    // Only fill missing ones from selectedPlayerIds
-    for(const pid of selectedPlayerIds){
-      if(!attStatuses[pid]) attStatuses[pid] = 'Asiste';
-    }
     renderAttList(event.team || TEAMS.GM);
   });
 }
 
 async function renderAttList(team) {
   const list = document.getElementById('attList');
+  const hint = document.getElementById('attListHint');
   list.innerHTML = '';
+  if(hint) hint.textContent = '';
+
   if(!allPlayers.length) {
     const { data } = await supa.from('players')
-      .select('id,apodo,nombre,numero_camiseta,equipos').order('apodo',{ascending:true});
+      .select('id,apodo,nombre,numero_camiseta,equipos,foto').order('apodo',{ascending:true});
     allPlayers = data || [];
   }
-  const filtered = team === TEAMS.GM ? allPlayers
-    : allPlayers.filter(p => Array.isArray(p.equipos) && p.equipos.includes(team));
-  attFilteredPlayers = filtered; // save for WA message
 
-  // Split into groups: confirmed, absent, pending (no answer)
-  const yes    = filtered.filter(p => attStatuses[p.id] === 'Asiste');
-  const no     = filtered.filter(p => attStatuses[p.id] === 'No asiste');
-  const duda   = filtered.filter(p => attStatuses[p.id] === 'Duda');
-  const pending= filtered.filter(p => !attStatuses[p.id]);
+  const convokedIds = new Set([...attConvokedPlayerIds]);
+  const filtered = allPlayers.filter(player => convokedIds.has(player.id));
+  attFilteredPlayers = filtered;
 
-  function makePlayerRow(p) {
-    const status = attStatuses[p.id] || null;
+  const myPlayerId = currentUser?.player_id;
+  const amCited = !!(myPlayerId && convokedIds.has(myPlayerId));
+  configureAttendanceModalActions(attCurrentEvent, amCited);
+  renderAttendancePlayerPanel(filtered, amCited);
+
+  if(!filtered.length){
+    if(hint){
+      hint.textContent = canManageAttendance()
+        ? 'Este evento aun no tiene jugadoras citadas.'
+        : 'Solo veras eventos donde estes citada.';
+    }
+    list.innerHTML = '<div class="empty-state"><span class="empty-state-icon">??</span>No hay jugadoras citadas para este evento</div>';
+    updateAttCounter();
+    return;
+  }
+
+  if(hint){
+    hint.textContent = canManageAttendance()
+      ? 'Edita la asistencia de las jugadoras citadas.'
+      : 'Tu respuesta aparece arriba. La lista de abajo es solo lectura.';
+  }
+
+  const yes = filtered.filter(player => attStatuses[player.id] === 'Asiste');
+  const no = filtered.filter(player => attStatuses[player.id] === 'No asiste');
+  const duda = filtered.filter(player => attStatuses[player.id] === 'Duda');
+  const pending = filtered.filter(player => !attStatuses[player.id]);
+
+  function makePlayerRow(player) {
+    const status = attStatuses[player.id] || null;
     const row = document.createElement('div');
-    row.className = 'att-row' +
-      (status==='Asiste'?' att-yes' : status==='No asiste'?' att-no' :
-       status==='Duda'?' att-maybe' : ' att-pending');
-    row.dataset.pid = p.id;
+    row.className = 'att-row ' + getAttendanceStatusClass(status);
+    row.dataset.pid = player.id;
+    if(isRestrictedAttendanceUser() && String(player.id) === String(currentUser?.player_id)){
+      row.classList.add('att-row-me');
+    }
 
-    const av = document.createElement('div'); av.className='att-avatar';
-    av.textContent = (p.apodo||p.nombre||'?')[0].toUpperCase();
-    const nm = document.createElement('div'); nm.className='att-name';
-    nm.textContent = p.apodo || p.nombre || '—';
-    const num = document.createElement('div'); num.className='att-num';
-    if(p.numero_camiseta) num.textContent = '#'+p.numero_camiseta;
+    let avatar;
+    if(player.foto){
+      avatar = document.createElement('img');
+      avatar.className = 'att-avatar';
+      avatar.src = player.foto;
+      avatar.alt = player.apodo || player.nombre || 'Jugadora';
+      avatar.loading = 'lazy';
+    } else {
+      avatar = document.createElement('div');
+      avatar.className = 'att-avatar';
+      avatar.textContent = (player.apodo || player.nombre || '?')[0].toUpperCase();
+    }
 
-    const taps = document.createElement('div'); taps.className='att-tap-group';
-    [['✅','Asiste','act-yes'],['❌','No asiste','act-no'],['🤔','Duda','act-duda']].forEach(([emoji,val,cls])=>{
-      const b = document.createElement('button');
-      b.className = 'att-tap' + (status===val?' '+cls:'');
-      b.textContent = emoji; b.title = val;
-      b.addEventListener('click', e=>{
-        e.stopPropagation();
-        attStatuses[p.id] = attStatuses[p.id]===val ? null : val;
-        renderAttList(team); updateAttCounter();
+    const name = document.createElement('div'); name.className = 'att-name';
+    name.textContent = player.apodo || player.nombre || '?';
+    if(isRestrictedAttendanceUser() && String(player.id) === String(currentUser?.player_id)){
+      name.textContent += ' - Tu';
+    }
+    const num = document.createElement('div'); num.className = 'att-num';
+    if(player.numero_camiseta) num.textContent = '#' + player.numero_camiseta;
+
+    row.appendChild(avatar);
+    row.appendChild(name);
+    row.appendChild(num);
+
+    if(canManageAttendance()){
+      const taps = document.createElement('div'); taps.className = 'att-tap-group';
+      [['?','Asiste','act-yes'],['?','No asiste','act-no'],['??','Duda','act-duda']].forEach(([emoji, value, cls]) => {
+        const button = document.createElement('button');
+        button.className = 'att-tap' + (status === value ? ' ' + cls : '');
+        button.type = 'button';
+        button.textContent = emoji;
+        button.title = value;
+        button.addEventListener('click', evt => {
+          evt.stopPropagation();
+          attStatuses[player.id] = attStatuses[player.id] === value ? null : value;
+          renderAttList(team);
+          updateAttCounter();
+        });
+        taps.appendChild(button);
       });
-      taps.appendChild(b);
-    });
+      row.appendChild(taps);
+    } else {
+      const pill = document.createElement('div');
+      pill.className = 'att-status-pill ' + getAttendanceStatusClass(status);
+      pill.textContent = getAttendanceStatusText(status);
+      row.appendChild(pill);
+    }
 
-    row.appendChild(av); row.appendChild(nm); row.appendChild(num); row.appendChild(taps);
     return row;
   }
 
@@ -1317,35 +1537,43 @@ async function renderAttList(team) {
     sep.className = 'att-section-label';
     sep.textContent = label + ' (' + players.length + ')';
     list.appendChild(sep);
-    players.forEach(p => list.appendChild(makePlayerRow(p)));
+    players.forEach(player => list.appendChild(makePlayerRow(player)));
   }
 
-  addSection('✅ Asisten', yes);
-  addSection('🤔 Duda', duda);
-  addSection('❌ No asisten', no);
-  addSection('⏳ Sin respuesta', pending);
+  addSection('? Asisten', yes);
+  addSection('?? Duda', duda);
+  addSection('? No asisten', no);
+  addSection('? Sin respuesta', pending);
 
   updateAttCounter();
 }
 
 function updateAttCounter(){
-  const vals = Object.values(attStatuses);
+  const total = attFilteredPlayers.length;
+  const vals = attFilteredPlayers.map(player => attStatuses[player.id] || null);
   const yes  = vals.filter(v=>v==='Asiste').length;
   const no   = vals.filter(v=>v==='No asiste').length;
   const duda = vals.filter(v=>v==='Duda').length;
-  const total= allPlayers.length;
   const pend = total - yes - no - duda;
-  let txt = `✅ ${yes}  ❌ ${no}`;
-  if(duda) txt += `  🤔 ${duda}`;
-  if(pend > 0) txt += `  ⏳ ${pend}`;
+  let txt = `? ${yes}  ? ${no}`;
+  if(duda) txt += `  ?? ${duda}`;
+  if(pend > 0) txt += `  ? ${pend}`;
   document.getElementById('attCounter').textContent = txt;
 }
 
 const attModalBg = document.getElementById('attModalBg');
 function closeAttModal(){
   closeDialog(attModalBg);
-  const sb=document.getElementById('btnShareAtt'); if(sb) sb.style.display='none';
-  const gb=document.getElementById('btnSaveAtt'); if(gb){ gb.disabled=false; gb.textContent='?? Guardar'; gb.classList.remove('p'); }
+  attCurrentEvent = null;
+  attConvokedPlayerIds = new Set();
+  const sb = document.getElementById('btnShareAtt'); if(sb) sb.style.display='none';
+  const gb = document.getElementById('btnSaveAtt');
+  if(gb){
+    gb.disabled = false;
+    gb.style.display = '';
+    gb.textContent = 'Guardar';
+    gb.classList.remove('p');
+  }
 }
 document.getElementById('btnCloseAtt').addEventListener('click', closeAttModal);
 attModalBg.addEventListener('click', e=>{ if(e.target===attModalBg) closeAttModal(); });
@@ -1354,64 +1582,85 @@ attModalBg.addEventListener('click', e=>{ if(e.target===attModalBg) closeAttModa
 let attWaMsg = '';
 
 document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
-  if(!supa||!IS_CONNECTED||!attEventId){ alert('Sin conexión.'); return; }
-  if(!allPlayers.length){ alert('No hay jugadoras cargadas.'); return; }
+  if(!supa||!IS_CONNECTED||!attEventId){ alert('Sin conexi?n.'); return; }
+  if(!attFilteredPlayers.length){ alert('No hay jugadoras citadas.'); return; }
   const btn = document.getElementById('btnSaveAtt');
-  btn.disabled = true; btn.textContent = 'Guardando…';
+  const managerMode = canManageAttendance();
+  const targetPlayers = managerMode
+    ? attFilteredPlayers.filter(player => attStatuses[player.id])
+    : attFilteredPlayers.filter(player => String(player.id) === String(currentUser?.player_id) && attStatuses[player.id]);
+
+  if(!targetPlayers.length){
+    showToast(managerMode ? 'Marca al menos una respuesta' : 'Selecciona tu respuesta');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = managerMode ? 'Guardando...' : 'Guardando tu respuesta...';
   try{
-    // Only save players the user explicitly marked — don't overwrite others' responses
-    const upserts = allPlayers
-      .filter(p => attStatuses[p.id])  // skip players with no status (null/undefined)
-      .map(p=>({
-        event_id: attEventId,
-        player_id: p.id,
-        status: attStatuses[p.id],
-        updated_at: new Date().toISOString()
-      }));
-    if(upserts.length){
-      const {error} = await supa.from('attendance').upsert(upserts, {onConflict:'event_id,player_id'});
-      if(error) throw error;
+    const upserts = targetPlayers.map(player => ({
+      event_id: attEventId,
+      player_id: player.id,
+      status: attStatuses[player.id],
+      updated_at: new Date().toISOString()
+    }));
+
+    const {error} = await supa.from('attendance').upsert(upserts, {onConflict:'event_id,player_id'});
+    if(error) throw error;
+
+    if(managerMode){
+      const eventTitle = document.getElementById('attModalTitle').textContent;
+      const yes = attFilteredPlayers.filter(player=>attStatuses[player.id]==='Asiste').map(player=>player.apodo||player.nombre);
+      const no = attFilteredPlayers.filter(player=>attStatuses[player.id]==='No asiste').map(player=>player.apodo||player.nombre);
+      const duda = attFilteredPlayers.filter(player=>attStatuses[player.id]==='Duda').map(player=>player.apodo||player.nombre);
+      const pending = attFilteredPlayers.filter(player=>!attStatuses[player.id]).map(player=>player.apodo||player.nombre);
+      const appUrl = 'https://nmillana.github.io/GoldenMoms2/?att=' + attEventId;
+      attWaMsg = '*Asistencia - ' + eventTitle + '*\n';
+      if(yes.length) attWaMsg += '\nAsisten (' + yes.length + '): ' + yes.join(', ');
+      if(duda.length) attWaMsg += '\nDuda (' + duda.length + '): ' + duda.join(', ');
+      if(no.length) attWaMsg += '\nNo asisten (' + no.length + '): ' + no.join(', ');
+      if(pending.length) attWaMsg += '\nSin responder (' + pending.length + '): ' + pending.join(', ');
+      attWaMsg += '\n\nConfirma tu asistencia en la app: ' + appUrl;
+
+      btn.textContent = 'Guardado';
+      btn.classList.add('p');
+
+      const shareBtn = document.getElementById('btnShareAtt');
+      shareBtn.innerHTML = WA_ICON + ' Compartir';
+      shareBtn.style.display = '';
+      shareBtn.href = '#';
+      shareBtn.onclick = async (event) => {
+        event.preventDefault();
+        try {
+          if(navigator.share) await navigator.share({ text: attWaMsg });
+          else if(navigator.clipboard) {
+            await navigator.clipboard.writeText(attWaMsg);
+            showToast('Mensaje copiado');
+          }
+          closeAttModal();
+        } catch(err) {}
+      };
+
+      showToast('Asistencia guardada');
+    } else {
+      btn.textContent = 'Respondido';
+      btn.classList.add('p');
+      showToast('Tu asistencia fue guardada');
     }
 
-    // Build WA message
-    const eventTitle = document.getElementById('attModalTitle').textContent;
-    const players = attFilteredPlayers.length ? attFilteredPlayers : allPlayers;
-    const yes    = players.filter(p=>attStatuses[p.id]==='Asiste').map(p=>p.apodo||p.nombre);
-    const no     = players.filter(p=>attStatuses[p.id]==='No asiste').map(p=>p.apodo||p.nombre);
-    const duda   = players.filter(p=>attStatuses[p.id]==='Duda').map(p=>p.apodo||p.nombre);
-    const pending= players.filter(p=>!attStatuses[p.id]).map(p=>p.apodo||p.nombre);
-    const appUrl = 'https://nmillana.github.io/GoldenMoms2/?att=' + attEventId;
-    attWaMsg = '📋 *Asistencia — ' + eventTitle + '*\n';
-    if(yes.length)     attWaMsg += '\n✅ Asisten (' + yes.length + '): ' + yes.join(', ');
-    if(duda.length)    attWaMsg += '\n🤔 Duda (' + duda.length + '): ' + duda.join(', ');
-    if(no.length)      attWaMsg += '\n❌ No asisten (' + no.length + '): ' + no.join(', ');
-    if(pending.length) attWaMsg += '\n⏳ Sin responder (' + pending.length + '): ' + pending.join(', ');
-    attWaMsg += '\n\n👉 Confirma tu asistencia en la app: ' + appUrl;
-
-    btn.textContent = '✅ Guardado';
-    btn.classList.add('p');
-
-    const shareBtn = document.getElementById('btnShareAtt');
-    shareBtn.innerHTML = WA_ICON + ' Compartir';
-    shareBtn.style.display = '';
-    shareBtn.href = '#';
-    shareBtn.onclick = (e) => {
-      e.preventDefault();
-      navigator.share({ text: attWaMsg })
-        .then(() => { closeAttModal(); })
-        .catch(() => {});
-    };
-
-    showToast('✅ Asistencia guardada');
+    await Promise.allSettled([
+      renderMonth(),
+      renderDash(),
+      loadNotifications(),
+      currentUser ? renderPlayerDash() : Promise.resolve()
+    ]);
   } catch(err){
-    btn.disabled = false; btn.textContent = '💾 Guardar';
+    btn.disabled = false;
+    btn.textContent = managerMode ? 'Guardar' : 'Guardar mi respuesta';
     alert('Error guardando asistencia: '+(err.message||err));
   }
 });
 
-/* ═══════════════════════════════════════════════════════════
-   RESULTADO PARTIDO
-   ══════════════════════════════════════════════════════════ */
 let resSelectedScorers = new Set();
 
 function openResultModal(event) {
@@ -3332,7 +3581,7 @@ function buildSessionUser(playerUser) {
   return {
     player_id: pl.id,
     username: playerUser?.username,
-    role: playerUser?.role || pl.role || 'jugadora',
+    role: resolveUserRole(playerUser, pl),
     apodo: pl.apodo || '',
     nombre: pl.nombre || '',
     numero_camiseta: pl.numero_camiseta,
@@ -3340,7 +3589,6 @@ function buildSessionUser(playerUser) {
   };
 }
 
-// ── Login flow ────────────────────────────────────────────
 let loginFoundUser = null; // player_user row found in step 1
 let registerablePlayers = [];
 let resettableUsers = [];
@@ -3799,7 +4047,7 @@ async function loginStep1() {
     avatar.style.backgroundSize = '';
     avatar.textContent = name[0].toUpperCase();
     document.getElementById('loginPlayerName').textContent = name;
-    document.getElementById('loginPlayerRole').textContent = data.role === 'admin' ? 'Administradora' : 'Jugadora';
+    document.getElementById('loginPlayerRole').textContent = userRoleLabel(data.role);
     if(pl?.foto) {
       avatar.style.backgroundImage='url('+pl.foto+')';
       avatar.style.backgroundSize='cover';
@@ -3884,7 +4132,7 @@ async function renderPlayerDash() {
 
   const name = currentUser.apodo || currentUser.nombre || 'Jugadora';
   if(pdName) pdName.textContent = 'Hola, ' + name + ' 👋';
-  if(pdRole) pdRole.textContent = currentUser.role==='admin' ? '⭐ Administradora' : '⚽ Jugadora · #'+(currentUser.numero_camiseta||'—');
+  if(pdRole) pdRole.textContent = currentUser.role==='admin' ? '? Administradora' : currentUser.role==='capitana' ? '??? Capitana ? #'+(currentUser.numero_camiseta||'?') : '? Jugadora ? #'+(currentUser.numero_camiseta||'?');
   card.style.display = '';
   if(pdItems) pdItems.innerHTML = '<div style="font-size:12px;opacity:.7">Cargando tus pendientes…</div>';
 
@@ -3896,20 +4144,23 @@ async function renderPlayerDash() {
     // 1. Asistencia pendiente (mis eventos con Duda)
     const now = new Date();
     const { data:attRows } = await supa.from('attendance')
-      .select('event_id, status, events(id,title,datetime,type)')
+      .select('event_id, status, events(id,title,datetime,type,team)')
       .eq('player_id', pid)
       .eq('status', 'Duda')
       .gte('events.datetime', now.toISOString());
     const pendingAtt = (attRows||[]).filter(a=>a.events);
     if(pendingAtt.length) {
       items.push({
-        icon:'⏳', title: pendingAtt.length + ' evento'+(pendingAtt.length>1?'s':'')+' sin confirmar',
+        icon:'?', title: pendingAtt.length + ' evento'+(pendingAtt.length>1?'s':'')+' sin confirmar',
         sub: pendingAtt.map(a=>{
           const d=new Date(a.events.datetime);
-          return a.events.title+' · '+d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
+          return a.events.title+' ? '+d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
         }).slice(0,3).join(' | '),
         badge: pendingAtt.length,
-        action: () => showView('events')
+        action: () => {
+          showView('events');
+          setTimeout(() => openEventForCurrentUser(pendingAtt[0]?.events), 350);
+        }
       });
     }
 
@@ -3975,7 +4226,7 @@ async function loadNotifications() {
     updateBell([]);
     return;
   }
-  if(currentUser.role === 'admin') {
+  if(canManageAttendance()) {
     await loadNotificationsAdmin();
     return;
   }

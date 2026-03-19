@@ -334,6 +334,18 @@ body.auth-loading>.toast{visibility:hidden}
     <div class="modal" role="dialog" aria-modal="true">
       <div class="modal-title"><div class="modal-title-icon">✅</div><span id="attModalTitle">Pase de lista</span></div>
       <div id="attEventMeta" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
+      <div id="attPlayerCard" class="att-player-card" style="display:none">
+        <div class="att-player-head">
+          <div>
+            <div class="att-player-kicker">Tu respuesta</div>
+            <div class="att-player-name" id="attPlayerName">Tu citaci?n</div>
+            <div class="att-player-meta" id="attPlayerMeta"></div>
+          </div>
+          <div class="att-player-status" id="attPlayerStatus">Duda</div>
+        </div>
+        <div class="att-player-actions" id="attPlayerActions"></div>
+      </div>
+      <div id="attListHint" class="att-list-hint"></div>
       <div id="attList" style="display:flex;flex-direction:column;gap:6px;max-height:55vh;overflow-y:auto"></div>
       <div class="modal-actions" style="margin-top:14px">
         <span id="attCounter" style="margin-right:auto;font-size:13px;color:var(--muted);font-weight:600"></span>
