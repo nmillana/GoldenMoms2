@@ -1314,6 +1314,11 @@ let attCurrentEvent = null;
 let attStatuses = {}; // player_id ? 'Asiste'|'No asiste'|'Duda'
 let attFilteredPlayers = []; // jugadoras citadas en el evento actual
 let attConvokedPlayerIds = new Set();
+const ATTENDANCE_ACTIONS = [
+  { icon:'&#x2705;', label:'Asiste', className:'act-yes' },
+  { icon:'&#x274C;', label:'No asiste', className:'act-no' },
+  { icon:'&#x2753;', label:'Duda', className:'act-duda' }
+];
 
 function getAttendanceStatusClass(status){
   if(status === 'Asiste') return 'att-yes';
@@ -1383,15 +1388,15 @@ function renderAttendancePlayerPanel(players, amCited){
   statusEl.textContent = getAttendanceStatusText(status);
   statusEl.className = 'att-player-status ' + getAttendanceStatusClass(status);
 
-  [['?','Asiste','act-yes'],['?','No asiste','act-no'],['??','Duda','act-duda']].forEach(([emoji, value, cls]) => {
+  ATTENDANCE_ACTIONS.forEach(({ icon, label, className }) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'att-player-choice' + (status === value ? ' ' + cls : '');
-    button.innerHTML = '<span>' + emoji + '</span><span>' + value + '</span>';
+    button.className = 'att-player-choice' + (status === label ? ' ' + className : '');
+    button.innerHTML = '<span aria-hidden="true">' + icon + '</span><span>' + label + '</span>';
     button.disabled = !canRespond;
     button.addEventListener('click', () => {
       if(!canRespond) return;
-      attStatuses[currentUser.player_id] = value;
+      attStatuses[currentUser.player_id] = label;
       renderAttList(attCurrentEvent?.team || TEAMS.GM);
     });
     actionsEl.appendChild(button);
@@ -1419,7 +1424,7 @@ function openAttModal(event) {
   const d = safeDate(event.datetime);
   document.getElementById('attEventMeta').textContent =
     (d ? d.toLocaleString('es-CL',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '') +
-    (event.team ? ' ? ' + event.team : '');
+    (event.team ? ' | ' + event.team : '');
 
   openDialog(attModalBg, document.getElementById('btnCloseAtt'));
   loadAttendanceForEvent(event.id).then(() => {
@@ -1454,7 +1459,7 @@ async function renderAttList(team) {
         ? 'Este evento aun no tiene jugadoras citadas.'
         : 'Solo veras eventos donde estes citada.';
     }
-    list.innerHTML = '<div class="empty-state"><span class="empty-state-icon">??</span>No hay jugadoras citadas para este evento</div>';
+    list.innerHTML = '<div class="empty-state"><span class="empty-state-icon">Lista</span>No hay jugadoras citadas para este evento</div>';
     updateAttCounter();
     return;
   }
@@ -1506,15 +1511,16 @@ async function renderAttList(team) {
 
     if(canManageAttendance()){
       const taps = document.createElement('div'); taps.className = 'att-tap-group';
-      [['?','Asiste','act-yes'],['?','No asiste','act-no'],['??','Duda','act-duda']].forEach(([emoji, value, cls]) => {
+      ATTENDANCE_ACTIONS.forEach(({ icon, label, className }) => {
         const button = document.createElement('button');
-        button.className = 'att-tap' + (status === value ? ' ' + cls : '');
+        button.className = 'att-tap' + (status === label ? ' ' + className : '');
         button.type = 'button';
-        button.textContent = emoji;
-        button.title = value;
+        button.innerHTML = icon;
+        button.title = label;
+        button.setAttribute('aria-label', label);
         button.addEventListener('click', evt => {
           evt.stopPropagation();
-          attStatuses[player.id] = attStatuses[player.id] === value ? null : value;
+          attStatuses[player.id] = attStatuses[player.id] === label ? null : label;
           renderAttList(team);
           updateAttCounter();
         });
@@ -1540,10 +1546,10 @@ async function renderAttList(team) {
     players.forEach(player => list.appendChild(makePlayerRow(player)));
   }
 
-  addSection('? Asisten', yes);
-  addSection('?? Duda', duda);
-  addSection('? No asisten', no);
-  addSection('? Sin respuesta', pending);
+  addSection('Asisten', yes);
+  addSection('Duda', duda);
+  addSection('No asisten', no);
+  addSection('Sin respuesta', pending);
 
   updateAttCounter();
 }
@@ -1555,9 +1561,9 @@ function updateAttCounter(){
   const no   = vals.filter(v=>v==='No asiste').length;
   const duda = vals.filter(v=>v==='Duda').length;
   const pend = total - yes - no - duda;
-  let txt = `? ${yes}  ? ${no}`;
-  if(duda) txt += `  ?? ${duda}`;
-  if(pend > 0) txt += `  ? ${pend}`;
+  let txt = `Asiste ${yes}  No ${no}`;
+  if(duda) txt += `  Duda ${duda}`;
+  if(pend > 0) txt += `  Pendiente ${pend}`;
   document.getElementById('attCounter').textContent = txt;
 }
 
@@ -2412,7 +2418,7 @@ function updateBell(pending) {
     const item = document.createElement('div');
     item.className = 'notif-item';
     item.innerHTML =
-      '<div class="notif-icon">!</div>' +
+      '<div class="notif-icon">&#x23F3;</div>' +
       '<div>' +
         '<div class="notif-title">' + escapeHTML(p.title||'Evento') + '</div>' +
         '<div class="notif-sub">' + p.dateStr + ' | ' + p.timeStr + ' | ' + p.team + '</div>' +
@@ -2433,7 +2439,7 @@ function updateBell(pending) {
     pending.slice(0,3).forEach(p => {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #fde68a;cursor:pointer;font-size:13px';
-      row.innerHTML = '<span style="font-size:15px">!</span><span style="font-weight:700;flex:1">' + escapeHTML(p.title||'') + '</span><span style="color:#92400e;font-size:12px">' + p.dateStr + ' | ' + p.timeStr + '</span>';
+      row.innerHTML = '<span style="font-size:15px">&#x23F3;</span><span style="font-weight:700;flex:1">' + escapeHTML(p.title||'') + '</span><span style="color:#92400e;font-size:12px">' + p.dateStr + ' | ' + p.timeStr + '</span>';
       row.addEventListener('click', () => {
         closeNotifDropdown();
         showView('events');
@@ -4132,7 +4138,7 @@ async function renderPlayerDash() {
 
   const name = currentUser.apodo || currentUser.nombre || 'Jugadora';
   if(pdName) pdName.textContent = 'Hola, ' + name + ' 👋';
-  if(pdRole) pdRole.textContent = currentUser.role==='admin' ? '? Administradora' : currentUser.role==='capitana' ? '??? Capitana ? #'+(currentUser.numero_camiseta||'?') : '? Jugadora ? #'+(currentUser.numero_camiseta||'?');
+  if(pdRole) pdRole.textContent = currentUser.role==='admin' ? 'Administradora' : currentUser.role==='capitana' ? 'Capitana' + (currentUser.numero_camiseta ? ' #' + currentUser.numero_camiseta : '') : 'Jugadora' + (currentUser.numero_camiseta ? ' #' + currentUser.numero_camiseta : '');
   card.style.display = '';
   if(pdItems) pdItems.innerHTML = '<div style="font-size:12px;opacity:.7">Cargando tus pendientes…</div>';
 
@@ -4151,10 +4157,10 @@ async function renderPlayerDash() {
     const pendingAtt = (attRows||[]).filter(a=>a.events);
     if(pendingAtt.length) {
       items.push({
-        icon:'?', title: pendingAtt.length + ' evento'+(pendingAtt.length>1?'s':'')+' sin confirmar',
+        icon:'&#x23F3;', title: pendingAtt.length + ' evento'+(pendingAtt.length>1?'s':'')+' sin confirmar',
         sub: pendingAtt.map(a=>{
           const d=new Date(a.events.datetime);
-          return a.events.title+' ? '+d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
+          return a.events.title+' | '+d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
         }).slice(0,3).join(' | '),
         badge: pendingAtt.length,
         action: () => {
@@ -4226,12 +4232,12 @@ async function loadNotifications() {
     updateBell([]);
     return;
   }
-  if(canManageAttendance()) {
-    await loadNotificationsAdmin();
+  if(!supa || !IS_CONNECTED) return;
+  if(!currentUser.player_id){
+    if(canManageAttendance()) await loadNotificationsAdmin();
+    else updateBell([]);
     return;
   }
-  // Jugadora: show only HER pending attendance
-  if(!supa || !IS_CONNECTED) return;
   try {
     const now = new Date();
     const future = new Date(now); future.setDate(future.getDate()+14);
@@ -4256,7 +4262,6 @@ async function loadNotifications() {
   } catch(err){ console.warn('loadNotifications player', err); }
 }
 
-// ── Admin panel: manage player_users ─────────────────────
 async function openUserManagement() {
   if(!currentUser || currentUser.role !== 'admin') return;
   // Load all players without accounts and show management UI
