@@ -3305,9 +3305,14 @@ function buildSessionUser(playerUser) {
 // ── Login flow ────────────────────────────────────────────
 let loginFoundUser = null; // player_user row found in step 1
 let registerablePlayers = [];
+let resettableUsers = [];
 
 function setRegisterError(message=''){
   const err = document.getElementById('registerErr');
+  if(err) err.textContent = message;
+}
+function setResetError(message=''){
+  const err = document.getElementById('resetErr');
   if(err) err.textContent = message;
 }
 function resetRegisterForm(){
@@ -3320,21 +3325,39 @@ function resetRegisterForm(){
   document.getElementById('registerSubmitBtn').textContent = 'Crear acceso';
   setRegisterError('');
 }
+function resetResetForm(){
+  document.getElementById('resetPlayer').value = '';
+  document.getElementById('resetBirth').value = '';
+  document.getElementById('resetPwd').value = '';
+  document.getElementById('resetPwd2').value = '';
+  document.getElementById('resetSubmitBtn').disabled = false;
+  document.getElementById('resetSubmitBtn').textContent = 'Actualizar contrasena';
+  const hint = document.getElementById('resetUsernameHint');
+  if(hint){
+    hint.textContent = '';
+    hint.style.display = 'none';
+  }
+  setResetError('');
+}
 function returnToLoginStep1(){
   document.getElementById('loginStep2').style.display = 'none';
   document.getElementById('loginRegisterStep').style.display = 'none';
+  document.getElementById('loginResetStep').style.display = 'none';
   document.getElementById('loginStep1').style.display = '';
   document.getElementById('loginPwd').value = '';
   document.getElementById('loginErr1').textContent = '';
   document.getElementById('loginErr2').textContent = '';
   document.getElementById('loginNextBtn').textContent = 'Continuar';
+  document.getElementById('loginSubmitBtn').textContent = 'Entrar';
   loginFoundUser = null;
   resetRegisterForm();
+  resetResetForm();
   setTimeout(() => document.getElementById('loginUser')?.focus(), 50);
 }
 async function openRegisterStep(){
   document.getElementById('loginStep1').style.display = 'none';
   document.getElementById('loginStep2').style.display = 'none';
+  document.getElementById('loginResetStep').style.display = 'none';
   document.getElementById('loginRegisterStep').style.display = '';
   resetRegisterForm();
   const select = document.getElementById('registerPlayer');
@@ -3351,6 +3374,31 @@ async function openRegisterStep(){
   await loadRegisterablePlayers();
   document.getElementById('registerPlayer')?.focus();
 }
+async function openResetStep(){
+  document.getElementById('loginStep1').style.display = 'none';
+  document.getElementById('loginStep2').style.display = 'none';
+  document.getElementById('loginRegisterStep').style.display = 'none';
+  document.getElementById('loginResetStep').style.display = '';
+  resetResetForm();
+  const select = document.getElementById('resetPlayer');
+  const submit = document.getElementById('resetSubmitBtn');
+  if(select){
+    select.innerHTML = '<option value="">Cargando jugadoras...</option>';
+    select.disabled = true;
+  }
+  if(submit){
+    submit.disabled = true;
+    submit.textContent = 'Preparando...';
+  }
+  setResetError(IS_CONNECTING || !IS_CONNECTED ? 'Conectando con la app...' : '');
+  await loadResettableUsers();
+  prefillResetUser();
+  if(document.getElementById('resetPlayer')?.value){
+    document.getElementById('resetBirth')?.focus();
+  } else {
+    document.getElementById('resetPlayer')?.focus();
+  }
+}
 function getRegisterPlayerLabel(player){
   const base = player.apodo || player.nombre || 'Jugadora';
   const details = [];
@@ -3358,11 +3406,43 @@ function getRegisterPlayerLabel(player){
   if(player.numero_camiseta) details.push('#' + player.numero_camiseta);
   return details.length ? base + ' - ' + details.join(' ') : base;
 }
+function getResetPlayerLabel(playerUser){
+  const player = playerUser?.players || {};
+  const base = player.apodo || player.nombre || playerUser?.username || 'Jugadora';
+  const details = [];
+  if(player.nombre && player.apodo && player.nombre !== player.apodo) details.push(player.nombre);
+  if(player.numero_camiseta) details.push('#' + player.numero_camiseta);
+  if(playerUser?.username) details.push('@' + playerUser.username);
+  return details.length ? base + ' - ' + details.join(' | ') : base;
+}
 function suggestUsername(player){
   const source = String(player.apodo || player.nombre || 'jugadora').toLowerCase();
   const base = source.replace(/[^a-z0-9]+/g, '').slice(0, 12) || 'jugadora';
   return player.numero_camiseta ? (base + player.numero_camiseta).slice(0, 18) : base;
 }
+function updateResetUsernameHint(){
+  const hint = document.getElementById('resetUsernameHint');
+  const userId = document.getElementById('resetPlayer')?.value;
+  if(!hint) return;
+  const playerUser = resettableUsers.find(item => String(item.id) === String(userId));
+  if(playerUser?.username){
+    hint.textContent = 'Tu usuario es @' + playerUser.username;
+    hint.style.display = '';
+    return;
+  }
+  hint.textContent = '';
+  hint.style.display = 'none';
+}
+function prefillResetUser(){
+  const select = document.getElementById('resetPlayer');
+  if(!select || !resettableUsers.length) return;
+  const typedUsername = (document.getElementById('loginUser')?.value || '').trim().toLowerCase();
+  let preferred = loginFoundUser ? resettableUsers.find(item => String(item.id) === String(loginFoundUser.id)) : null;
+  if(!preferred && typedUsername) preferred = resettableUsers.find(item => String(item.username || '').toLowerCase() === typedUsername);
+  if(preferred) select.value = String(preferred.id);
+  updateResetUsernameHint();
+}
+
 async function loadRegisterablePlayers(){
   const select = document.getElementById('registerPlayer');
   const submit = document.getElementById('registerSubmitBtn');
@@ -3411,6 +3491,52 @@ async function loadRegisterablePlayers(){
     setRegisterError('No se pudo cargar la lista de jugadoras.');
   }
 }
+async function loadResettableUsers(){
+  const select = document.getElementById('resetPlayer');
+  const submit = document.getElementById('resetSubmitBtn');
+  if(!select || !submit) return;
+  select.innerHTML = '<option value="">Cargando jugadoras...</option>';
+  select.disabled = true;
+  submit.disabled = true;
+  setResetError('');
+  if(!supa || !IS_CONNECTED){
+    select.innerHTML = '<option value="">Conectando...</option>';
+    setResetError('Conectando con la app...');
+    const ready = await ensureSupabaseReady();
+    if(!ready){
+      select.innerHTML = '<option value="">Sin conexion</option>';
+      setResetError('No se pudo conectar. Intenta de nuevo en unos segundos.');
+      submit.textContent = 'Actualizar contrasena';
+      return;
+    }
+  }
+  try {
+    const { data:users, error:usersError } = await supa.from('player_users')
+      .select('id,player_id,username,active,players(id,apodo,nombre,numero_camiseta,fecha_nacimiento,estado,foto)')
+      .eq('active', true)
+      .order('username', { ascending:true });
+    if(usersError) throw usersError;
+    resettableUsers = (users || []).filter(item => item?.players && item.players.estado === 'activo');
+    submit.textContent = 'Actualizar contrasena';
+    select.innerHTML = '<option value="">Selecciona tu nombre</option>';
+    resettableUsers.forEach(playerUser => {
+      const option = document.createElement('option');
+      option.value = playerUser.id;
+      option.textContent = getResetPlayerLabel(playerUser);
+      select.appendChild(option);
+    });
+    const hasUsers = resettableUsers.length > 0;
+    select.disabled = !hasUsers;
+    submit.disabled = !hasUsers;
+    if(!hasUsers) setResetError('No hay cuentas disponibles para recuperar.');
+  } catch(err) {
+    console.warn('loadResettableUsers', err);
+    submit.textContent = 'Actualizar contrasena';
+    select.innerHTML = '<option value="">No se pudo cargar la lista</option>';
+    setResetError('No se pudo cargar la lista de jugadoras.');
+  }
+}
+
 async function completeLoginFromPlayerUser(playerUser){
   const user = buildSessionUser(playerUser);
   saveSession(user);
@@ -3509,17 +3635,76 @@ async function registerPlayerAccess(){
   }
 }
 
+async function resetPlayerPassword(){
+  const playerUserId = document.getElementById('resetPlayer').value;
+  const birthDate = document.getElementById('resetBirth').value;
+  const password = document.getElementById('resetPwd').value || '';
+  const password2 = document.getElementById('resetPwd2').value || '';
+  const submit = document.getElementById('resetSubmitBtn');
+  const playerUser = resettableUsers.find(item => String(item.id) === String(playerUserId));
+  const player = playerUser?.players || null;
+
+  if(!playerUser || !player){ setResetError('Selecciona tu jugadora.'); return; }
+  if(!player.fecha_nacimiento){ setResetError('Tu ficha no tiene fecha de nacimiento. Pide ayuda a la capitana.'); return; }
+  if(!birthDate){ setResetError('Ingresa tu fecha de nacimiento.'); return; }
+  if((player.fecha_nacimiento || '').slice(0,10) != birthDate){ setResetError('La fecha de nacimiento no coincide.'); return; }
+  if(password.length < 6){ setResetError('La contrasena debe tener al menos 6 caracteres.'); return; }
+  if(password != password2){ setResetError('Las contrasenas no coinciden.'); return; }
+  if(!supa || !IS_CONNECTED){
+    setResetError('Conectando con la app...');
+    const ready = await ensureSupabaseReady();
+    if(!ready){
+      setResetError('No se pudo conectar. Intenta de nuevo.');
+      return;
+    }
+  }
+
+  submit.disabled = true;
+  submit.textContent = 'Actualizando...';
+  setResetError('');
+
+  try {
+    const { error:updateError } = await supa.from('player_users')
+      .update({ pwd_hash: await sha256(password) })
+      .eq('id', playerUser.id);
+    if(updateError) throw updateError;
+
+    if(supa?.auth) supa.auth.signOut().catch(() => {});
+    returnToLoginStep1();
+    document.getElementById('loginUser').value = playerUser.username || '';
+    document.getElementById('loginErr1').textContent = playerUser.username
+      ? 'Contrasena actualizada. Tu usuario es @' + playerUser.username
+      : 'Contrasena actualizada. Ya puedes ingresar.';
+    showToast(playerUser.username
+      ? 'Contrasena actualizada para @' + playerUser.username
+      : 'Contrasena actualizada con exito.');
+  } catch(err) {
+    console.warn('resetPlayerPassword', err);
+    setResetError('No se pudo actualizar la contrasena. Intenta de nuevo.');
+  } finally {
+    submit.disabled = false;
+    submit.textContent = 'Actualizar contrasena';
+  }
+}
+
 document.getElementById('loginRegisterOpenBtn')?.addEventListener('click', openRegisterStep);
+document.getElementById('loginResetOpenBtn')?.addEventListener('click', openResetStep);
+document.getElementById('loginResetFromPwdBtn')?.addEventListener('click', openResetStep);
 document.getElementById('registerBackBtn')?.addEventListener('click', returnToLoginStep1);
+document.getElementById('resetBackBtn')?.addEventListener('click', returnToLoginStep1);
 document.getElementById('loginBackBtn')?.addEventListener('click', returnToLoginStep1);
 document.getElementById('registerSubmitBtn')?.addEventListener('click', registerPlayerAccess);
+document.getElementById('resetSubmitBtn')?.addEventListener('click', resetPlayerPassword);
 document.getElementById('registerPwd2')?.addEventListener('keydown', e => { if(e.key==='Enter') registerPlayerAccess(); });
 document.getElementById('registerUser')?.addEventListener('keydown', e => { if(e.key==='Enter') registerPlayerAccess(); });
+document.getElementById('resetPwd2')?.addEventListener('keydown', e => { if(e.key==='Enter') resetPlayerPassword(); });
+document.getElementById('resetBirth')?.addEventListener('keydown', e => { if(e.key==='Enter') resetPlayerPassword(); });
 document.getElementById('registerPlayer')?.addEventListener('change', e => {
   const player = registerablePlayers.find(item => String(item.id) === String(e.target.value));
   const input = document.getElementById('registerUser');
   if(player && input && !input.value.trim()) input.value = suggestUsername(player);
 });
+document.getElementById('resetPlayer')?.addEventListener('change', updateResetUsernameHint);
 
 async function initAuth() {
 

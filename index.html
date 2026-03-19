@@ -38,6 +38,9 @@
       <button class="login-btn" id="loginNextBtn">Continuar</button>
       <button class="login-btn login-btn-secondary" id="loginRegisterOpenBtn" type="button">Crear mi usuario</button>
       <div class="login-hint">Si todavia no tienes acceso, registrate como jugadora activa.</div>
+      <div style="text-align:center;margin-top:8px">
+        <button style="background:none;border:none;font-size:12px;color:var(--blue);cursor:pointer;padding:4px 8px" id="loginResetOpenBtn" type="button">Olvide mi contrasena</button>
+      </div>
     </div>
     <div id="loginStep2" style="display:none">
       <div class="player-avatar-login" id="loginAvatar">?</div>
@@ -51,6 +54,9 @@
       <button class="login-btn" id="loginSubmitBtn">Entrar</button>
       <div style="text-align:center;margin-top:14px">
         <button style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;padding:4px 8px" id="loginBackBtn">&larr; Cambiar usuario</button>
+      </div>
+      <div style="text-align:center;margin-top:2px">
+        <button style="background:none;border:none;font-size:12px;color:var(--blue);cursor:pointer;padding:4px 8px" id="loginResetFromPwdBtn" type="button">Olvide mi contrasena</button>
       </div>
     </div>
     <div id="loginRegisterStep" style="display:none">
@@ -76,6 +82,30 @@
       <div class="login-hint">Solo disponible para jugadoras activas que aun no tengan cuenta.</div>
       <div style="text-align:center;margin-top:14px">
         <button style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;padding:4px 8px" id="registerBackBtn">&larr; Volver al ingreso</button>
+      </div>
+    </div>
+    <div id="loginResetStep" style="display:none">
+      <div class="login-logo">
+        <img src="Logo.webp" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover"/>
+        <div class="login-logo-text">Golden <span>Moms</span></div>
+      </div>
+      <div class="login-welcome">Recupera tu contrasena</div>
+      <label class="login-label" for="resetPlayer">Jugadora</label>
+      <select id="resetPlayer" class="login-input" autocomplete="off">
+        <option value="">Selecciona tu nombre</option>
+      </select>
+      <div class="login-hint" id="resetUsernameHint" style="margin-top:6px;margin-bottom:8px;display:none"></div>
+      <label class="login-label" for="resetBirth">Fecha de nacimiento</label>
+      <input id="resetBirth" class="login-input" type="date" autocomplete="bday"/>
+      <label class="login-label" for="resetPwd">Nueva contrasena</label>
+      <input id="resetPwd" class="login-input" type="password" placeholder="Minimo 6 caracteres" autocomplete="new-password"/>
+      <label class="login-label" for="resetPwd2">Confirmar contrasena</label>
+      <input id="resetPwd2" class="login-input" type="password" placeholder="Repite tu nueva contrasena" autocomplete="new-password"/>
+      <div class="login-err" id="resetErr"></div>
+      <button class="login-btn" id="resetSubmitBtn" type="button">Actualizar contrasena</button>
+      <div class="login-hint">Validamos tu fecha de nacimiento para proteger tu acceso.</div>
+      <div style="text-align:center;margin-top:14px">
+        <button style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;padding:4px 8px" id="resetBackBtn">&larr; Volver al ingreso</button>
       </div>
     </div>
   </div>
