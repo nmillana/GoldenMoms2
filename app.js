@@ -850,20 +850,39 @@ async function renderWeekEvents(){
   }
 }
 
+function createBirthAvatar(player, extraClass=''){
+  const classes = ['birth-avatar'];
+  if(player?.foto) classes.push('birth-avatar-photo');
+  if(extraClass) classes.push(extraClass);
+
+  if(player?.foto){
+    const img = document.createElement('img');
+    img.className = classes.join(' ');
+    img.src = player.foto;
+    img.alt = player.apodo || player.nombre || 'Jugadora';
+    img.loading = 'lazy';
+    return img;
+  }
+
+  const av = document.createElement('div');
+  av.className = classes.join(' ');
+  av.textContent = (player?.apodo || player?.nombre || '?')[0].toUpperCase();
+  return av;
+}
+
 async function renderBirthdays(){
   const upB=document.getElementById('upBirth');
   const birthTodayEl=document.getElementById('birthToday');
   const todayYMD=localDateYMD(new Date());
   upB.innerHTML=''; birthTodayEl.innerHTML='';
-  if(!supa||!IS_CONNECTED){ upB.innerHTML='<div class="empty-state">Sin conexión</div>'; return; }
+  if(!supa||!IS_CONNECTED){ upB.innerHTML='<div class="empty-state">Sin conexi?n</div>'; return; }
   try{
-    // Try view first; fallback to players table if view doesn't exist
     let vw = null;
     const { data:vwData, error:vwErr } = await supa.from('vw_upcoming_birthdays').select('*').order('proximo_cumple',{ascending:true}).limit(10);
-    if(!vwErr){ vw = vwData; }
-    else {
-      // Fallback: compute from players.fecha_nacimiento
-      const { data:pl } = await supa.from('players').select('id,apodo,nombre,fecha_nacimiento').eq('estado','activo').not('fecha_nacimiento','is',null);
+    if(!vwErr){
+      vw = vwData || [];
+    } else {
+      const { data:pl } = await supa.from('players').select('id,apodo,nombre,fecha_nacimiento,foto').eq('estado','activo').not('fecha_nacimiento','is',null);
       const today = new Date(); const todayMD = (today.getMonth()+1)*100+today.getDate();
       vw = (pl||[]).map(p=>{
         const bd = new Date(p.fecha_nacimiento+'T00:00:00');
@@ -874,39 +893,52 @@ async function renderBirthdays(){
         return { ...p, proximo_cumple: nextBday.toISOString().split('T')[0], edad: today.getFullYear()-bd.getFullYear()-(bMD>todayMD?1:0), days_ahead: daysAhead };
       }).sort((a,b)=>a.days_ahead-b.days_ahead).slice(0,10);
     }
+
+    const birthdayIds = [...new Set((vw || []).map(p => p?.id).filter(Boolean))];
+    if(birthdayIds.length && (vw || []).some(p => !p?.foto)){
+      const { data:photoRows, error:photoErr } = await supa.from('players').select('id,foto').in('id', birthdayIds);
+      if(!photoErr){
+        const photoMap = new Map((photoRows || []).map(row => [String(row.id), row.foto || '']));
+        vw = (vw || []).map(p => ({ ...p, foto: p?.foto || photoMap.get(String(p.id)) || '' }));
+      }
+    }
+
     const seen=new Set(); const uniq=[];
     for(const p of (vw||[])){ if(!seen.has(p.id)&&uniq.length<5){ seen.add(p.id); uniq.push(p); } }
     if(uniq.length){
       for(const p of uniq){
         const bd=safeDateOnly(p.proximo_cumple); if(!bd) continue;
         const item=document.createElement('div'); item.className='birth-item';
-        const av=document.createElement('div'); av.className='birth-avatar';
-        av.textContent=(p.apodo||p.nombre||'?')[0].toUpperCase(); item.appendChild(av);
+        item.appendChild(createBirthAvatar(p));
         const info=document.createElement('div');
-        const nm=document.createElement('div'); nm.className='birth-name'; nm.textContent=p.apodo||p.nombre||'—'; info.appendChild(nm);
+        const nm=document.createElement('div'); nm.className='birth-name'; nm.textContent=p.apodo||p.nombre||'?'; info.appendChild(nm);
         const dt=document.createElement('div'); dt.className='birth-date';
         dt.textContent=bd.toLocaleDateString('es-CL',{day:'2-digit',month:'short'}); info.appendChild(dt);
         item.appendChild(info);
         const isToday=localDateYMD(bd)===todayYMD;
-        if(isToday){ const b=document.createElement('div'); b.className='birth-today-badge'; b.textContent='¡Hoy! 🎂'; item.appendChild(b); }
+        if(isToday){ const b=document.createElement('div'); b.className='birth-today-badge'; b.textContent='?Hoy! ??'; item.appendChild(b); }
         upB.appendChild(item);
       }
       const todayList=uniq.filter(p=>p.proximo_cumple&&localDateYMD(safeDateOnly(p.proximo_cumple)||new Date(0))===todayYMD);
       if(todayList.length){
         birthTodayEl.innerHTML='';
         for(const p of todayList){
-          const item=document.createElement('div'); item.className='birth-item';
-          const av=document.createElement('div'); av.className='birth-avatar'; av.style.background='var(--lime)'; av.style.color='var(--navy)';
-          av.textContent=(p.apodo||p.nombre||'?')[0].toUpperCase(); item.appendChild(av);
+          const item=document.createElement('div'); item.className='birth-item birth-item-today';
+          item.appendChild(createBirthAvatar(p, 'birth-avatar-today'));
           const info=document.createElement('div');
-          const nm=document.createElement('div'); nm.className='birth-name'; nm.textContent=p.apodo||p.nombre||'—'; info.appendChild(nm);
-          if(p.edad){ const ag=document.createElement('div'); ag.className='birth-date'; ag.textContent=`${p.edad} años 🎉`; info.appendChild(ag); }
-          item.appendChild(info); birthTodayEl.appendChild(item);
+          const nm=document.createElement('div'); nm.className='birth-name'; nm.textContent=p.apodo||p.nombre||'?'; info.appendChild(nm);
+          const ag=document.createElement('div'); ag.className='birth-date';
+          ag.textContent = p.edad ? `${p.edad} a?os hoy ??` : 'Est? de cumplea?os hoy';
+          info.appendChild(ag);
+          item.appendChild(info);
+          const badge=document.createElement('div'); badge.className='birth-today-badge'; badge.textContent='?Hoy!';
+          item.appendChild(badge);
+          birthTodayEl.appendChild(item);
         }
-      } else { birthTodayEl.innerHTML='<div class="empty-state"><span class="empty-state-icon">🎂</span>Hoy no hay cumpleaños</div>'; }
+      } else { birthTodayEl.innerHTML='<div class="empty-state"><span class="empty-state-icon">??</span>Hoy no hay cumplea?os</div>'; }
     } else {
-      upB.innerHTML='<div class="empty-state"><span class="empty-state-icon">🎉</span>Sin datos</div>';
-      birthTodayEl.innerHTML='<div class="empty-state"><span class="empty-state-icon">🎂</span>Sin cumpleaños hoy</div>';
+      upB.innerHTML='<div class="empty-state"><span class="empty-state-icon">??</span>Sin datos</div>';
+      birthTodayEl.innerHTML='<div class="empty-state"><span class="empty-state-icon">??</span>Sin cumplea?os hoy</div>';
     }
   } catch(err){ console.warn('renderBirthdays', err); upB.innerHTML='<div class="empty-state">Error</div>'; }
 }

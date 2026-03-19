@@ -331,7 +331,26 @@ body.modal-open { overflow: hidden; }
   background: var(--lime-pale); border: 1.5px solid var(--lime-soft);
   color: var(--lime); font-family: var(--font-head); font-weight: 700; font-size: 13px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  overflow: hidden;
 }
+.birth-avatar-photo {
+  object-fit: cover;
+  background: var(--surface-3);
+  color: transparent;
+}
+.birth-avatar-today {
+  width: 56px; height: 56px;
+  border-width: 2px;
+  box-shadow: var(--sh-2);
+}
+.birth-item-today {
+  padding: 12px;
+  gap: 12px;
+  border-color: var(--lime-soft);
+  background: linear-gradient(135deg, var(--lime-pale), #fff);
+}
+.birth-item-today .birth-name { font-size: 14px; }
+.birth-item-today .birth-date { font-size: 12px; }
 .birth-name { font-weight: 600; font-size: 13px; color: var(--ink); }
 .birth-date { font-size: 11px; color: var(--muted); }
 .birth-today-badge {
