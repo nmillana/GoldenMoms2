@@ -14,11 +14,35 @@
 <link rel="apple-touch-icon" href="Logo.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+body.auth-loading{overflow:hidden}
+body.auth-loading>.top,
+body.auth-loading>main,
+body.auth-loading>.toast{visibility:hidden}
+#bootScreen{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:linear-gradient(160deg,#0f2a1a 0%,#1a4a2a 50%,#0d3320 100%);
+}
+#bootScreen[hidden]{display:none}
+</style>
 
 <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="auth-loading">
+<div id="bootScreen" aria-hidden="true">
+  <div class="boot-card">
+    <img src="Logo.webp" alt="" class="boot-logo"/>
+    <div class="boot-title">Golden <span>Moms</span></div>
+    <div class="boot-sub">Cargando acceso...</div>
+  </div>
+</div>
 <a class="skip-link" href="#appMain">Saltar al contenido</a>
 
 <!-- ══════════════════════════════════════════════════════

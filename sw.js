@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'gm-shell-v2';
+﻿const CACHE_NAME = 'gm-shell-v3';
 const APP_SHELL = [
   './',
   './index.html',

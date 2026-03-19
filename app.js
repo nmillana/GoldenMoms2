@@ -100,6 +100,11 @@ function updateConnStatus(){
     el.className = 'offline';
   }
 }
+function setAuthLoading(isLoading){
+  document.body?.classList.toggle('auth-loading', isLoading);
+  const bootScreen = document.getElementById('bootScreen');
+  if(bootScreen) bootScreen.hidden = !isLoading;
+}
 
 function escapeHTML(str){
   if(str == null) return '';
@@ -1128,6 +1133,8 @@ function showView(v){
    INIT
    ══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async () => {
+  setAuthLoading(true);
+  try {
   syncTopbarOffset();
   window.addEventListener('resize', syncTopbarOffset);
   window.addEventListener('orientationchange', syncTopbarOffset);
@@ -1212,6 +1219,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const initialView = persisted || 'dash';
   activateNavTab(initialView);
   syncTabPanels(initialView);
+  } catch(err) {
+    console.error('startup', err);
+    if(!currentUser) showLoginScreen();
+  } finally {
+    setAuthLoading(false);
+    syncTopbarOffset();
+  }
 });
 
 /* ═══════════════════════════════════════════════════════════
