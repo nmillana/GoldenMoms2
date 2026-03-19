@@ -75,6 +75,20 @@ body   {
 }
 a      { color: inherit; text-decoration: none; }
 button { font-family: var(--font-body); cursor: pointer; }
+[hidden] { display: none !important; }
+body.modal-open { overflow: hidden; }
+.skip-link {
+  position: fixed; top: 12px; left: 12px; z-index: 1200;
+  background: var(--navy); color: #fff;
+  padding: 10px 14px; border-radius: var(--r-sm);
+  transform: translateY(-160%); transition: transform 0.18s ease;
+  box-shadow: var(--sh-3);
+}
+.skip-link:focus { transform: translateY(0); }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
 
 /* ── Campana de notificaciones ──────────────────────── */
 .bell-btn {
@@ -166,6 +180,7 @@ button { font-family: var(--font-body); cursor: pointer; }
 .top-right { display: flex; align-items: center; gap: 14px; }
 
 #connStatus { font-size: 11px; font-weight: 600; color: var(--muted-2); }
+#connStatus.connecting { color: var(--blue); }
 #connStatus.online  { color: var(--win); }
 #connStatus.offline { color: var(--danger); }
 
@@ -214,7 +229,7 @@ button { font-family: var(--font-body); cursor: pointer; }
 }
 
 /* ── Layout ──────────────────────────────────────────── */
-.container { max-width: 1100px; margin: 0 auto; padding: 22px 16px 48px; }
+.container { display:block; max-width: 1100px; margin: 0 auto; padding: 22px 16px 48px; }
 .section-header {
   display: flex; align-items: flex-end;
   justify-content: space-between; margin-bottom: 18px; gap: 12px;
@@ -792,7 +807,8 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 .treas-lock-title { font-family:var(--font-head); font-weight:800; font-size:17px; color:var(--ink); margin-bottom:4px; }
 .treas-lock-sub   { font-size:12px; color:var(--muted); margin-bottom:18px; }
 .treas-lock-input { width:100%; padding:10px 14px; border:1.5px solid var(--line-2); border-radius:var(--r-sm);
-  font-size:15px; text-align:center; letter-spacing:3px; outline:none; margin-bottom:12px; }
+  font-size:15px; text-align:left; letter-spacing:0; outline:none; margin-bottom:12px; }
+.treas-lock-pass { text-align:center; letter-spacing:2px; }
 .treas-lock-input:focus { border-color:var(--lime); }
 .treas-lock-err { font-size:12px; color:var(--danger); margin-bottom:10px; min-height:16px; }
 
@@ -885,7 +901,8 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   font-size: 13px; font-weight: 600;
   box-shadow: var(--sh-3); z-index: 9999;
   transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s;
-  opacity: 0; pointer-events: none; white-space: nowrap;
+  opacity: 0; pointer-events: none; white-space: normal; text-align: center;
+  width: min(92vw, 460px);
 }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
@@ -900,7 +917,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 }
 .login-card {
   background: #fff; border-radius: 20px; padding: 36px 32px;
-  width: 100%; max-width: 360px;
+  width: 100%; max-width: 400px;
   box-shadow: 0 24px 64px rgba(0,0,0,.35);
   animation: loginFadeIn .4s ease;
 }
@@ -919,6 +936,9 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 .login-btn { width:100%; padding:13px; background:var(--lime); border:none; border-radius:var(--r-sm); font-family:var(--font-head); font-size:15px; font-weight:800; color:#fff; cursor:pointer; margin-top:4px; letter-spacing:.3px; }
 .login-btn:hover { background:#65a30d; }
 .login-btn:active { transform:scale(.98); }
+.login-btn-secondary { background:#fff; color:var(--ink); border:1.5px solid var(--line-2); margin-top:10px; }
+.login-btn-secondary:hover { background:var(--surface-2); color:var(--ink); }
+#loginRegisterStep .login-input { margin-bottom:10px; }
 .login-err { font-size:12px; color:var(--danger); text-align:center; min-height:18px; margin-top:-6px; margin-bottom:6px; }
 .login-hint { font-size:11px; color:var(--muted-2); text-align:center; margin-top:14px; }
 .player-avatar-login {
@@ -935,6 +955,7 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   background:var(--surface-2); border:1px solid var(--line-2);
   border-radius:99px; padding:3px 10px 3px 4px;
   font-size:12px; font-weight:600; color:var(--ink); cursor:pointer;
+  appearance:none;
 }
 .user-pill-av {
   width:24px; height:24px; border-radius:50%; background:var(--lime);

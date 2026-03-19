@@ -25,53 +25,82 @@ const SUPA_CONFIG = {
 };
 let supa = null;
 let IS_CONNECTED = false;
+let IS_CONNECTING = false;
+let supaInitPromise = null;
 
 async function initSupabase(timeoutMs = 8000){
-  try{
-    if(typeof createClient === 'function'){
-      supa = createClient(SUPA_CONFIG.url, SUPA_CONFIG.key);
-    } else if(window.supabase?.createClient){
-      supa = window.supabase.createClient(SUPA_CONFIG.url, SUPA_CONFIG.key);
-    } else {
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js';
-        s.async = true;
-        let done = false;
-        const to = setTimeout(() => { if(!done){ done=true; reject(new Error('timeout')); }}, timeoutMs);
-        s.onload  = () => { if(done) return; done=true; clearTimeout(to); resolve(); };
-        s.onerror = () => { if(done) return; done=true; clearTimeout(to); reject(new Error('load error')); };
-        document.head.appendChild(s);
-      });
-      if(typeof createClient === 'function') supa = createClient(SUPA_CONFIG.url, SUPA_CONFIG.key);
-      else if(window.supabase?.createClient) supa = window.supabase.createClient(SUPA_CONFIG.url, SUPA_CONFIG.key);
-    }
-    const test = await supa.from('events').select('id').limit(1);
-    IS_CONNECTED = !test?.error;
-    if(test?.error) console.warn('Supabase test error:', test.error);
-  } catch(err){
-    console.error('initSupabase:', err);
-    supa = null; IS_CONNECTED = false;
-  }
+  if(supaInitPromise) return supaInitPromise;
+  IS_CONNECTING = true;
   updateConnStatus();
+  supaInitPromise = (async () => {
+    try{
+      if(typeof createClient === 'function'){
+        supa = createClient(SUPA_CONFIG.url, SUPA_CONFIG.key);
+      } else if(window.supabase?.createClient){
+        supa = window.supabase.createClient(SUPA_CONFIG.url, SUPA_CONFIG.key);
+      } else {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js';
+          s.async = true;
+          let done = false;
+          const to = setTimeout(() => { if(!done){ done=true; reject(new Error('timeout')); }}, timeoutMs);
+          s.onload  = () => { if(done) return; done=true; clearTimeout(to); resolve(); };
+          s.onerror = () => { if(done) return; done=true; clearTimeout(to); reject(new Error('load error')); };
+          document.head.appendChild(s);
+        });
+        if(typeof createClient === 'function') supa = createClient(SUPA_CONFIG.url, SUPA_CONFIG.key);
+        else if(window.supabase?.createClient) supa = window.supabase.createClient(SUPA_CONFIG.url, SUPA_CONFIG.key);
+      }
+      const test = await supa.from('events').select('id').limit(1);
+      IS_CONNECTED = !test?.error;
+      if(test?.error) console.warn('Supabase test error:', test.error);
+    } catch(err){
+      console.error('initSupabase:', err);
+      supa = null;
+      IS_CONNECTED = false;
+    } finally {
+      IS_CONNECTING = false;
+      updateConnStatus();
+      supaInitPromise = null;
+    }
+    return IS_CONNECTED;
+  })();
+  return supaInitPromise;
+}
 
+async function ensureSupabaseReady(timeoutMs = 8000){
+  if(supa && IS_CONNECTED) return true;
+  const deadline = Date.now() + timeoutMs;
+  while(Date.now() < deadline){
+    if(supa && IS_CONNECTED) return true;
+    if(!supaInitPromise) initSupabase(timeoutMs).catch(() => {});
+    await new Promise(resolve => setTimeout(resolve, 350));
+  }
+  if(supa && IS_CONNECTED) return true;
+  if(!supaInitPromise){
+    try { await initSupabase(timeoutMs); } catch(err) {}
+  }
+  return !!(supa && IS_CONNECTED);
 }
 
 function updateConnStatus(){
   const el = document.getElementById('connStatus');
   if(!el) return;
+  if(IS_CONNECTING){
+    el.textContent = '? Conectando...';
+    el.className = 'connecting';
+    return;
+  }
   if(IS_CONNECTED){
-    el.textContent = '● Conectado';
+    el.textContent = '? Conectado';
     el.className = 'online';
   } else {
-    el.textContent = '● Sin conexión';
+    el.textContent = '? Sin conexi?n';
     el.className = 'offline';
   }
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SEGURIDAD & HELPERS
-   ══════════════════════════════════════════════════════════ */
 function escapeHTML(str){
   if(str == null) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -116,6 +145,139 @@ function localDateYMD(d){
   const D = new Date(d);
   return `${D.getFullYear()}-${pad(D.getMonth()+1)}-${pad(D.getDate())}`;
 }
+
+let pendingAttendanceLinkId = null;
+const FOCUSABLE_SELECTOR = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+function getDialogElement(backdrop){
+  return backdrop?.querySelector('[role="dialog"]') || backdrop?.querySelector('.modal, .modal-wide') || backdrop;
+}
+function getFocusableElements(container){
+  return [...(container?.querySelectorAll(FOCUSABLE_SELECTOR) || [])].filter(el => {
+    if(!(el instanceof HTMLElement)) return false;
+    if(el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true') return false;
+    return el.offsetParent !== null || el === document.activeElement;
+  });
+}
+function openDialog(backdrop, focusTarget){
+  if(!backdrop) return;
+  const dialog = getDialogElement(backdrop);
+  if(dialog && !dialog.hasAttribute('tabindex')) dialog.tabIndex = -1;
+  backdrop.__lastFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  backdrop.style.display = 'flex';
+  backdrop.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+  const target = focusTarget || getFocusableElements(dialog)[0] || dialog;
+  requestAnimationFrame(() => {
+    if(target && typeof target.focus === 'function') target.focus();
+  });
+}
+function closeDialog(backdrop){
+  if(!backdrop) return;
+  backdrop.style.display = 'none';
+  backdrop.setAttribute('aria-hidden', 'true');
+  if(!document.querySelector('.modal-bg[aria-hidden="false"]')) document.body.classList.remove('modal-open');
+  const lastFocus = backdrop.__lastFocusEl;
+  backdrop.__lastFocusEl = null;
+  if(lastFocus && document.contains(lastFocus) && typeof lastFocus.focus === 'function') lastFocus.focus();
+}
+function trapDialogFocus(backdrop, event){
+  const dialog = getDialogElement(backdrop);
+  const focusable = getFocusableElements(dialog);
+  if(!focusable.length){
+    event.preventDefault();
+    if(dialog && typeof dialog.focus === 'function') dialog.focus();
+    return;
+  }
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if(event.shiftKey && document.activeElement === first){
+    event.preventDefault();
+    last.focus();
+    return;
+  }
+  if(!event.shiftKey && document.activeElement === last){
+    event.preventDefault();
+    first.focus();
+  }
+}
+function setBellExpanded(isOpen){
+  document.getElementById('bellBtn')?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+function activateNavTab(view){
+  document.querySelectorAll('.nav .tab').forEach(btn => {
+    const isActive = btn.dataset.view === view;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    btn.setAttribute('tabindex', isActive ? '0' : '-1');
+  });
+  const mobileNav = document.getElementById('mobileNavSelect');
+  if(mobileNav && mobileNav.value !== view) mobileNav.value = view;
+}
+function syncTabPanels(view){
+  document.querySelectorAll('[role="tabpanel"]').forEach(panel => {
+    const isActive = panel.id === 'v-' + view;
+    panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+  });
+}
+async function ensureXlsxLib(){
+  if(window.XLSX) return window.XLSX;
+  await new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('No se pudo cargar XLSX'));
+    document.head.appendChild(script);
+  });
+  if(!window.XLSX) throw new Error('No se pudo cargar el exportador Excel');
+  return window.XLSX;
+}
+async function openAttendanceFromLink(eventId){
+  if(!eventId || !currentUser || !supa || !IS_CONNECTED) return false;
+  activateNavTab('events');
+  showView('events');
+  closeModal();
+  closePlayerModal();
+  closeNotifDropdown();
+  try {
+    const { data: ev, error } = await supa.from('events').select('*').eq('id', eventId).maybeSingle();
+    if(error || !ev){
+      showToast('No se encontro el evento');
+      return false;
+    }
+    setTimeout(() => openAttModal(ev), 250);
+    return true;
+  } catch(err) {
+    console.warn('Attendance deep link error:', err);
+    showToast('No se pudo abrir la asistencia');
+    return false;
+  }
+}
+
+document.addEventListener('keydown', event => {
+  const openBackdrop = document.querySelector('.modal-bg[aria-hidden="false"]');
+  if(!openBackdrop) return;
+  if(event.key === 'Escape'){
+    const closeHandlers = {
+      modalBg: closeModal,
+      playerModalBg: closePlayerModal,
+      attModalBg: closeAttModal,
+      resultModalBg: closeResultModal,
+      annModalBg: closeAnnModal,
+      feeModalBg: closeFeeModal,
+      treasEventModalBg: closeTreasEventModal,
+      expenseModalBg: closeExpenseModal
+    };
+    const closeHandler = closeHandlers[openBackdrop.id];
+    if(typeof closeHandler === 'function'){
+      event.preventDefault();
+      closeHandler();
+    }
+    return;
+  }
+  if(event.key === 'Tab') trapDialogFocus(openBackdrop, event);
+});
 
 /* ═══════════════════════════════════════════════════════════
    MODAL EVENTOS
@@ -260,14 +422,12 @@ function openModal(opts = {}){
     btnDelete.style.display = 'none';
     loadConvocatoria(f_team.value);
   }
-  modalBg.style.display='flex'; modalBg.setAttribute('aria-hidden','false');
-  requestAnimationFrame(() => f_title.focus());
+  openDialog(modalBg, f_title);
 }
-function closeModal(){ modalBg.style.display='none'; modalBg.setAttribute('aria-hidden','true'); editingEventId=null; }
+function closeModal(){ closeDialog(modalBg); editingEventId=null; }
 
 f_team.addEventListener('change', () => { selectedPlayerIds=new Set(); loadConvocatoria(f_team.value); });
 modalBg.addEventListener('click', e => { if(e.target===modalBg) closeModal(); });
-document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeModal(); closePlayerModal(); } });
 btnCancel.addEventListener('click', closeModal);
 
 btnDelete.addEventListener('click', async () => {
@@ -351,9 +511,9 @@ function openPlayerModal(player){
   p_eq_pw.checked = equipos.includes(TEAMS.PW);
   p_img_preview.src = player?.foto || PHOTO_PLACEHOLDER;
   p_img_preview.alt = escapeHTML(player?.apodo||player?.nombre||'Jugadora');
-  playerModalBg.style.display='flex'; playerModalBg.setAttribute('aria-hidden','false'); p_nombre.focus();
+  openDialog(playerModalBg, p_nombre);
 }
-function closePlayerModal(){ playerModalBg.style.display='none'; playerModalBg.setAttribute('aria-hidden','true'); editingPlayerId=null; }
+function closePlayerModal(){ closeDialog(playerModalBg); editingPlayerId=null; }
 
 playerModalBg.addEventListener('click', e => { if(e.target===playerModalBg) closePlayerModal(); });
 document.getElementById('btnCancelPlayer').addEventListener('click', closePlayerModal);
@@ -870,15 +1030,15 @@ document.getElementById('btnNewPlayer').addEventListener('click', ()=>openPlayer
    ROUTING
    ══════════════════════════════════════════════════════════ */
 function showView(v){
+  activateNavTab(v);
   for(const id of ['dash','events','roster','matches','stats','board','fees']){
     const el=document.getElementById('v-'+id);
     if(el){ el.style.display='none'; el.classList.remove('view-enter'); }
   }
+  syncTabPanels(v);
   const target=document.getElementById('v-'+v);
   if(target){ target.style.display='block'; requestAnimationFrame(()=>target.classList.add('view-enter')); }
-  // Keep mobile dropdown in sync
-  const mSel = document.getElementById('mobileNavSelect');
-  if(mSel && mSel.value !== v) mSel.value = v;
+  if(v !== 'fees') hideTreasLock();
   if(v==='dash')    { renderDash(); loadNotifications(); if(currentUser) renderPlayerDash(); }
   if(v==='events')  renderMonth();
   if(v==='matches') renderMatches();
@@ -886,9 +1046,14 @@ function showView(v){
   if(v==='stats')   renderStats();
   if(v==='board')   renderBoard();
   if(v==='fees'){
-    renderFees();
-    if(checkTreasAuth()){ hideTreasLock(); renderTreasKPIs(); renderExpenses(); }
-    else showTreasLock();
+    if(checkTreasAuth()){
+      hideTreasLock();
+      renderFees();
+      renderTreasKPIs();
+      renderExpenses();
+    } else {
+      showTreasLock();
+    }
   }
 }
 
@@ -896,69 +1061,86 @@ function showView(v){
    INIT
    ══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async () => {
-  await initSupabase();
-  // Mobile dropdown navigation
-  document.getElementById('mobileNavSelect')?.addEventListener('change', e => {
-    showView(e.target.value);
+  const loginLogoImg = document.getElementById('loginLogoImg');
+  if(loginLogoImg){
+    loginLogoImg.addEventListener('error', () => { loginLogoImg.hidden = true; });
+  }
+  document.getElementById('userPill')?.addEventListener('click', showLogoutMenu);
+  document.getElementById('treasUserInput')?.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      document.getElementById('treasPwdInput')?.focus();
+    }
   });
-
-  document.querySelectorAll('.nav .tab').forEach(btn => {
+  document.querySelectorAll('[data-stand-tab]').forEach(btn => {
     btn.setAttribute('role','tab');
     btn.setAttribute('aria-selected', btn.classList.contains('active') ? 'true' : 'false');
+    btn.addEventListener('click', () => switchStandTab(Number(btn.dataset.standTab)));
+  });
+
+  await initSupabase();
+
+  document.getElementById('mobileNavSelect')?.addEventListener('change', e => {
+    const view = e.target.value;
+    try{ localStorage.setItem('gm_view', view); } catch(e){}
+    showView(view);
+  });
+
+  const navTabs = [...document.querySelectorAll('.nav .tab')];
+  navTabs.forEach((btn, index) => {
+    btn.setAttribute('role','tab');
+    btn.setAttribute('aria-selected', btn.classList.contains('active') ? 'true' : 'false');
+    btn.setAttribute('tabindex', btn.classList.contains('active') ? '0' : '-1');
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav .tab').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected','true');
-      const view=btn.dataset.view;
-      try{ localStorage.setItem('gm_view',view); } catch(e){}
+      const view = btn.dataset.view;
+      try{ localStorage.setItem('gm_view', view); } catch(e){}
       showView(view);
+    });
+    btn.addEventListener('keydown', e => {
+      if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) return;
+      e.preventDefault();
+      if(e.key === 'Home'){ navTabs[0]?.focus(); return; }
+      if(e.key === 'End'){ navTabs[navTabs.length - 1]?.focus(); return; }
+      const nextIndex = e.key === 'ArrowRight'
+        ? (index + 1) % navTabs.length
+        : (index - 1 + navTabs.length) % navTabs.length;
+      navTabs[nextIndex]?.focus();
     });
   });
 
-  // Check for deep link: ?att=EVENT_ID → open attendance modal directly
-  const urlParams = new URLSearchParams(window.location.search);
-  const attParam  = urlParams.get('att');
-
-  if(attParam && supa && IS_CONNECTED) {
-    // Navigate to events view first
-    document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
-    const evTab = document.querySelector('.nav .tab[data-view="events"]');
-    if(evTab) evTab.classList.add('active');
-    showView('events');
-    closeModal(); closePlayerModal();
-
-    // Fetch the event and open attendance modal
-    try {
-      const { data: ev, error } = await supa.from('events').select('*').eq('id', attParam).maybeSingle();
-      if(ev && !error) {
-        // Small delay to let the calendar render first
-        setTimeout(() => openAttModal(ev), 350);
-      } else {
-        showToast('⚠️ No se encontró el evento');
-        const persisted=(()=>{ try{ return localStorage.getItem('gm_view'); } catch(e){ return null; } })();
-        showView(persisted||'dash');
-      }
-    } catch(err) {
-      console.warn('Deep link error:', err);
-    }
-    // Clean URL without reloading
+  const persisted = (() => { try{ return localStorage.getItem('gm_view'); } catch(e){ return null; } })();
+  pendingAttendanceLinkId = new URLSearchParams(window.location.search).get('att');
+  if(pendingAttendanceLinkId){
     history.replaceState({}, '', window.location.pathname);
-  } else {
-    const persisted=(()=>{ try{ return localStorage.getItem('gm_view'); } catch(e){ return null; } })();
-    const initialView=persisted||'dash';
-    document.querySelectorAll('.nav .tab').forEach(b=>b.classList.remove('active'));
-    const toActivate=document.querySelector(`.nav .tab[data-view="${initialView}"]`);
-    if(toActivate) toActivate.classList.add('active');
-    await initAuth();
-    if(currentUser) {
-      updateUserUI();
-      addAdminControls();
+  }
+
+  await initAuth();
+  closeModal();
+  closePlayerModal();
+  closeAttModal();
+  closeResultModal();
+  closeAnnModal();
+  closeFeeModal();
+  closeTreasEventModal();
+  closeExpenseModal();
+
+  if(currentUser) {
+    updateUserUI();
+    addAdminControls();
+    if(pendingAttendanceLinkId){
+      const eventId = pendingAttendanceLinkId;
+      pendingAttendanceLinkId = null;
+      await openAttendanceFromLink(eventId);
+    } else {
       showView('dash');
       renderPlayerDash();
     }
-    closeModal();
-    closePlayerModal();
+    return;
   }
+
+  const initialView = persisted || 'dash';
+  activateNavTab(initialView);
+  syncTabPanels(initialView);
 });
 
 /* ═══════════════════════════════════════════════════════════
@@ -983,7 +1165,7 @@ function openAttModal(event) {
     (d ? d.toLocaleString('es-CL',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '') +
     (event.team ? ' · ' + event.team : '');
 
-  attModalBg.style.display = 'flex';
+  openDialog(attModalBg, document.getElementById('btnSaveAtt'));
   loadAttendanceForEvent(event.id).then(() => {
     // attStatuses already loaded from DB in loadAttendanceForEvent
     // Only fill missing ones from selectedPlayerIds
@@ -1075,12 +1257,13 @@ function updateAttCounter(){
 }
 
 const attModalBg = document.getElementById('attModalBg');
-document.getElementById('btnCloseAtt').addEventListener('click', ()=>{
-  attModalBg.style.display='none';
+function closeAttModal(){
+  closeDialog(attModalBg);
   const sb=document.getElementById('btnShareAtt'); if(sb) sb.style.display='none';
-  const gb=document.getElementById('btnSaveAtt'); if(gb){ gb.disabled=false; gb.textContent='💾 Guardar'; gb.classList.remove('p'); }
-});
-attModalBg.addEventListener('click', e=>{ if(e.target===attModalBg) attModalBg.style.display='none'; });
+  const gb=document.getElementById('btnSaveAtt'); if(gb){ gb.disabled=false; gb.textContent='?? Guardar'; gb.classList.remove('p'); }
+}
+document.getElementById('btnCloseAtt').addEventListener('click', closeAttModal);
+attModalBg.addEventListener('click', e=>{ if(e.target===attModalBg) closeAttModal(); });
 
 // Stores the last built WA message for the share button
 let attWaMsg = '';
@@ -1130,7 +1313,7 @@ document.getElementById('btnSaveAtt').addEventListener('click', async ()=>{
     shareBtn.onclick = (e) => {
       e.preventDefault();
       navigator.share({ text: attWaMsg })
-        .then(() => { attModalBg.style.display='none'; })
+        .then(() => { closeAttModal(); })
         .catch(() => {});
     };
 
@@ -1168,7 +1351,7 @@ function openResultModal(event) {
     });
   } else { renderScorerGrid(event.team || TEAMS.GM); }
 
-  resultModalBg.style.display='flex';
+  openDialog(resultModalBg, document.getElementById('res_gf'));
 }
 
 async function renderScorerGrid(team) {
@@ -1195,8 +1378,11 @@ async function renderScorerGrid(team) {
 }
 
 const resultModalBg = document.getElementById('resultModalBg');
-document.getElementById('btnCloseResult').addEventListener('click',()=>{ resultModalBg.style.display='none'; });
-resultModalBg.addEventListener('click', e=>{ if(e.target===resultModalBg) resultModalBg.style.display='none'; });
+function closeResultModal(){
+  closeDialog(resultModalBg);
+}
+document.getElementById('btnCloseResult').addEventListener('click', closeResultModal);
+resultModalBg.addEventListener('click', e=>{ if(e.target===resultModalBg) closeResultModal(); });
 
 document.getElementById('btnSaveResult').addEventListener('click', async ()=>{
   if(!supa||!IS_CONNECTED){ alert('Sin conexión.'); return; }
@@ -1234,7 +1420,7 @@ document.getElementById('btnSaveResult').addEventListener('click', async ()=>{
       }]);
       if(error) throw error;
     }
-    resultModalBg.style.display='none';
+    closeResultModal();
     if(document.querySelector('.nav .tab.active')?.dataset.view==='matches') renderMatches();
     renderKPIs();
   } catch(err){ alert('Error: '+(err.message||err)); console.error(err); }
@@ -1361,10 +1547,9 @@ function openAnnModal(ann=null){
   document.getElementById('ann_team').value = ann?.team||'Golden Moms';
   document.getElementById('ann_pinned').checked = ann?.pinned||false;
   document.getElementById('btnDeleteAnn').style.display = ann ? '' : 'none';
-  annModalBg.style.display='flex';
-  document.getElementById('ann_title').focus();
+  openDialog(annModalBg, document.getElementById('ann_title'));
 }
-function closeAnnModal(){ annModalBg.style.display='none'; editingAnnId=null; }
+function closeAnnModal(){ closeDialog(annModalBg); editingAnnId=null; }
 
 document.getElementById('btnNewAnn').addEventListener('click',()=>openAnnModal());
 document.getElementById('btnCloseAnn').addEventListener('click',closeAnnModal);
@@ -1461,7 +1646,7 @@ async function openFeeModal(fee=null){
   // Load payment statuses
   const pgrid=document.getElementById('fee_payments_grid');
   pgrid.innerHTML='<div style="color:var(--muted);font-size:12px;padding:8px">Cargando jugadoras…</div>';
-  feeModalBg.style.display='flex';
+  openDialog(feeModalBg, document.getElementById('fee_title'));
 
   if(!supa||!IS_CONNECTED){ pgrid.innerHTML='<div style="color:var(--muted)">Sin conexión</div>'; return; }
   try{
@@ -1529,7 +1714,7 @@ document.getElementById('fee_team').addEventListener('change', ()=>{
   renderFeePaymentsGrid(filtered);
 });
 
-function closeFeeModal(){ feeModalBg.style.display='none'; editingFeeId=null; feePaymentsState={}; }
+function closeFeeModal(){ closeDialog(feeModalBg); editingFeeId=null; feePaymentsState={}; }
 document.getElementById('btnNewFee').addEventListener('click',()=>openFeeModal());
 document.getElementById('btnCloseFee').addEventListener('click',closeFeeModal);
 feeModalBg.addEventListener('click',e=>{ if(e.target===feeModalBg) closeFeeModal(); });
@@ -1775,6 +1960,7 @@ async function exportRosterExcel() {
       .order('apodo', {ascending:true});
     if(error) throw error;
 
+    const XLSX = await ensureXlsxLib();
     const wb = XLSX.read(XLSX_TEMPLATE_B64, {type:'base64'});
     const ws = wb.Sheets[wb.SheetNames[0]];
 
@@ -1943,12 +2129,16 @@ function updateBell(pending) {
 
 function closeNotifDropdown(){
   document.getElementById('notifDropdown')?.classList.remove('open');
+  setBellExpanded(false);
 }
 
 // Bell toggle
 document.getElementById('bellBtn')?.addEventListener('click', (e) => {
   e.stopPropagation();
-  document.getElementById('notifDropdown')?.classList.toggle('open');
+  const dropdown = document.getElementById('notifDropdown');
+  if(!dropdown) return;
+  const isOpen = dropdown.classList.toggle('open');
+  setBellExpanded(isOpen);
 });
 document.addEventListener('click', (e) => {
   if(!e.target.closest('#bellBtn') && !e.target.closest('#notifDropdown')){
@@ -1960,27 +2150,71 @@ document.addEventListener('click', (e) => {
 /* ═══════════════════════════════════════════════════════════
    PANEL TESORERA — clave + KPIs + eventos especiales
    ══════════════════════════════════════════════════════════ */
-// Treasurer password hash — SHA-256 of 'TesoreraGolden'
-// To change password: compute SHA-256 of new password and replace the hash below
-// Tool: https://emn178.github.io/online-tools/sha256.html
-const TREAS_PWD_HASH = '9e9d62dd2039594c7365e0faf3f5f016f4d855bd62fa33fe702ea79488e95d81';
-const TREAS_KEY     = 'gm_treas_auth';
+const TREAS_KEY        = 'gm_treas_auth';
+const TREAS_SESSION_MS = 45 * 60 * 1000;
 const MONTHLY_AMOUNT = 20000;
 let treasUnlocked   = false;
 let editingTreasEventId = null;
 
-// ── Lock / unlock ─────────────────────────────────────────
+function loadTreasAuth(){
+  treasUnlocked = false;
+  if(currentUser?.role === 'admin'){
+    treasUnlocked = true;
+    return true;
+  }
+  try {
+    const raw = sessionStorage.getItem(TREAS_KEY);
+    if(!raw) return false;
+    if(raw === '1'){
+      treasUnlocked = true;
+      return true;
+    }
+    const parsed = JSON.parse(raw);
+    if(parsed?.role === 'admin' && parsed.expiresAt > Date.now()){
+      treasUnlocked = true;
+      return true;
+    }
+    sessionStorage.removeItem(TREAS_KEY);
+  } catch(e){
+    try { sessionStorage.removeItem(TREAS_KEY); } catch(inner) {}
+  }
+  return false;
+}
 function checkTreasAuth(){
-  try { return sessionStorage.getItem(TREAS_KEY) === '1'; } catch(e){ return false; }
+  return loadTreasAuth();
 }
-function setTreasAuth(){
-  try { sessionStorage.setItem(TREAS_KEY, '1'); } catch(e){}
+function setTreasAuth(user){
   treasUnlocked = true;
+  try {
+    sessionStorage.setItem(TREAS_KEY, JSON.stringify({
+      username: user?.username || '',
+      role: 'admin',
+      expiresAt: Date.now() + TREAS_SESSION_MS
+    }));
+  } catch(e){}
 }
-
+function clearTreasAuth(){
+  treasUnlocked = false;
+  try { sessionStorage.removeItem(TREAS_KEY); } catch(e){}
+}
+function resetTreasView(){
+  document.getElementById('feesList').innerHTML = '';
+  document.getElementById('expensesList').innerHTML = '';
+  document.getElementById('kIncome').textContent = '$0';
+  document.getElementById('kExpense').textContent = '$0';
+  document.getElementById('kBalance').textContent = '$0';
+}
 function showTreasLock(){
   const lock = document.getElementById('treasLock');
   if(lock) lock.style.display = 'flex';
+  resetTreasView();
+  const err = document.getElementById('treasPwdErr');
+  if(err) err.textContent = '';
+  const userInput = document.getElementById('treasUserInput');
+  const pwdInput = document.getElementById('treasPwdInput');
+  if(userInput) userInput.value = '';
+  if(pwdInput) pwdInput.value = '';
+  requestAnimationFrame(() => userInput?.focus());
 }
 function hideTreasLock(){
   const lock = document.getElementById('treasLock');
@@ -1988,24 +2222,70 @@ function hideTreasLock(){
 }
 
 document.getElementById('treasUnlockBtn')?.addEventListener('click', async () => {
-  const val = document.getElementById('treasPwdInput')?.value || '';
+  const userInput = document.getElementById('treasUserInput');
+  const pwdInput = document.getElementById('treasPwdInput');
+  const username = (userInput?.value || '').trim().toLowerCase();
+  const password = pwdInput?.value || '';
   const err = document.getElementById('treasPwdErr');
-  if(!val){ if(err) err.textContent='Ingresá la clave'; return; }
-  const h = await sha256(val);
-  if(h === TREAS_PWD_HASH){
-    setTreasAuth();
+  const btn = document.getElementById('treasUnlockBtn');
+
+  if(!username || !password){
+    if(err) err.textContent = 'Ingresa usuario y contrasena';
+    return;
+  }
+  if(!supa || !IS_CONNECTED){
+    if(err) err.textContent = 'Sin conexion. Intenta de nuevo en un momento';
+    return;
+  }
+
+  if(btn){
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
+  }
+  if(err) err.textContent = '';
+
+  try {
+    const playerUser = await findPlayerUser(username);
+    if(!playerUser){
+      if(err) err.textContent = 'Usuario o contrasena incorrectos';
+      return;
+    }
+    if(playerUser.role !== 'admin'){
+      if(err) err.textContent = 'Esta cuenta no tiene acceso a Tesorera';
+      return;
+    }
+    const ok = await verifyPlayerUserPassword(playerUser, password);
+    if(!ok){
+      if(err) err.textContent = 'Usuario o contrasena incorrectos';
+      if(pwdInput) pwdInput.value = '';
+      return;
+    }
+
+    const user = buildSessionUser(playerUser);
+    setTreasAuth(user);
+    saveSession(user);
+    hideLoginScreen();
+    updateUserUI();
+    addAdminControls();
     hideTreasLock();
     renderFees();
     renderTreasKPIs();
     renderExpenses();
-  } else {
-    if(err) err.textContent = '❌ Clave incorrecta';
-    document.getElementById('treasPwdInput').value='';
-    setTimeout(()=>{ if(err) err.textContent=''; }, 2500);
+  } catch(e) {
+    console.warn('Treasury auth error', e);
+    if(err) err.textContent = 'No se pudo validar el acceso';
+  } finally {
+    if(btn){
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    }
   }
 });
 document.getElementById('treasPwdInput')?.addEventListener('keydown', e => {
-  if(e.key === 'Enter') document.getElementById('treasUnlockBtn')?.click();
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    document.getElementById('treasUnlockBtn')?.click();
+  }
 });
 
 // Lock handled inside showView original
@@ -2150,7 +2430,7 @@ async function openTreasEventModal(ev=null){
 
   // Load players for team
   await loadTreasEventPlayers(ev?.team||'Golden Moms', ev?.id||null);
-  document.getElementById('treasEventModalBg').style.display = 'flex';
+  openDialog(document.getElementById('treasEventModalBg'), document.getElementById('te_title'));
 }
 
 async function loadTreasEventPlayers(team, eventId){
@@ -2193,7 +2473,7 @@ document.getElementById('te_amount')?.addEventListener('input', ()=>{
 });
 
 function closeTreasEventModal(){
-  document.getElementById('treasEventModalBg').style.display='none';
+  closeDialog(document.getElementById('treasEventModalBg'));
   editingTreasEventId=null;
 }
 document.getElementById('btnCancelTreasEvent')?.addEventListener('click', closeTreasEventModal);
@@ -2245,11 +2525,18 @@ document.getElementById('btnDeleteTreasEvent')?.addEventListener('click', async 
    STANDINGS TABS
    ══════════════════════════════════════════════════════════ */
 function switchStandTab(n){
-  document.getElementById('standView1').style.display = n===1?'':'none';
-  document.getElementById('standView2').style.display = n===2?'':'none';
-  document.getElementById('standTab1').classList.toggle('active', n===1);
-  document.getElementById('standTab2').classList.toggle('active', n===2);
-  if(n===2) loadTournaments();
+  const isFirst = n===1;
+  document.getElementById('standView1').style.display = isFirst?'':'none';
+  document.getElementById('standView2').style.display = isFirst?'none':'';
+  document.getElementById('standView1').hidden = !isFirst;
+  document.getElementById('standView2').hidden = isFirst;
+  document.getElementById('standTab1').classList.toggle('active', isFirst);
+  document.getElementById('standTab2').classList.toggle('active', !isFirst);
+  document.getElementById('standTab1').setAttribute('aria-selected', isFirst ? 'true' : 'false');
+  document.getElementById('standTab2').setAttribute('aria-selected', isFirst ? 'false' : 'true');
+  document.getElementById('standTab1').setAttribute('tabindex', isFirst ? '0' : '-1');
+  document.getElementById('standTab2').setAttribute('tabindex', isFirst ? '-1' : '0');
+  if(!isFirst) loadTournaments();
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2822,7 +3109,7 @@ async function openExpenseModal(expId=null){
       });
     }
   }
-  document.getElementById('expenseModalBg').style.display='flex';
+  openDialog(document.getElementById('expenseModalBg'), document.getElementById('exp_title'));
 }
 
 document.getElementById('exp_split_chk')?.addEventListener('change', async e=>{
@@ -2859,8 +3146,12 @@ document.getElementById('exp_total')?.addEventListener('input',()=>{
   checked.forEach(chk=>{ const inp=document.querySelector('.treas-amount-input[data-pid="'+chk.dataset.pid+'"]'); if(inp) inp.value=sh; });
 });
 
-document.getElementById('btnCancelExpense')?.addEventListener('click',()=>{ document.getElementById('expenseModalBg').style.display='none'; editingExpenseId=null; });
-document.getElementById('expenseModalBg')?.addEventListener('click',e=>{ if(e.target===document.getElementById('expenseModalBg')){ document.getElementById('expenseModalBg').style.display='none'; editingExpenseId=null; } });
+function closeExpenseModal(){
+  closeDialog(document.getElementById('expenseModalBg'));
+  editingExpenseId=null;
+}
+document.getElementById('btnCancelExpense')?.addEventListener('click', closeExpenseModal);
+document.getElementById('expenseModalBg')?.addEventListener('click',e=>{ if(e.target===document.getElementById('expenseModalBg')) closeExpenseModal(); });
 
 document.getElementById('btnSaveExpense')?.addEventListener('click', async()=>{
   const title=document.getElementById('exp_title').value.trim();
@@ -2877,7 +3168,7 @@ document.getElementById('btnSaveExpense')?.addEventListener('click', async()=>{
       const upserts=checks.map(chk=>({ expense_id:eid, player_id:chk.dataset.pid, amount:Number(document.querySelector('.treas-amount-input[data-pid="'+chk.dataset.pid+'"]')?.value)||0, paid:false }));
       if(upserts.length) await supa.from('expense_payments').upsert(upserts,{onConflict:'expense_id,player_id'});
     }
-    document.getElementById('expenseModalBg').style.display='none'; editingExpenseId=null;
+    closeExpenseModal();
     renderExpenses(); renderTreasKPIs(); showToast('✅ Egreso guardado');
   } catch(e){ alert('Error: '+(e.message||e)); }
 });
@@ -2886,7 +3177,7 @@ document.getElementById('btnDeleteExpense')?.addEventListener('click',async()=>{
   if(!editingExpenseId||!confirm('¿Eliminar este egreso?')) return;
   await supa.from('expense_payments').delete().eq('expense_id',editingExpenseId);
   await supa.from('expenses').delete().eq('id',editingExpenseId);
-  document.getElementById('expenseModalBg').style.display='none'; editingExpenseId=null;
+  closeExpenseModal();
   renderExpenses(); renderTreasKPIs();
 });
 
@@ -2894,7 +3185,6 @@ document.getElementById('btnNewExpense')?.addEventListener('click',()=>openExpen
 
 // Update renderTreasKPIs to include expense data
 
-Listener('click', ()=> openTreasEventModal());
 
 // Init: check session auth when fees tab opens
 // (handled in overridden showView above)
@@ -2913,25 +3203,294 @@ async function sha256(text) {
 }
 
 // ── Session persistence ───────────────────────────────────
+const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+
 function loadSession() {
+  currentUser = null;
   try {
     const raw = sessionStorage.getItem(AUTH_KEY);
-    if(raw) currentUser = JSON.parse(raw);
-  } catch(e) { currentUser = null; }
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+    if(parsed?.player_id && parsed?.username){
+      currentUser = parsed;
+      return;
+    }
+    if(parsed?.user && parsed.expiresAt > Date.now()){
+      currentUser = parsed.user;
+      return;
+    }
+    sessionStorage.removeItem(AUTH_KEY);
+  } catch(e) {
+    currentUser = null;
+  }
 }
 function saveSession(user) {
   currentUser = user;
-  try { sessionStorage.setItem(AUTH_KEY, JSON.stringify(user)); } catch(e) {}
+  try {
+    sessionStorage.setItem(AUTH_KEY, JSON.stringify({
+      user,
+      expiresAt: Date.now() + SESSION_TTL_MS
+    }));
+  } catch(e) {}
 }
 function clearSession() {
   currentUser = null;
   try { sessionStorage.removeItem(AUTH_KEY); } catch(e) {}
 }
+async function findPlayerUser(username) {
+  if(!supa || !IS_CONNECTED) throw new Error('Sin conexion');
+  const { data, error } = await supa.from('player_users')
+    .select('*, players(id,apodo,nombre,numero_camiseta,foto,rol,email)')
+    .eq('username', username)
+    .eq('active', true)
+    .maybeSingle();
+  if(error) throw error;
+  return data || null;
+}
+async function verifyPlayerUserPassword(playerUser, password) {
+  const pl = playerUser?.players;
+  const email = pl?.email || playerUser?.email || '';
+  if(email && supa?.auth){
+    const { error: authError } = await supa.auth.signInWithPassword({ email, password });
+    if(!authError) return true;
+  }
+  const hash = await sha256(password);
+  return hash === playerUser?.pwd_hash;
+}
+function buildSessionUser(playerUser) {
+  const pl = playerUser?.players || {};
+  return {
+    player_id: pl.id,
+    username: playerUser?.username,
+    role: playerUser?.role || pl.role || 'jugadora',
+    apodo: pl.apodo || '',
+    nombre: pl.nombre || '',
+    numero_camiseta: pl.numero_camiseta,
+    foto: pl.foto || ''
+  };
+}
 
 // ── Login flow ────────────────────────────────────────────
 let loginFoundUser = null; // player_user row found in step 1
+let registerablePlayers = [];
+
+function setRegisterError(message=''){
+  const err = document.getElementById('registerErr');
+  if(err) err.textContent = message;
+}
+function resetRegisterForm(){
+  document.getElementById('registerPlayer').value = '';
+  document.getElementById('registerBirth').value = '';
+  document.getElementById('registerUser').value = '';
+  document.getElementById('registerPwd').value = '';
+  document.getElementById('registerPwd2').value = '';
+  document.getElementById('registerSubmitBtn').disabled = false;
+  document.getElementById('registerSubmitBtn').textContent = 'Crear acceso';
+  setRegisterError('');
+}
+function returnToLoginStep1(){
+  document.getElementById('loginStep2').style.display = 'none';
+  document.getElementById('loginRegisterStep').style.display = 'none';
+  document.getElementById('loginStep1').style.display = '';
+  document.getElementById('loginPwd').value = '';
+  document.getElementById('loginErr1').textContent = '';
+  document.getElementById('loginErr2').textContent = '';
+  document.getElementById('loginNextBtn').textContent = 'Continuar';
+  loginFoundUser = null;
+  resetRegisterForm();
+  setTimeout(() => document.getElementById('loginUser')?.focus(), 50);
+}
+async function openRegisterStep(){
+  document.getElementById('loginStep1').style.display = 'none';
+  document.getElementById('loginStep2').style.display = 'none';
+  document.getElementById('loginRegisterStep').style.display = '';
+  resetRegisterForm();
+  const select = document.getElementById('registerPlayer');
+  const submit = document.getElementById('registerSubmitBtn');
+  if(select){
+    select.innerHTML = '<option value="">Cargando jugadoras...</option>';
+    select.disabled = true;
+  }
+  if(submit){
+    submit.disabled = true;
+    submit.textContent = 'Preparando...';
+  }
+  setRegisterError(IS_CONNECTING || !IS_CONNECTED ? 'Conectando con la app...' : '');
+  await loadRegisterablePlayers();
+  document.getElementById('registerPlayer')?.focus();
+}
+function getRegisterPlayerLabel(player){
+  const base = player.apodo || player.nombre || 'Jugadora';
+  const details = [];
+  if(player.nombre && player.apodo && player.nombre !== player.apodo) details.push(player.nombre);
+  if(player.numero_camiseta) details.push('#' + player.numero_camiseta);
+  return details.length ? base + ' - ' + details.join(' ') : base;
+}
+function suggestUsername(player){
+  const source = String(player.apodo || player.nombre || 'jugadora').toLowerCase();
+  const base = source.replace(/[^a-z0-9]+/g, '').slice(0, 12) || 'jugadora';
+  return player.numero_camiseta ? (base + player.numero_camiseta).slice(0, 18) : base;
+}
+async function loadRegisterablePlayers(){
+  const select = document.getElementById('registerPlayer');
+  const submit = document.getElementById('registerSubmitBtn');
+  if(!select || !submit) return;
+  select.innerHTML = '<option value="">Cargando jugadoras...</option>';
+  select.disabled = true;
+  submit.disabled = true;
+  setRegisterError('');
+  if(!supa || !IS_CONNECTED){
+    select.innerHTML = '<option value="">Conectando...</option>';
+    setRegisterError('Conectando con la app...');
+    const ready = await ensureSupabaseReady();
+    if(!ready){
+      select.innerHTML = '<option value="">Sin conexion</option>';
+      setRegisterError('No se pudo conectar. Intenta de nuevo en unos segundos.');
+      submit.textContent = 'Crear acceso';
+      return;
+    }
+  }
+  try {
+    const { data:players, error:playersError } = await supa.from('players')
+      .select('id,apodo,nombre,numero_camiseta,fecha_nacimiento,estado')
+      .eq('estado','activo')
+      .order('apodo', { ascending:true });
+    if(playersError) throw playersError;
+    const { data:users, error:usersError } = await supa.from('player_users').select('player_id');
+    if(usersError) throw usersError;
+    const takenPlayerIds = new Set((users || []).map(user => user.player_id));
+    registerablePlayers = (players || []).filter(player => !takenPlayerIds.has(player.id));
+    submit.textContent = 'Crear acceso';
+    select.innerHTML = '<option value="">Selecciona tu nombre</option>';
+    registerablePlayers.forEach(player => {
+      const option = document.createElement('option');
+      option.value = player.id;
+      option.textContent = getRegisterPlayerLabel(player);
+      select.appendChild(option);
+    });
+    const hasPlayers = registerablePlayers.length > 0;
+    select.disabled = !hasPlayers;
+    submit.disabled = !hasPlayers;
+    if(!hasPlayers) setRegisterError('No hay jugadoras disponibles para auto-registro.');
+  } catch(err) {
+    console.warn('loadRegisterablePlayers', err);
+    submit.textContent = 'Crear acceso';
+    select.innerHTML = '<option value="">No se pudo cargar la lista</option>';
+    setRegisterError('No se pudo cargar la lista de jugadoras.');
+  }
+}
+async function completeLoginFromPlayerUser(playerUser){
+  const user = buildSessionUser(playerUser);
+  saveSession(user);
+  if(user.role === 'admin') setTreasAuth(user);
+  hideLoginScreen();
+  updateUserUI();
+  addAdminControls();
+  let openedFromLink = false;
+  if(pendingAttendanceLinkId) {
+    const eventId = pendingAttendanceLinkId;
+    pendingAttendanceLinkId = null;
+    openedFromLink = await openAttendanceFromLink(eventId);
+  }
+  if(!openedFromLink) {
+    showView('dash');
+    renderPlayerDash();
+  }
+}
+async function registerPlayerAccess(){
+  const playerId = document.getElementById('registerPlayer').value;
+  const birthDate = document.getElementById('registerBirth').value;
+  const username = (document.getElementById('registerUser').value || '').trim().toLowerCase();
+  const password = document.getElementById('registerPwd').value || '';
+  const password2 = document.getElementById('registerPwd2').value || '';
+  const submit = document.getElementById('registerSubmitBtn');
+  const player = registerablePlayers.find(item => String(item.id) === String(playerId));
+
+  if(!player){ setRegisterError('Selecciona tu jugadora.'); return; }
+  if(!player.fecha_nacimiento){ setRegisterError('Tu ficha no tiene fecha de nacimiento. Pide ayuda a la capitana.'); return; }
+  if(!birthDate){ setRegisterError('Ingresa tu fecha de nacimiento.'); return; }
+  if((player.fecha_nacimiento || '').slice(0,10) !== birthDate){ setRegisterError('La fecha de nacimiento no coincide.'); return; }
+  if(!/^[a-z0-9._-]{3,20}$/.test(username)){ setRegisterError('Usa un usuario de 3 a 20 caracteres: letras, numeros, punto, guion o guion bajo.'); return; }
+  if(password.length < 6){ setRegisterError('La contrasena debe tener al menos 6 caracteres.'); return; }
+  if(password !== password2){ setRegisterError('Las contrasenas no coinciden.'); return; }
+  if(!supa || !IS_CONNECTED){
+    setRegisterError('Conectando con la app...');
+    const ready = await ensureSupabaseReady();
+    if(!ready){
+      setRegisterError('No se pudo conectar. Intenta de nuevo.');
+      return;
+    }
+  }
+
+  submit.disabled = true;
+  submit.textContent = 'Creando acceso...';
+  setRegisterError('');
+
+  try {
+    const { data:existingUser, error:existingUserError } = await supa.from('player_users')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle();
+    if(existingUserError) throw existingUserError;
+    if(existingUser){
+      setRegisterError('Ese usuario ya existe.');
+      return;
+    }
+
+    const { data:existingPlayerUser, error:existingPlayerError } = await supa.from('player_users')
+      .select('id')
+      .eq('player_id', player.id)
+      .maybeSingle();
+    if(existingPlayerError) throw existingPlayerError;
+    if(existingPlayerUser){
+      await loadRegisterablePlayers();
+      setRegisterError('Esta jugadora ya tiene cuenta.');
+      return;
+    }
+
+    const { error:insertError } = await supa.from('player_users').insert([{
+      player_id: player.id,
+      username,
+      role: 'jugadora',
+      active: true,
+      pwd_hash: await sha256(password)
+    }]);
+    if(insertError) throw insertError;
+
+    const createdUser = await findPlayerUser(username);
+    if(!createdUser){
+      setRegisterError('La cuenta se creo, pero no se pudo iniciar sesion automaticamente.');
+      returnToLoginStep1();
+      document.getElementById('loginUser').value = username;
+      showToast('Cuenta creada. Ingresa con tu nuevo usuario.');
+      return;
+    }
+
+    showToast('Cuenta creada con exito.');
+    await completeLoginFromPlayerUser(createdUser);
+  } catch(err) {
+    console.warn('registerPlayerAccess', err);
+    setRegisterError('No se pudo crear la cuenta. Intenta de nuevo.');
+  } finally {
+    submit.disabled = false;
+    submit.textContent = 'Crear acceso';
+  }
+}
+
+document.getElementById('loginRegisterOpenBtn')?.addEventListener('click', openRegisterStep);
+document.getElementById('registerBackBtn')?.addEventListener('click', returnToLoginStep1);
+document.getElementById('loginBackBtn')?.addEventListener('click', returnToLoginStep1);
+document.getElementById('registerSubmitBtn')?.addEventListener('click', registerPlayerAccess);
+document.getElementById('registerPwd2')?.addEventListener('keydown', e => { if(e.key==='Enter') registerPlayerAccess(); });
+document.getElementById('registerUser')?.addEventListener('keydown', e => { if(e.key==='Enter') registerPlayerAccess(); });
+document.getElementById('registerPlayer')?.addEventListener('change', e => {
+  const player = registerablePlayers.find(item => String(item.id) === String(e.target.value));
+  const input = document.getElementById('registerUser');
+  if(player && input && !input.value.trim()) input.value = suggestUsername(player);
+});
 
 async function initAuth() {
+
   loadSession();
   if(currentUser) {
     hideLoginScreen();
@@ -2957,35 +3516,43 @@ document.getElementById('loginUser')?.addEventListener('keydown', e => { if(e.ke
 async function loginStep1() {
   const username = (document.getElementById('loginUser')?.value||'').trim().toLowerCase();
   const err1 = document.getElementById('loginErr1');
-  if(!username) { err1.textContent='Ingresá tu usuario'; return; }
-  if(!supa || !IS_CONNECTED) { err1.textContent='Sin conexión. Esperá un momento…'; return; }
+  if(!username) { err1.textContent='Ingresa tu usuario'; return; }
+  if(!supa || !IS_CONNECTED) {
+    err1.textContent = 'Conectando con la app...';
+    document.getElementById('loginNextBtn').textContent = 'Conectando...';
+    const ready = await ensureSupabaseReady();
+    if(!ready){
+      document.getElementById('loginNextBtn').textContent = 'Continuar';
+      err1.textContent = 'No se pudo conectar. Intenta de nuevo.';
+      return;
+    }
+  }
   err1.textContent = '';
-  document.getElementById('loginNextBtn').textContent = 'Buscando…';
+  document.getElementById('loginNextBtn').textContent = 'Buscando...';
   try {
-    const { data, error } = await supa.from('player_users')
-      .select('*, players(id,apodo,nombre,numero_camiseta,foto,rol,email)')
-      .eq('username', username)
-      .eq('active', true)
-      .maybeSingle();
-    document.getElementById('loginNextBtn').textContent = 'Continuar →';
-    if(error || !data) { err1.textContent='Usuario no encontrado'; return; }
+    const data = await findPlayerUser(username);
+    document.getElementById('loginNextBtn').textContent = 'Continuar';
+    if(!data) { err1.textContent='Usuario no encontrado'; return; }
     loginFoundUser = data;
-    // Show step 2
     document.getElementById('loginStep1').style.display = 'none';
     const step2 = document.getElementById('loginStep2');
     step2.style.display = '';
     const pl = data.players;
     const name = pl?.apodo || pl?.nombre || username;
-    document.getElementById('loginAvatar').textContent = name[0].toUpperCase();
+    const avatar = document.getElementById('loginAvatar');
+    avatar.style.backgroundImage = '';
+    avatar.style.backgroundSize = '';
+    avatar.textContent = name[0].toUpperCase();
     document.getElementById('loginPlayerName').textContent = name;
-    document.getElementById('loginPlayerRole').textContent = data.role === 'admin' ? '⭐ Administradora' : '⚽ Jugadora';
+    document.getElementById('loginPlayerRole').textContent = data.role === 'admin' ? 'Administradora' : 'Jugadora';
     if(pl?.foto) {
-      const av = document.getElementById('loginAvatar');
-      av.style.backgroundImage='url('+pl.foto+')'; av.style.backgroundSize='cover'; av.textContent='';
+      avatar.style.backgroundImage='url('+pl.foto+')';
+      avatar.style.backgroundSize='cover';
+      avatar.textContent='';
     }
     setTimeout(() => document.getElementById('loginPwd')?.focus(), 100);
   } catch(err) {
-    document.getElementById('loginNextBtn').textContent = 'Continuar →';
+    document.getElementById('loginNextBtn').textContent = 'Continuar';
     err1.textContent = 'Error al buscar usuario';
     console.warn(err);
   }
@@ -2994,119 +3561,63 @@ async function loginStep1() {
 // Step 2: verify password
 document.getElementById('loginSubmitBtn')?.addEventListener('click', loginStep2);
 document.getElementById('loginPwd')?.addEventListener('keydown', e => { if(e.key==='Enter') loginStep2(); });
-document.getElementById('loginBackBtn')?.addEventListener('click', () => {
-  document.getElementById('loginStep2').style.display='none';
-  document.getElementById('loginStep1').style.display='';
-  document.getElementById('loginPwd').value='';
-  document.getElementById('loginErr2').textContent='';
-  loginFoundUser = null;
-});
-
 async function loginStep2() {
   const pwd = document.getElementById('loginPwd')?.value||'';
   const err2 = document.getElementById('loginErr2');
-  if(!pwd) { err2.textContent='Ingresá tu contraseña'; return; }
+  if(!pwd) { err2.textContent='Ingresa tu contrasena'; return; }
+  if(!loginFoundUser) { err2.textContent='Primero selecciona tu usuario'; return; }
   err2.textContent='';
-  document.getElementById('loginSubmitBtn').textContent='Verificando…';
+  document.getElementById('loginSubmitBtn').textContent='Verificando...';
   try {
-    const pl = loginFoundUser.players;
-    const email = pl?.email || loginFoundUser.email || '';
-
-    // ── Opción A: Supabase Auth (si la jugadora tiene email registrado) ──
-    if(email && supa.auth) {
-      const { data: authData, error: authError } = await supa.auth.signInWithPassword({
-        email,
-        password: pwd,
-      });
-      if(authError) {
-        // If Supabase Auth fails, fall through to hash verification
-        // (for users not yet migrated to Supabase Auth)
-        const hash = await sha256(pwd);
-        if(hash !== loginFoundUser.pwd_hash) {
-          err2.textContent = 'Contraseña incorrecta';
-          document.getElementById('loginSubmitBtn').textContent = '🔓 Entrar';
-          document.getElementById('loginPwd').value = '';
-          return;
-        }
-      }
-    } else {
-      // ── Opción B: Hash local (fallback para usuarios sin email) ──
-      const hash = await sha256(pwd);
-      if(hash !== loginFoundUser.pwd_hash) {
-        err2.textContent = 'Contraseña incorrecta';
-        document.getElementById('loginSubmitBtn').textContent = '🔓 Entrar';
-        document.getElementById('loginPwd').value = '';
-        return;
-      }
+    const ok = await verifyPlayerUserPassword(loginFoundUser, pwd);
+    if(!ok) {
+      err2.textContent = 'Contrasena incorrecta';
+      document.getElementById('loginSubmitBtn').textContent = 'Entrar';
+      document.getElementById('loginPwd').value = '';
+      return;
     }
 
-    // ── Login exitoso ──
-    const user = {
-      player_id: pl.id,
-      username: loginFoundUser.username,
-      role: loginFoundUser.role,
-      apodo: pl.apodo||'',
-      nombre: pl.nombre||'',
-      numero_camiseta: pl.numero_camiseta,
-      foto: pl.foto||''
-    };
-    saveSession(user);
-    hideLoginScreen();
-    updateUserUI();
-    showView('dash');
-    renderPlayerDash();
+    await completeLoginFromPlayerUser(loginFoundUser);
   } catch(err) {
-    err2.textContent = 'Error de conexión, intentá de nuevo';
-    document.getElementById('loginSubmitBtn').textContent = '🔓 Entrar';
+    err2.textContent = 'Error de conexion, intenta de nuevo';
+    document.getElementById('loginSubmitBtn').textContent = 'Entrar';
     console.warn(err);
   }
 }
 
-// ── Update UI after login ─────────────────────────────────
 function updateUserUI() {
-  if(!currentUser) return;
   const pill = document.getElementById('userPill');
   const pillAv = document.getElementById('userPillAv');
   const pillName = document.getElementById('userPillName');
+  if(!currentUser) {
+    if(pill) pill.style.display = 'none';
+    document.getElementById('playerDashCard').style.display='none';
+    return;
+  }
   if(pill) pill.style.display = 'flex';
   const name = currentUser.apodo || currentUser.nombre || currentUser.username;
   if(pillAv) pillAv.textContent = name[0].toUpperCase();
   if(pillName) pillName.textContent = name;
-
-  // Hide admin-only nav items for regular players
-  const isAdmin = currentUser.role === 'admin';
-  const feesTab = document.querySelector('.nav .tab[data-view="fees"]');
-  if(feesTab) feesTab.style.display = isAdmin ? '' : 'none';
   const mSel = document.getElementById('mobileNavSelect');
-  if(mSel){
-    // Remove fees option if not admin (mobile dropdown)
-    const feeOpt = mSel.querySelector('option[value="fees"]');
-    if(feeOpt) feeOpt.style.display = isAdmin ? '' : 'none';
-    // Set current view in dropdown
-    mSel.value = 'dash';
-  }
+  if(mSel) mSel.value = document.querySelector('.nav .tab.active')?.dataset.view || 'dash';
 }
 
-// ── Logout ────────────────────────────────────────────────
 function showLogoutMenu() {
   if(!currentUser) return;
   const name = currentUser.apodo || currentUser.nombre || currentUser.username;
-  if(confirm('¿Cerrar sesión de ' + name + '?')) {
+  if(confirm('Cerrar sesion de ' + name + '?')) {
     clearSession();
-    // Reset UI
-    const pill = document.getElementById('userPill');
-    if(pill) pill.style.display = 'none';
+    clearTreasAuth();
+    if(supa?.auth) supa.auth.signOut().catch(() => {});
     document.getElementById('loginUser').value='';
     document.getElementById('loginPwd').value='';
-    document.getElementById('loginStep1').style.display='';
-    document.getElementById('loginStep2').style.display='none';
-    document.getElementById('playerDashCard').style.display='none';
+    updateUserUI();
+    showView('dash');
     showLoginScreen();
-    loginFoundUser = null;
+    returnToLoginStep1();
   }
 }
 
-// ── Player personal dashboard ─────────────────────────────
 async function renderPlayerDash() {
   const card = document.getElementById('playerDashCard');
   const pdName = document.getElementById('pdName');
@@ -3203,7 +3714,11 @@ async function renderPlayerDash() {
 // ── Filter notifications for current player ───────────────
 // Override loadNotifications to filter by player when logged in as jugadora
 async function loadNotifications() {
-  if(!currentUser || currentUser.role === 'admin') {
+  if(!currentUser) {
+    updateBell([]);
+    return;
+  }
+  if(currentUser.role === 'admin') {
     await loadNotificationsAdmin();
     return;
   }

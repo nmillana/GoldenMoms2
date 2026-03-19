@@ -1,10 +1,16 @@
-{
+﻿{
+  "id": "/GoldenMoms2/",
   "name": "Golden Moms",
   "short_name": "Golden Moms",
-  "start_url": "/GoldenMoms2/",
+  "description": "App del equipo Golden Moms para eventos, plantel, resultados y tesoreria.",
+  "lang": "es-CL",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f7fb",
   "theme_color": "#0f3a78",
+  "categories": ["sports", "team-management"],
   "icons": [
     {
       "src": "icon-192.png",

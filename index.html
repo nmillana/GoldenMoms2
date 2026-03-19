@@ -6,7 +6,8 @@
 <title>Golden Moms 💚</title>
 <link rel="icon" href="Logo.webp"/>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#ffffff">
+<meta name="description" content="App del equipo Golden Moms para eventos, plantel, resultados y tesorería.">
+<meta name="theme-color" content="#0f3a78">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Golden Moms">
@@ -14,59 +15,82 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<a class="skip-link" href="#appMain">Saltar al contenido</a>
 
 <!-- ══════════════════════════════════════════════════════
      LOGIN SCREEN
      ══════════════════════════════════════════════════════ -->
 <div id="loginScreen" style="display:none">
   <div class="login-card" id="loginCard">
-    <!-- Step 1: username -->
     <div id="loginStep1">
       <div class="login-logo">
-        <img src="Logo.webp" onerror="this.style.display='none'" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover"/>
+        <img src="Logo.webp" id="loginLogoImg" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover"/>
         <div class="login-logo-text">Golden <span>Moms</span></div>
       </div>
-      <div class="login-welcome">Ingresá tu usuario para continuar</div>
+      <div class="login-welcome">Ingresa tu usuario para continuar</div>
       <label class="login-label" for="loginUser">Usuario</label>
       <input id="loginUser" class="login-input" placeholder="tu usuario" autocomplete="username" autocapitalize="none" spellcheck="false"/>
       <div class="login-err" id="loginErr1"></div>
-      <button class="login-btn" id="loginNextBtn">Continuar →</button>
-      <div class="login-hint">¿No tenés usuario? Consultá a tu capitana 💚</div>
+      <button class="login-btn" id="loginNextBtn">Continuar</button>
+      <button class="login-btn login-btn-secondary" id="loginRegisterOpenBtn" type="button">Crear mi usuario</button>
+      <div class="login-hint">Si todavia no tienes acceso, registrate como jugadora activa.</div>
     </div>
-    <!-- Step 2: password -->
     <div id="loginStep2" style="display:none">
       <div class="player-avatar-login" id="loginAvatar">?</div>
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--ink)" id="loginPlayerName"></div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px" id="loginPlayerRole"></div>
       </div>
-      <label class="login-label" for="loginPwd">Contraseña</label>
-      <input id="loginPwd" class="login-input" type="password" placeholder="••••••••" autocomplete="current-password"/>
+      <label class="login-label" for="loginPwd">Contrasena</label>
+      <input id="loginPwd" class="login-input" type="password" placeholder="********" autocomplete="current-password"/>
       <div class="login-err" id="loginErr2"></div>
-      <button class="login-btn" id="loginSubmitBtn">🔓 Entrar</button>
+      <button class="login-btn" id="loginSubmitBtn">Entrar</button>
       <div style="text-align:center;margin-top:14px">
-        <button style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;padding:4px 8px" id="loginBackBtn">← Cambiar usuario</button>
+        <button style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;padding:4px 8px" id="loginBackBtn">&larr; Cambiar usuario</button>
+      </div>
+    </div>
+    <div id="loginRegisterStep" style="display:none">
+      <div class="login-logo">
+        <img src="Logo.webp" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover"/>
+        <div class="login-logo-text">Golden <span>Moms</span></div>
+      </div>
+      <div class="login-welcome">Crea tu acceso como jugadora</div>
+      <label class="login-label" for="registerPlayer">Jugadora</label>
+      <select id="registerPlayer" class="login-input" autocomplete="off">
+        <option value="">Selecciona tu nombre</option>
+      </select>
+      <label class="login-label" for="registerBirth">Fecha de nacimiento</label>
+      <input id="registerBirth" class="login-input" type="date" autocomplete="bday"/>
+      <label class="login-label" for="registerUser">Usuario nuevo</label>
+      <input id="registerUser" class="login-input" placeholder="ej: sole10" autocomplete="username" autocapitalize="none" spellcheck="false"/>
+      <label class="login-label" for="registerPwd">Contrasena</label>
+      <input id="registerPwd" class="login-input" type="password" placeholder="Minimo 6 caracteres" autocomplete="new-password"/>
+      <label class="login-label" for="registerPwd2">Confirmar contrasena</label>
+      <input id="registerPwd2" class="login-input" type="password" placeholder="Repite tu contrasena" autocomplete="new-password"/>
+      <div class="login-err" id="registerErr"></div>
+      <button class="login-btn" id="registerSubmitBtn" type="button">Crear acceso</button>
+      <div class="login-hint">Solo disponible para jugadoras activas que aun no tengan cuenta.</div>
+      <div style="text-align:center;margin-top:14px">
+        <button style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;padding:4px 8px" id="registerBackBtn">&larr; Volver al ingreso</button>
       </div>
     </div>
   </div>
 </div>
 
-
-<!-- ─── TOPBAR ───────────────────────────────────────────── -->
+<!-- TOPBAR ───────────────────────────────────────────── -->
 <header class="top">
   <div class="brand">
     <img src="Logo.webp" alt="GM" class="brand-logo"/>
     <div class="brand-name">Golden <span>Moms</span></div>
   </div>
   <div class="top-right">
-    <div id="connStatus">Conectando…</div>
+    <div id="connStatus" role="status" aria-live="polite">Conectando…</div>
     <div style="position:relative">
-      <button class="bell-btn" id="bellBtn" title="Notificaciones">🔔
+      <button class="bell-btn" id="bellBtn" title="Notificaciones" aria-controls="notifDropdown" aria-expanded="false">🔔
         <span class="bell-badge hidden" id="bellBadge">0</span>
       </button>
       <div class="notif-dropdown" id="notifDropdown">
@@ -79,10 +103,10 @@
         </div>
       </div>
     </div>
-    <div class="user-pill" id="userPill" style="display:none" onclick="showLogoutMenu()">
+    <button type="button" class="user-pill" id="userPill" style="display:none">
       <div class="user-pill-av" id="userPillAv">?</div>
       <span id="userPillName">Usuario</span>
-    </div>
+    </button>
     <select id="mobileNavSelect" aria-label="Navegación móvil">
         <option value="dash">🏠 Dashboard</option>
         <option value="events">📅 Eventos</option>
@@ -90,26 +114,27 @@
         <option value="matches">🏆 Partidos</option>
         <option value="stats">📊 Estadísticas</option>
         <option value="board">📌 Tablón</option>
-        <option value="fees">💰 Cuotas</option>
+        <option value="fees">💰 Tesorera</option>
       </select>
     <nav class="nav" role="tablist" aria-label="Navegación">
-      <button class="tab active" data-view="dash">Dashboard</button>
-      <button class="tab" data-view="events">Eventos</button>
-      <button class="tab" data-view="roster">Plantel</button>
-      <button class="tab" data-view="matches">Partidos</button>
-      <button class="tab" data-view="stats">Estadísticas</button>
-      <button class="tab" data-view="board">Tablón</button>
-      <button class="tab" data-view="fees">Cuotas</button>
+      <button class="tab active" id="tab-dash" data-view="dash" aria-controls="v-dash">Dashboard</button>
+      <button class="tab" id="tab-events" data-view="events" aria-controls="v-events">Eventos</button>
+      <button class="tab" id="tab-roster" data-view="roster" aria-controls="v-roster">Plantel</button>
+      <button class="tab" id="tab-matches" data-view="matches" aria-controls="v-matches">Partidos</button>
+      <button class="tab" id="tab-stats" data-view="stats" aria-controls="v-stats">Estadísticas</button>
+      <button class="tab" id="tab-board" data-view="board" aria-controls="v-board">Tablón</button>
+      <button class="tab" id="tab-fees" data-view="fees" aria-controls="v-fees">Tesorera</button>
     </nav>
   </div>
 </header>
 
-<div class="container">
+<main id="appMain" class="container">
+  <h1 class="sr-only">Golden Moms</h1>
 
   <!-- ═══════════════════════════════════════════════════════
        DASHBOARD
        ═══════════════════════════════════════════════════════ -->
-  <section id="v-dash" class="view-enter">
+  <section id="v-dash" class="view-enter" role="tabpanel" aria-labelledby="tab-dash">
 
     <!-- KPIs -->
     <div class="kpi-grid">
@@ -186,7 +211,7 @@
   <!-- ═══════════════════════════════════════════════════════
        EVENTOS
        ═══════════════════════════════════════════════════════ -->
-  <section id="v-events" style="display:none">
+  <section id="v-events" style="display:none" role="tabpanel" aria-labelledby="tab-events">
     <div class="card calendar-card">
       <div class="month-bar">
         <div class="month-nav">
@@ -213,7 +238,7 @@
   <!-- ═══════════════════════════════════════════════════════
        PLANTEL
        ═══════════════════════════════════════════════════════ -->
-  <section id="v-roster" style="display:none">
+  <section id="v-roster" style="display:none" role="tabpanel" aria-labelledby="tab-roster">
     <div class="section-header">
       <div>
         <div class="section-title">Plantel</div>
@@ -238,7 +263,7 @@
   <!-- ═══════════════════════════════════════════════════════
        PARTIDOS
        ═══════════════════════════════════════════════════════ -->
-  <section id="v-matches" style="display:none">
+  <section id="v-matches" style="display:none" role="tabpanel" aria-labelledby="tab-matches">
     <div class="section-header">
       <div>
         <div class="section-title">Partidos</div>
@@ -248,11 +273,10 @@
     <div id="matchesList"></div>
   </section>
 
-</div>
-
+</main>
 
   <!-- ═══════════ ASISTENCIA RÁPIDA MODAL ═══════════ -->
-  <div class="modal-bg" id="attModalBg" role="dialog" aria-modal="true" style="display:none" aria-hidden="true">
+  <div class="modal-bg" id="attModalBg" style="display:none" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true">
       <div class="modal-title"><div class="modal-title-icon">✅</div><span id="attModalTitle">Pase de lista</span></div>
       <div id="attEventMeta" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
@@ -377,11 +401,11 @@
   </div>
 
   <!-- ═══════════ ESTADÍSTICAS ═══════════ -->
-  <section id="v-stats" style="display:none;padding:0 4px;overflow-x:hidden">
+  <section id="v-stats" style="display:none;padding:0 4px;overflow-x:hidden" role="tabpanel" aria-labelledby="tab-stats">
     <!-- Tabs: Nuestros equipos | Torneos -->
-    <div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px">
-      <button class="tab active" id="standTab1" onclick="switchStandTab(1)">🏅 Nuestros equipos</button>
-      <button class="tab" id="standTab2" onclick="switchStandTab(2)">🏆 Torneos</button>
+        <div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px" role="tablist" aria-label="Estadísticas">
+      <button class="tab active" id="standTab1" type="button" data-stand-tab="1" aria-controls="standView1">🏅 Nuestros equipos</button>
+      <button class="tab" id="standTab2" type="button" data-stand-tab="2" aria-controls="standView2">🏆 Torneos</button>
     </div>
 
     <!-- Tab 1: Our teams internal standings -->
@@ -456,7 +480,7 @@
   </section>
 
   <!-- ═══════════ TABLÓN ═══════════ -->
-  <section id="v-board" style="display:none;padding:0 4px">
+  <section id="v-board" style="display:none;padding:0 4px" role="tabpanel" aria-labelledby="tab-board">
     <div class="section-header">
       <div><div class="section-title">Tablón</div><div class="section-sub">Anuncios y avisos del equipo</div></div>
       <button class="btn p" id="btnNewAnn">＋ Anuncio</button>
@@ -465,14 +489,15 @@
   </section>
 
   <!-- ═══════════ CUOTAS ═══════════ -->
-  <section id="v-fees" style="display:none;position:relative;min-height:400px">
+  <section id="v-fees" style="display:none;position:relative;min-height:400px" role="tabpanel" aria-labelledby="tab-fees">
     <!-- Lock overlay — solo cubre esta pestaña -->
     <div id="treasLock" class="treas-lock">
       <div class="treas-lock-box">
         <div class="treas-lock-icon">🔐</div>
-        <div class="treas-lock-title">Panel Tesorera</div>
-        <div class="treas-lock-sub">Ingresá la clave para continuar</div>
-        <input type="password" id="treasPwdInput" class="treas-lock-input" placeholder="••••••••" maxlength="30"/>
+                <div class="treas-lock-title">Acceso Tesorera</div>
+        <div class="treas-lock-sub">Ingresá una cuenta administradora para abrir este módulo</div>
+        <input id="treasUserInput" class="treas-lock-input" placeholder="Usuario" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="40"/>
+        <input type="password" id="treasPwdInput" class="treas-lock-input treas-lock-pass" placeholder="Contraseña" autocomplete="current-password" maxlength="60"/>
         <div class="treas-lock-err" id="treasPwdErr"></div>
         <button class="btn p" id="treasUnlockBtn" style="width:100%">🔓 Entrar</button>
       </div>
@@ -486,7 +511,7 @@
 
     <!-- Mensualidades -->
     <div class="section-header" style="margin-bottom:10px">
-      <div><div class="section-title">Cuotas</div><div class="section-sub">Mensualidades y pagos del equipo</div></div>
+      <div><div class="section-title">Tesorera</div><div class="section-sub">Cuotas, pagos y egresos del equipo</div></div>
       <button class="btn p" id="btnNewFee">＋ Nueva cuota</button>
     </div>
     <div id="feesList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px"></div>
@@ -679,7 +704,7 @@
 <!-- ═══════════════════════════════════════════════════════════
      MODAL JUGADORA
      ══════════════════════════════════════════════════════════ -->
-<div class="modal-bg" id="playerModalBg" role="dialog" aria-modal="true" style="display:none" aria-hidden="true">
+<div class="modal-bg" id="playerModalBg" style="display:none" aria-hidden="true">
   <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle">
 
     <!-- Header con foto -->
@@ -787,7 +812,7 @@ if('serviceWorker' in navigator){
 }
 </script>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js" defer></script>
 </body>
 </html>
