@@ -220,6 +220,12 @@ function syncTabPanels(view){
     panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
   });
 }
+function syncTopbarOffset(){
+  const topbar = document.querySelector('.top');
+  if(!topbar) return;
+  const height = Math.max(58, Math.ceil(topbar.getBoundingClientRect().height));
+  document.documentElement.style.setProperty('--topbar-offset', height + 'px');
+}
 async function ensureXlsxLib(){
   if(window.XLSX) return window.XLSX;
   await new Promise((resolve, reject) => {
@@ -1062,6 +1068,7 @@ document.getElementById('btnNewPlayer').addEventListener('click', ()=>openPlayer
    ROUTING
    ══════════════════════════════════════════════════════════ */
 function showView(v){
+  closeNotifDropdown();
   activateNavTab(v);
   for(const id of ['dash','events','roster','matches','stats','board','fees']){
     const el=document.getElementById('v-'+id);
@@ -1093,6 +1100,9 @@ function showView(v){
    INIT
    ══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async () => {
+  syncTopbarOffset();
+  window.addEventListener('resize', syncTopbarOffset);
+  window.addEventListener('orientationchange', syncTopbarOffset);
   const loginLogoImg = document.getElementById('loginLogoImg');
   if(loginLogoImg){
     loginLogoImg.addEventListener('error', () => { loginLogoImg.hidden = true; });
@@ -1115,6 +1125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('mobileNavSelect')?.addEventListener('change', e => {
     const view = e.target.value;
     try{ localStorage.setItem('gm_view', view); } catch(e){}
+    closeNotifDropdown();
     showView(view);
   });
 
@@ -3809,6 +3820,7 @@ function updateUserUI() {
   if(!currentUser) {
     if(pill) pill.style.display = 'none';
     document.getElementById('playerDashCard').style.display='none';
+    requestAnimationFrame(syncTopbarOffset);
     return;
   }
   if(pill) pill.style.display = 'flex';
@@ -3817,6 +3829,7 @@ function updateUserUI() {
   if(pillName) pillName.textContent = name;
   const mSel = document.getElementById('mobileNavSelect');
   if(mSel) mSel.value = document.querySelector('.nav .tab.active')?.dataset.view || 'dash';
+  requestAnimationFrame(syncTopbarOffset);
 }
 
 function showLogoutMenu() {

@@ -1019,3 +1019,98 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   #tournamentStandingsWrap { padding: 0 4px; }
   .tab[id^="standTab"] { font-size:12px; padding:6px 10px; }
 }
+
+
+/* Mobile topbar and notifications stability */
+.notif-dropdown {
+  width: min(320px, calc(100vw - 24px));
+}
+#mobileNavSelect {
+  width: 100%;
+}
+@media (max-width: 860px) {
+  .top {
+    height: auto;
+    min-height: 58px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .brand {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .brand-name {
+    font-size: 15px;
+  }
+  .top-right {
+    flex: 1 1 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  #mobileNavSelect {
+    display: block;
+    order: 99;
+    flex: 1 1 100%;
+  }
+  .nav {
+    display: none !important;
+  }
+  .notif-dropdown {
+    position: fixed;
+    top: calc(var(--topbar-offset, 58px) + 8px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: min(60vh, 420px);
+  }
+  .notif-list {
+    max-height: min(52vh, 340px);
+  }
+}
+@media (max-width: 540px) {
+  .brand {
+    gap: 8px;
+  }
+  .brand-name {
+    font-size: 14px;
+  }
+  #connStatus {
+    display: none;
+  }
+  .bell-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  .user-pill {
+    max-width: 100%;
+  }
+  #userPillName {
+    max-width: 84px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 420px) {
+  .top-right {
+    gap: 6px;
+  }
+  .bell-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+  }
+  .user-pill {
+    font-size: 11px;
+    padding-right: 8px;
+  }
+  .user-pill-av {
+    width: 22px;
+    height: 22px;
+  }
+}
