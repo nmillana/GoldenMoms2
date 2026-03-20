@@ -396,11 +396,9 @@ async function loadAttendanceForEvent(eventId){
 async function saveAttendance(eventId){
   if(!supa || !IS_CONNECTED || !eventId) return;
   try{
-    // Get the event's team so we can load the right players
     const { data: evData } = await supa.from('events').select('team,type').eq('id', eventId).maybeSingle();
     const evTeam = evData?.team || TEAMS.GM;
 
-    // Determine which players to mark: selectedPlayerIds if any, else ALL active players of that team
     let targetIds = [...selectedPlayerIds];
     if(!targetIds.length){
       const { data: teamPlayers } = await supa.from('players')
@@ -414,16 +412,32 @@ async function saveAttendance(eventId){
       targetIds = allActive.map(p=>p.id);
     }
 
+    const targetSet = new Set(targetIds);
+    const { data: existing, error: existingErr } = await supa.from('attendance').select('player_id,status').eq('event_id', eventId);
+    if(existingErr) throw existingErr;
+
+    const removableIds = (existing || [])
+      .filter(row => !targetSet.has(row.player_id))
+      .map(row => row.player_id);
+    if(removableIds.length){
+      const { error: deleteErr } = await supa.from('attendance').delete().eq('event_id', eventId).in('player_id', removableIds);
+      if(deleteErr) throw deleteErr;
+    }
+
     if(!targetIds.length) return;
 
-    // Fetch current statuses to not overwrite confirmed ones
-    const { data: existing } = await supa.from('attendance').select('player_id,status').eq('event_id', eventId);
     const confirmedSet = new Set((existing||[]).filter(r=>r.status==='Asiste'||r.status==='No asiste').map(r=>r.player_id));
     const upserts = targetIds
       .filter(pid => !confirmedSet.has(pid))
       .map(pid => ({ event_id: eventId, player_id: pid, status: 'Duda', updated_at: new Date().toISOString() }));
-    if(upserts.length) await supa.from('attendance').upsert(upserts, { onConflict: 'event_id,player_id' });
-  } catch(err){ console.warn('saveAttendance', err); }
+    if(upserts.length){
+      const { error: upsertErr } = await supa.from('attendance').upsert(upserts, { onConflict: 'event_id,player_id' });
+      if(upsertErr) throw upsertErr;
+    }
+  } catch(err){
+    console.warn('saveAttendance', err);
+    throw err;
+  }
 }
 
 function openModal(opts = {}){
@@ -479,25 +493,42 @@ btnDelete.addEventListener('click', async () => {
 btnSave.addEventListener('click', async () => {
   const title=f_title.value.trim(), type=f_type.value, team=f_team.value;
   const opponent=f_opponent.value.trim(), uniform=f_uniform.value, location=f_location.value.trim();
-  if(!title||!f_dt.value){ alert('Completa título y fecha/hora'); return; }
-  if(!supa||!IS_CONNECTED){ alert('Sin conexión.'); return; }
+  if(!title||!f_dt.value){ alert('Completa titulo y fecha/hora'); return; }
+  if(!supa||!IS_CONNECTED){ alert('Sin conexion.'); return; }
   const datetime=localInputToISOWithOffset(f_dt.value);
   const payload={ title, type, team, opponent, uniform, location, datetime };
+  const originalLabel = btnSave.textContent;
+  btnSave.disabled = true;
+  btnSave.textContent = editingEventId ? 'Guardando cambios...' : 'Guardando...';
   try{
     let savedId=editingEventId;
+    const wasEditing = !!editingEventId;
     if(editingEventId){
-      const { error, count } = await supa.from('events').update(payload,{count:'exact'}).eq('id',editingEventId);
+      const { data, error } = await supa.from('events')
+        .update(payload)
+        .eq('id', editingEventId)
+        .select('id')
+        .maybeSingle();
       if(error) throw error;
-      if(count===0) console.warn('update: ninguna fila actualizada');
+      if(!data?.id) throw new Error('No se pudo actualizar el evento. Intenta nuevamente.');
+      savedId = data.id;
     } else {
-      const { data, error } = await supa.from('events').insert([payload]).select('id');
+      const { data, error } = await supa.from('events').insert([payload]).select('id').maybeSingle();
       if(error) throw error;
-      savedId = data?.[0]?.id;
+      savedId = data?.id;
     }
-    // Always create pending attendance for all convoked players
-    if(savedId) await saveAttendance(savedId);
-  } catch(err){ alert('Error: '+(err.message||err)); console.error(err); return; }
-  closeModal(); renderMonth(); renderDash();
+    if(!savedId) throw new Error('No se pudo guardar el evento.');
+    await saveAttendance(savedId);
+    closeModal();
+    await Promise.allSettled([renderMonth(), renderDash(), loadNotifications()]);
+    showToast(wasEditing ? 'Evento actualizado' : 'Evento creado');
+  } catch(err){
+    alert('Error: '+(err.message||err));
+    console.error(err);
+  } finally {
+    btnSave.disabled = false;
+    btnSave.textContent = originalLabel;
+  }
 });
 
 /* ═══════════════════════════════════════════════════════════
