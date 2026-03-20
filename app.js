@@ -88,15 +88,15 @@ function updateConnStatus(){
   const el = document.getElementById('connStatus');
   if(!el) return;
   if(IS_CONNECTING){
-    el.textContent = '? Conectando...';
+    el.textContent = 'Conectando...';
     el.className = 'connecting';
     return;
   }
   if(IS_CONNECTED){
-    el.textContent = '? Conectado';
+    el.textContent = 'Conectado';
     el.className = 'online';
   } else {
-    el.textContent = '? Sin conexi?n';
+    el.textContent = 'Sin conexion';
     el.className = 'offline';
   }
 }
@@ -992,7 +992,7 @@ async function renderBirthdays(){
   const birthTodayEl=document.getElementById('birthToday');
   const todayYMD=localDateYMD(new Date());
   upB.innerHTML=''; birthTodayEl.innerHTML='';
-  if(!supa||!IS_CONNECTED){ upB.innerHTML='<div class="empty-state">Sin conexi?n</div>'; return; }
+  if(!supa||!IS_CONNECTED){ upB.innerHTML='<div class="empty-state">Sin conexion</div>'; return; }
   try{
     let vw = null;
     const { data:vwData, error:vwErr } = await supa.from('vw_upcoming_birthdays').select('*').order('proximo_cumple',{ascending:true}).limit(10);
@@ -1033,7 +1033,7 @@ async function renderBirthdays(){
         dt.textContent=bd.toLocaleDateString('es-CL',{day:'2-digit',month:'short'}); info.appendChild(dt);
         item.appendChild(info);
         const isToday=localDateYMD(bd)===todayYMD;
-        if(isToday){ const b=document.createElement('div'); b.className='birth-today-badge'; b.textContent='?Hoy! ??'; item.appendChild(b); }
+        if(isToday){ const b=document.createElement('div'); b.className='birth-today-badge'; b.textContent='Hoy'; item.appendChild(b); }
         upB.appendChild(item);
       }
       const todayList=uniq.filter(p=>p.proximo_cumple&&localDateYMD(safeDateOnly(p.proximo_cumple)||new Date(0))===todayYMD);
@@ -1045,17 +1045,17 @@ async function renderBirthdays(){
           const info=document.createElement('div');
           const nm=document.createElement('div'); nm.className='birth-name'; nm.textContent=p.apodo||p.nombre||'?'; info.appendChild(nm);
           const ag=document.createElement('div'); ag.className='birth-date';
-          ag.textContent = p.edad ? `${p.edad} a?os hoy ??` : 'Est? de cumplea?os hoy';
+          ag.textContent = p.edad ? `${p.edad} anos hoy` : 'Esta de cumpleanos hoy';
           info.appendChild(ag);
           item.appendChild(info);
-          const badge=document.createElement('div'); badge.className='birth-today-badge'; badge.textContent='?Hoy!';
+          const badge=document.createElement('div'); badge.className='birth-today-badge'; badge.textContent='Hoy';
           item.appendChild(badge);
           birthTodayEl.appendChild(item);
         }
-      } else { birthTodayEl.innerHTML='<div class="empty-state"><span class="empty-state-icon">??</span>Hoy no hay cumplea?os</div>'; }
+      } else { birthTodayEl.innerHTML='<div class="empty-state"><span class="empty-state-icon">&#x1F382;</span>Hoy no hay cumpleanos</div>'; }
     } else {
-      upB.innerHTML='<div class="empty-state"><span class="empty-state-icon">??</span>Sin datos</div>';
-      birthTodayEl.innerHTML='<div class="empty-state"><span class="empty-state-icon">??</span>Sin cumplea?os hoy</div>';
+      upB.innerHTML='<div class="empty-state"><span class="empty-state-icon">&#x1F382;</span>Sin proximos cumpleanos</div>';
+      birthTodayEl.innerHTML='<div class="empty-state"><span class="empty-state-icon">&#x1F382;</span>Sin cumpleanos hoy</div>';
     }
   } catch(err){ console.warn('renderBirthdays', err); upB.innerHTML='<div class="empty-state">Error</div>'; }
 }
@@ -1770,107 +1770,11 @@ document.getElementById('btnSaveResult').addEventListener('click', async ()=>{
    ESTADÍSTICAS INDIVIDUALES
    ══════════════════════════════════════════════════════════ */
 async function renderStats() {
-  const filterTeam = document.getElementById('stats_team_filter').value;
-  const tbody = document.getElementById('standingsBody');
-  const kpisEl = document.getElementById('standingsKpis');
-  const scorersEl = document.getElementById('topScorers');
-  if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--muted)">⏳ Cargando…</td></tr>';
-  if(!supa||!IS_CONNECTED){ tbody.innerHTML='<tr><td colspan="11" class="empty-state">Sin conexión</td></tr>'; return; }
-  try{
-    // Load matches with result
-    let matchQ = supa.from('matches').select('*').order('date',{ascending:false});
-    if(filterTeam!=='all') matchQ = matchQ.eq('team', filterTeam);
-    const {data:matches} = await matchQ;
-
-    // Load goals / scorers
-    const {data:allGoals} = await supa.from('goals').select('player_id,match_id');
-    const {data:players} = await supa.from('players').select('id,apodo,nombre,equipos').order('apodo',{ascending:true});
-    const playerMap = Object.fromEntries((players||[]).map(p=>[p.id,p]));
-
-    // Group matches by team (rival name acts as "opponent team")
-    // Build per-team row: our teams vs rivals
-    const teams = filterTeam==='all' ? ['Golden Moms','Dreams','Power'] : [filterTeam];
-    const rows = [];
-
-    for(const team of teams){
-      const tm = (matches||[]).filter(m=>m.team===team && m.goals_for!=null && m.goals_against!=null);
-      if(!tm.length) continue;
-      let pj=0,g=0,e=0,p=0,gf=0,gc=0;
-      const form = [];
-      for(const m of tm){
-        pj++; gf+=m.goals_for; gc+=m.goals_against;
-        if(m.goals_for>m.goals_against){ g++; form.push('W'); }
-        else if(m.goals_for===m.goals_against){ e++; form.push('D'); }
-        else { p++; form.push('L'); }
-      }
-      const pts=g*3+e;
-      const dif=gf-gc;
-      rows.push({team,pj,g,e,p,gf,gc,dif,pts,form:form.slice(0,5)});
-    }
-
-    // Sort by pts desc, dif desc, gf desc
-    rows.sort((a,b)=>b.pts-a.pts||b.dif-a.dif||b.gf-a.gf);
-
-    // Team colors
-    const teamColor = {'Golden Moms':'#22c55e','Dreams':'#a855f7','Power':'#f97316'};
-
-    tbody.innerHTML='';
-    if(!rows.length){
-      tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--muted-2)">Sin partidos registrados con resultado</td></tr>';
-    }
-    rows.forEach((r,i)=>{
-      const tr=document.createElement('tr');
-      if(i===0) tr.className='top-1';
-      else if(i<3) tr.className='top-3';
-      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
-      const diffHtml = r.dif>0?'<span class="st-diff-pos">+'+r.dif+'</span>':r.dif<0?'<span class="st-diff-neg">'+r.dif+'</span>':'0';
-      const formHtml = r.form.map(f=>f==='W'?'<div class="st-form-w">G</div>':f==='D'?'<div class="st-form-d">E</div>':'<div class="st-form-l">P</div>').join('');
-      tr.innerHTML = '<td>'+medal+'</td>'+
-        '<td><span class="st-team-badge" style="background:'+( teamColor[r.team]||'#999')+'"></span><span class="st-team-name">'+r.team+'</span></td>'+
-        '<td>'+r.pj+'</td><td>'+r.g+'</td><td>'+r.e+'</td><td>'+r.p+'</td>'+
-        '<td>'+r.gf+'</td><td>'+r.gc+'</td><td>'+diffHtml+'</td>'+
-        '<td><span class="st-pts">'+r.pts+'</span></td>'+
-        '<td><div class="st-form">'+formHtml+'</div></td>';
-      tbody.appendChild(tr);
-    });
-
-    // Season KPIs
-    if(kpisEl){
-      const allM = (matches||[]).filter(m=>m.goals_for!=null);
-      const totPJ=allM.length, totG=allM.filter(m=>m.goals_for>m.goals_against).length;
-      const totGF=allM.reduce((s,m)=>s+m.goals_for,0), totGC=allM.reduce((s,m)=>s+m.goals_against,0);
-      kpisEl.innerHTML=[
-        {label:'Partidos',val:totPJ,icon:'📅'},
-        {label:'Victorias',val:totG,icon:'🏆'},
-        {label:'Goles a favor',val:totGF,icon:'⚽'},
-        {label:'Goles en contra',val:totGC,icon:'🥅'},
-      ].map(k=>'<div class="kpi-card" style="padding:12px 8px;text-align:center"><div style="font-size:18px">'+k.icon+'</div><div class="kpi-value" style="font-size:24px;margin:2px 0">'+k.val+'</div><div class="kpi-label">'+k.label+'</div></div>').join('');
-    }
-
-    // Top scorers
-    if(scorersEl){
-      const goalsByPlayer={};
-      for(const g of (allGoals||[])){ goalsByPlayer[g.player_id]=(goalsByPlayer[g.player_id]||0)+1; }
-      for(const m of (matches||[])){
-        for(const id of (m.scorer_ids||[])){ goalsByPlayer[id]=(goalsByPlayer[id]||0)+1; }
-      }
-      const scorerRows=Object.entries(goalsByPlayer).map(([id,g])=>({p:playerMap[id],g})).filter(r=>r.p).sort((a,b)=>b.g-a.g).slice(0,10);
-      scorersEl.innerHTML='';
-      if(!scorerRows.length){ scorersEl.innerHTML='<div class="empty-state" style="padding:12px;font-size:13px">Sin goles registrados</div>'; }
-      scorerRows.forEach((r,i)=>{
-        const row=document.createElement('div');
-        row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);font-size:13px';
-        row.innerHTML='<span style="width:20px;text-align:center;font-weight:800;color:var(--muted)">'+(i+1)+'</span>'+
-          '<div class="stats-avatar" style="width:32px;height:32px;font-size:12px">'+( r.p.apodo||r.p.nombre||'?')[0].toUpperCase()+'</div>'+
-          '<span style="flex:1;font-weight:700">'+(r.p.apodo||r.p.nombre||'—')+'</span>'+
-          '<span style="font-weight:800;font-size:15px;color:var(--lime)">'+r.g+' ⚽</span>';
-        scorersEl.appendChild(row);
-      });
-    }
-  } catch(err){ console.error('renderStats',err); tbody.innerHTML='<tr><td colspan="11" class="empty-state">Error cargando datos</td></tr>'; }
+  switchStandTab(2);
 }
-document.getElementById('stats_team_filter').addEventListener('change', renderStats);
+const statsTeamFilter = document.getElementById('stats_team_filter');
+if(statsTeamFilter) statsTeamFilter.addEventListener('change', renderStats);
+
 
 /* ═══════════════════════════════════════════════════════════
    TABLÓN DE ANUNCIOS
@@ -2433,7 +2337,7 @@ function updateBell(pending) {
     list.appendChild(item);
   });
 
-  if(banner && pList){
+  if(banner && pList && !currentUser?.player_id){
     banner.style.display = '';
     pList.innerHTML = '';
     pending.slice(0,3).forEach(p => {
@@ -2449,6 +2353,8 @@ function updateBell(pending) {
     });
     const last = pList.lastChild;
     if(last) last.style.borderBottom = 'none';
+  } else if(banner){
+    banner.style.display = 'none';
   }
 }
 
@@ -4129,6 +4035,35 @@ function showLogoutMenu() {
   }
 }
 
+async function getCurrentUserPendingAttendance(daysAhead = 14) {
+  if(!supa || !IS_CONNECTED || !currentUser?.player_id) return [];
+  const now = new Date();
+  const future = new Date(now);
+  future.setDate(future.getDate() + daysAhead);
+  const { data:attRows, error } = await supa.from('attendance')
+    .select('event_id, status, events(id,title,datetime,team,type)')
+    .eq('player_id', currentUser.player_id)
+    .eq('status', 'Duda')
+    .gte('events.datetime', now.toISOString())
+    .lte('events.datetime', future.toISOString());
+  if(error) throw error;
+  return (attRows || []).filter(a => a.events).map(a => {
+    const ev = a.events;
+    const d = new Date(ev.datetime);
+    return {
+      id: ev.id,
+      title: ev.title,
+      dateStr: d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'}),
+      timeStr: d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}),
+      team: ev.team,
+      type: ev.type,
+      event: ev,
+      pendingCount: 1,
+      total: 1
+    };
+  });
+}
+
 async function renderPlayerDash() {
   const card = document.getElementById('playerDashCard');
   const pdName = document.getElementById('pdName');
@@ -4137,40 +4072,30 @@ async function renderPlayerDash() {
   if(!card || !currentUser) return;
 
   const name = currentUser.apodo || currentUser.nombre || 'Jugadora';
-  if(pdName) pdName.textContent = 'Hola, ' + name + ' 👋';
+  if(pdName) pdName.textContent = 'Hola, ' + name;
   if(pdRole) pdRole.textContent = currentUser.role==='admin' ? 'Administradora' : currentUser.role==='capitana' ? 'Capitana' + (currentUser.numero_camiseta ? ' #' + currentUser.numero_camiseta : '') : 'Jugadora' + (currentUser.numero_camiseta ? ' #' + currentUser.numero_camiseta : '');
   card.style.display = '';
-  if(pdItems) pdItems.innerHTML = '<div style="font-size:12px;opacity:.7">Cargando tus pendientes…</div>';
+  if(pdItems) pdItems.innerHTML = '<div style="font-size:12px;opacity:.7">Cargando tus pendientes...</div>';
 
   if(!supa || !IS_CONNECTED || !currentUser.player_id) return;
   const items = [];
   const pid = currentUser.player_id;
 
   try {
-    // 1. Asistencia pendiente (mis eventos con Duda)
-    const now = new Date();
-    const { data:attRows } = await supa.from('attendance')
-      .select('event_id, status, events(id,title,datetime,type,team)')
-      .eq('player_id', pid)
-      .eq('status', 'Duda')
-      .gte('events.datetime', now.toISOString());
-    const pendingAtt = (attRows||[]).filter(a=>a.events);
+    const pendingAtt = await getCurrentUserPendingAttendance(14);
     if(pendingAtt.length) {
       items.push({
-        icon:'&#x23F3;', title: pendingAtt.length + ' evento'+(pendingAtt.length>1?'s':'')+' sin confirmar',
-        sub: pendingAtt.map(a=>{
-          const d=new Date(a.events.datetime);
-          return a.events.title+' | '+d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'});
-        }).slice(0,3).join(' | '),
+        icon:'&#x23F3;',
+        title: pendingAtt.length + ' evento' + (pendingAtt.length>1?'s':'') + ' sin confirmar',
+        sub: pendingAtt.map(a => a.title + ' | ' + a.dateStr).slice(0,3).join(' | '),
         badge: pendingAtt.length,
         action: () => {
           showView('events');
-          setTimeout(() => openEventForCurrentUser(pendingAtt[0]?.events), 350);
+          setTimeout(() => openEventForCurrentUser(pendingAtt[0]?.event), 350);
         }
       });
     }
 
-    // 2. Cuotas pendientes (fee_payments con paid=false)
     const { data:feeRows } = await supa.from('fee_payments')
       .select('paid, fees(title,amount,due_date)')
       .eq('player_id', pid)
@@ -4179,14 +4104,14 @@ async function renderPlayerDash() {
     if(pendingFees.length) {
       const total = pendingFees.reduce((s,f)=>s+Number(f.fees?.amount||0),0);
       items.push({
-        icon:'💰', title: pendingFees.length + ' cuota'+(pendingFees.length>1?'s':'')+' pendiente'+(pendingFees.length>1?'s':''),
-        sub: pendingFees.map(f=>f.fees.title).slice(0,3).join(', ') + (total?'  ·  Total: $'+total.toLocaleString('es-CL'):''),
+        icon:'&#x1F4B0;',
+        title: pendingFees.length + ' cuota' + (pendingFees.length>1?'s':'') + ' pendiente' + (pendingFees.length>1?'s':''),
+        sub: pendingFees.map(f=>f.fees.title).slice(0,3).join(', ') + (total?' | Total: $'+total.toLocaleString('es-CL'):''),
         badge: pendingFees.length,
         action: null
       });
     }
 
-    // 3. Egresos pendientes (expense_payments con paid=false)
     const { data:expRows } = await supa.from('expense_payments')
       .select('amount, paid, expenses(title)')
       .eq('player_id', pid)
@@ -4195,15 +4120,16 @@ async function renderPlayerDash() {
     if(pendingExp.length) {
       const totalExp = pendingExp.reduce((s,e)=>s+Number(e.amount||0),0);
       items.push({
-        icon:'📤', title: pendingExp.length + ' cobro'+(pendingExp.length>1?'s':'')+' pendiente'+(pendingExp.length>1?'s':''),
-        sub: pendingExp.map(e=>e.expenses.title+' $'+Number(e.amount||0).toLocaleString('es-CL')).slice(0,3).join(' | ') + '  ·  Total: $'+totalExp.toLocaleString('es-CL'),
+        icon:'&#x1F4E4;',
+        title: pendingExp.length + ' cobro' + (pendingExp.length>1?'s':'') + ' pendiente' + (pendingExp.length>1?'s':''),
+        sub: pendingExp.map(e=>e.expenses.title+' $'+Number(e.amount||0).toLocaleString('es-CL')).slice(0,3).join(' | ') + ' | Total: $'+totalExp.toLocaleString('es-CL'),
         badge: pendingExp.length,
         action: null
       });
     }
 
     if(!items.length) {
-      if(pdItems) pdItems.innerHTML = '<div style="font-size:13px;opacity:.85;text-align:center;padding:8px 0">✅ Todo al día — sin pendientes</div>';
+      if(pdItems) pdItems.innerHTML = '<div style="font-size:13px;opacity:.85;text-align:center;padding:8px 0">Todo al dia - sin pendientes</div>';
       return;
     }
     if(pdItems) {
@@ -4225,41 +4151,19 @@ async function renderPlayerDash() {
   } catch(err) { console.warn('renderPlayerDash', err); }
 }
 
-// ── Filter notifications for current player ───────────────
-// Override loadNotifications to filter by player when logged in as jugadora
 async function loadNotifications() {
   if(!currentUser) {
     updateBell([]);
     return;
   }
-  if(!supa || !IS_CONNECTED) return;
-  if(!currentUser.player_id){
-    if(canManageAttendance()) await loadNotificationsAdmin();
-    else updateBell([]);
+  if(!supa || !IS_CONNECTED) {
+    updateBell([]);
     return;
   }
   try {
-    const now = new Date();
-    const future = new Date(now); future.setDate(future.getDate()+14);
-    const { data:attRows } = await supa.from('attendance')
-      .select('event_id, status, events(id,title,datetime,team,type)')
-      .eq('player_id', currentUser.player_id)
-      .eq('status','Duda')
-      .gte('events.datetime', now.toISOString())
-      .lte('events.datetime', future.toISOString());
-    const pending = (attRows||[]).filter(a=>a.events).map(a=>{
-      const ev=a.events;
-      const d=new Date(ev.datetime);
-      return {
-        id:ev.id, title:ev.title,
-        dateStr:d.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'}),
-        timeStr:d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}),
-        team:ev.team, type:ev.type, event:ev,
-        pendingCount:1, total:1
-      };
-    });
+    const pending = await getCurrentUserPendingAttendance(14);
     updateBell(pending);
-  } catch(err){ console.warn('loadNotifications player', err); }
+  } catch(err){ console.warn('loadNotifications', err); }
 }
 
 async function openUserManagement() {

@@ -248,7 +248,7 @@ body.auth-loading>.toast{visibility:hidden}
       </div>
       <div class="card">
         <div class="dash-card-title">
-          <span class="dash-card-icon">🎉</span> Próximos
+          <span class="dash-card-icon">🎉</span> Proximos cumpleanos
         </div>
         <div id="upBirth"></div>
       </div>
@@ -321,7 +321,7 @@ body.auth-loading>.toast{visibility:hidden}
     <div class="section-header">
       <div>
         <div class="section-title">Partidos</div>
-        <div class="section-sub">Historial con marcador, goleadoras y observaciones</div>
+        <div class="section-sub">Historial detallado: rival, fecha, marcador, goleadoras y observaciones.</div>
       </div>
     </div>
     <div id="matchesList"></div>
@@ -469,13 +469,13 @@ body.auth-loading>.toast{visibility:hidden}
   <!-- ═══════════ ESTADÍSTICAS ═══════════ -->
   <section id="v-stats" style="display:none;padding:0 4px;overflow-x:hidden" role="tabpanel" aria-labelledby="tab-stats">
     <!-- Tabs: Nuestros equipos | Torneos -->
-        <div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px" role="tablist" aria-label="Estadísticas">
+        <div style="display:none;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px" role="tablist" aria-label="Estadísticas">
       <button class="tab active" id="standTab1" type="button" data-stand-tab="1" aria-controls="standView1">🏅 Nuestros equipos</button>
       <button class="tab" id="standTab2" type="button" data-stand-tab="2" aria-controls="standView2">🏆 Torneos</button>
     </div>
 
     <!-- Tab 1: Our teams internal standings -->
-    <div id="standView1">
+    <div id="standView1" style="display:none" hidden>
       <div class="section-header" style="margin-bottom:12px">
         <div class="section-sub">Resultados acumulados por equipo</div>
         <select id="stats_team_filter" class="input" style="width:auto;min-width:160px">
@@ -501,7 +501,7 @@ body.auth-loading>.toast{visibility:hidden}
     </div>
 
     <!-- Tab 2: Tournaments -->
-    <div id="standView2" style="display:none">
+    <div id="standView2">
       <!-- Header bar -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <select id="tournamentSelect" class="input" style="flex:1;min-width:160px;max-width:280px">
