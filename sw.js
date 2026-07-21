@@ -1,9 +1,9 @@
-const CACHE_NAME = 'gm-shell-v5';
+const CACHE_NAME = 'gm-shell-v6';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
-  './app.js?v=20260721-3',
+  './app.js?v=20260721-4',
   './manifest.webmanifest',
   './Logo.webp',
   './icon-192.png',

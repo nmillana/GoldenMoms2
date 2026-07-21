@@ -1905,10 +1905,14 @@ async function renderBoard(){
 const feeModalBg=document.getElementById('feeModalBg');
 let editingFeeId=null;
 let feePaymentsState={}; // player_id → boolean
+let feeAssignedPlayers = new Set();
+let feeModalPlayers = [];
 
 async function openFeeModal(fee=null){
   editingFeeId=fee?.id||null;
   feePaymentsState={};
+  feeAssignedPlayers=new Set();
+  feeModalPlayers=[];
   feeExcludedPlayers=new Set();
   document.getElementById('feeModalTitle').textContent=fee?'Editar cuota':'Nueva cuota';
   document.getElementById('fee_id').value=fee?.id||'';
@@ -1934,18 +1938,16 @@ async function openFeeModal(fee=null){
     let filtered=allPlayers;
     if(teamFilter!=='Todos') filtered=filtered.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(teamFilter));
 
-    // Load existing payments if editing. If there are payment rows, they are the assigned list.
-    let existingPaymentIds = new Set();
+    // Load existing payments if editing. Payment rows are assigned cobranza rows.
     if(fee?.id){
       const {data:payments,error}=await supa.from('fee_payments').select('player_id,paid,paid_at').eq('fee_id',fee.id);
       if(error) throw error;
       for(const pay of (payments||[])){
-        existingPaymentIds.add(String(pay.player_id));
+        feeAssignedPlayers.add(String(pay.player_id));
         feePaymentsState[pay.player_id]=!!pay.paid;
       }
-    }
-    if(fee?.id && existingPaymentIds.size){
-      filtered=filtered.filter(p=>existingPaymentIds.has(String(p.id)));
+    } else {
+      filtered.forEach(p=>feeAssignedPlayers.add(String(p.id)));
     }
 
     renderFeePaymentsGrid(filtered);
@@ -1956,45 +1958,62 @@ async function openFeeModal(fee=null){
 let feeExcludedPlayers = new Set();
 
 function renderFeePaymentsGrid(players){
+  feeModalPlayers = players || [];
   const pgrid=document.getElementById('fee_payments_grid');
   pgrid.innerHTML='';
-  for(const p of players){
-    if(feeExcludedPlayers.has(p.id)) continue; // skip excluded
-    const paid=feePaymentsState[p.id]||false;
+  for(const p of feeModalPlayers){
+    const pid=String(p.id);
+    const assigned=feeAssignedPlayers.has(pid);
+    const paid=!!feePaymentsState[pid];
     const row=document.createElement('div');row.className='fee-player-row';
     row.dataset.pid=p.id;
+    row.dataset.assigned=assigned?'true':'false';
+    if(!assigned) row.style.opacity='.62';
     const av=document.createElement('div');av.className='att-avatar';av.style.width='28px';av.style.height='28px';av.style.fontSize='11px';
     av.textContent=(p.apodo||p.nombre||'?')[0].toUpperCase();
     const nm=document.createElement('div');nm.className='fee-player-name';nm.style.flex='1';nm.textContent=p.apodo||p.nombre||'—';
-    const toggle=document.createElement('button');toggle.type='button';
-    toggle.className='fee-toggle '+(paid?'paid':'unpaid');
-    toggle.textContent=paid?'✅ Pagó':'❌ Debe';
-    toggle.dataset.pid=p.id;
-    toggle.addEventListener('click',()=>{
-      feePaymentsState[p.id]=!feePaymentsState[p.id];
-      toggle.className='fee-toggle '+(feePaymentsState[p.id]?'paid':'unpaid');
-      toggle.textContent=feePaymentsState[p.id]?'✅ Pagó':'❌ Debe';
-    });
-    // Remove player button
-    const removeBtn=document.createElement('button');removeBtn.type='button';
-    removeBtn.style.cssText='background:none;border:none;color:var(--muted-2);font-size:15px;cursor:pointer;padding:2px 4px;margin-left:4px;line-height:1;border-radius:4px';
-    removeBtn.title='Quitar de esta cuota';
-    removeBtn.textContent='✕';
-    removeBtn.addEventListener('click',()=>{
-      feeExcludedPlayers.add(p.id);
-      delete feePaymentsState[p.id];
-      row.remove();
-    });
-    row.appendChild(av);row.appendChild(nm);row.appendChild(toggle);row.appendChild(removeBtn);
+    row.appendChild(av);row.appendChild(nm);
+
+    if(assigned){
+      const toggle=document.createElement('button');toggle.type='button';
+      toggle.className='fee-toggle '+(paid?'paid':'unpaid');
+      toggle.textContent=paid?'✅ Pagó':'❌ Debe';
+      toggle.dataset.pid=p.id;
+      toggle.addEventListener('click',()=>{
+        feePaymentsState[pid]=!feePaymentsState[pid];
+        toggle.className='fee-toggle '+(feePaymentsState[pid]?'paid':'unpaid');
+        toggle.textContent=feePaymentsState[pid]?'✅ Pagó':'❌ Debe';
+      });
+      const removeBtn=document.createElement('button');removeBtn.type='button';
+      removeBtn.style.cssText='background:none;border:none;color:var(--muted-2);font-size:15px;cursor:pointer;padding:2px 4px;margin-left:4px;line-height:1;border-radius:4px';
+      removeBtn.title='Quitar de esta cuota';
+      removeBtn.textContent='✕';
+      removeBtn.addEventListener('click',()=>{
+        feeAssignedPlayers.delete(pid);
+        feePaymentsState[pid]=false;
+        renderFeePaymentsGrid(feeModalPlayers);
+      });
+      row.appendChild(toggle);row.appendChild(removeBtn);
+    } else {
+      const addBtn=document.createElement('button');addBtn.type='button';
+      addBtn.className='btn';
+      addBtn.style.cssText='font-size:11px;padding:4px 9px;white-space:nowrap';
+      addBtn.textContent='＋ Agregar';
+      addBtn.addEventListener('click',()=>{
+        feeAssignedPlayers.add(pid);
+        if(!(pid in feePaymentsState)) feePaymentsState[pid]=false;
+        renderFeePaymentsGrid(feeModalPlayers);
+      });
+      row.appendChild(addBtn);
+    }
     pgrid.appendChild(row);
   }
 }
-
 function getSelectedFeePaymentRows(feeId){
   const grid=document.getElementById('fee_payments_grid');
   if(!grid) return [];
   const seen=new Set();
-  return [...grid.querySelectorAll('.fee-player-row[data-pid]')]
+  return [...grid.querySelectorAll('.fee-player-row[data-pid][data-assigned="true"]')]
     .map(row=>{
       const playerId=row.dataset.pid;
       if(!playerId || seen.has(playerId)) return null;
@@ -2054,7 +2073,7 @@ document.getElementById('fee_team').addEventListener('change', ()=>{
   renderFeePaymentsGrid(filtered);
 });
 
-function closeFeeModal(){ closeDialog(feeModalBg); editingFeeId=null; feePaymentsState={}; feeExcludedPlayers=new Set(); }
+function closeFeeModal(){ closeDialog(feeModalBg); editingFeeId=null; feePaymentsState={}; feeAssignedPlayers=new Set(); feeModalPlayers=[]; feeExcludedPlayers=new Set(); }
 document.getElementById('btnNewFee').addEventListener('click',()=>openFeeModal());
 document.getElementById('btnCloseFee').addEventListener('click',closeFeeModal);
 feeModalBg.addEventListener('click',e=>{ if(e.target===feeModalBg) closeFeeModal(); });
