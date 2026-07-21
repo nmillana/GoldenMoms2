@@ -3337,6 +3337,64 @@ async function renderExpenses(){
   }
 }
 // Expense modal
+function getSelectedExpensePaymentRows(expenseId){
+  const grid = document.getElementById('exp_players_grid');
+  if(!grid) return [];
+  const seen = new Set();
+  return [...grid.querySelectorAll('input[type=checkbox]:checked')]
+    .map(chk => {
+      const playerId = chk.dataset.pid;
+      if(!playerId || seen.has(playerId)) return null;
+      seen.add(playerId);
+      const amountInput = chk.closest('.treas-player-row')?.querySelector('.treas-amount-input');
+      return {
+        expense_id: expenseId,
+        player_id: playerId,
+        amount: Number(amountInput?.value) || 0
+      };
+    })
+    .filter(Boolean);
+}
+
+async function syncExpensePayments(expenseId, selectedRows){
+  const { data: existing, error: existingErr } = await supa
+    .from('expense_payments')
+    .select('player_id,paid,paid_at')
+    .eq('expense_id', expenseId);
+  if(existingErr) throw existingErr;
+
+  const previousByPlayer = new Map((existing || []).map(row => [String(row.player_id), row]));
+  const selectedByPlayer = new Map(selectedRows.map(row => [String(row.player_id), row]));
+  const removableIds = (existing || [])
+    .filter(row => !selectedByPlayer.has(String(row.player_id)))
+    .map(row => row.player_id);
+
+  if(removableIds.length){
+    const { error: deleteErr } = await supa
+      .from('expense_payments')
+      .delete()
+      .eq('expense_id', expenseId)
+      .in('player_id', removableIds);
+    if(deleteErr) throw deleteErr;
+  }
+
+  const rows = selectedRows.map(row => {
+    const previous = previousByPlayer.get(String(row.player_id));
+    const wasPaid = !!previous?.paid;
+    return {
+      ...row,
+      paid: wasPaid,
+      paid_at: wasPaid ? (previous.paid_at || new Date().toISOString()) : null
+    };
+  });
+
+  if(rows.length){
+    const { error: upsertErr } = await supa
+      .from('expense_payments')
+      .upsert(rows, { onConflict: 'expense_id,player_id' });
+    if(upsertErr) throw upsertErr;
+  }
+}
 async function openExpenseModal(expId=null){
   editingExpenseId=expId;
   document.getElementById('expenseModalTitle').textContent=expId?'Editar egreso':'Nuevo egreso';
@@ -3419,22 +3477,32 @@ document.getElementById('btnSaveExpense')?.addEventListener('click', async()=>{
   const title=document.getElementById('exp_title').value.trim();
   const total=Number(document.getElementById('exp_total').value)||0;
   if(!title||!total){ alert('Falta descripción o monto'); return; }
+  const shouldSplit=document.getElementById('exp_split_chk').checked;
+  const selectedRows = shouldSplit ? getSelectedExpensePaymentRows(null) : [];
+  if(shouldSplit && !selectedRows.length){
+    alert('Selecciona al menos una jugadora para cobrar');
+    return;
+  }
   const payload={title,total_amount:total,date:document.getElementById('exp_date').value||null,team:document.getElementById('exp_team').value,notes:document.getElementById('exp_notes').value.trim()||null};
   try{
     let eid=editingExpenseId;
-    if(eid){ await supa.from('expenses').update(payload).eq('id',eid); }
-    else { const {data}=await supa.from('expenses').insert([payload]).select('id'); eid=data?.[0]?.id; }
-    // Save player splits
-    if(document.getElementById('exp_split_chk').checked && eid){
-      const checks=[...document.querySelectorAll('#exp_players_grid input[type=checkbox]:checked')];
-      const upserts=checks.map(chk=>({ expense_id:eid, player_id:chk.dataset.pid, amount:Number(document.querySelector('.treas-amount-input[data-pid="'+chk.dataset.pid+'"]')?.value)||0, paid:false }));
-      if(upserts.length) await supa.from('expense_payments').upsert(upserts,{onConflict:'expense_id,player_id'});
+    if(eid){
+      const { error } = await supa.from('expenses').update(payload).eq('id',eid);
+      if(error) throw error;
+    } else {
+      const {data,error}=await supa.from('expenses').insert([payload]).select('id');
+      if(error) throw error;
+      eid=data?.[0]?.id;
+      if(!eid) throw new Error('No se pudo crear el egreso');
+    }
+    if(shouldSplit){
+      selectedRows.forEach(row => { row.expense_id = eid; });
+      await syncExpensePayments(eid, selectedRows);
     }
     closeExpenseModal();
     renderExpenses(); renderTreasKPIs(); showToast('✅ Egreso guardado');
   } catch(e){ alert('Error: '+(e.message||e)); }
 });
-
 document.getElementById('btnDeleteExpense')?.addEventListener('click',async()=>{
   if(!editingExpenseId||!confirm('¿Eliminar este egreso?')) return;
   await supa.from('expense_payments').delete().eq('expense_id',editingExpenseId);
