@@ -2726,6 +2726,64 @@ async function loadTreasEventPlayers(team, eventId){
   });
 }
 
+function getSelectedTreasEventPaymentRows(treasEventId){
+  const grid = document.getElementById('te_players_grid');
+  if(!grid) return [];
+  const seen = new Set();
+  return [...grid.querySelectorAll('.te-player-chk:checked')]
+    .map(chk => {
+      const playerId = chk.dataset.pid;
+      if(!playerId || seen.has(playerId)) return null;
+      seen.add(playerId);
+      const amountInput = chk.closest('.treas-player-row')?.querySelector('.treas-amount-input');
+      return {
+        treas_event_id: treasEventId,
+        player_id: playerId,
+        amount: Number(amountInput?.value) || 0
+      };
+    })
+    .filter(Boolean);
+}
+
+async function syncTreasEventPayments(treasEventId, selectedRows){
+  const { data: existing, error: existingErr } = await supa
+    .from('treas_event_payments')
+    .select('player_id,paid,paid_at')
+    .eq('treas_event_id', treasEventId);
+  if(existingErr) throw existingErr;
+
+  const previousByPlayer = new Map((existing || []).map(row => [String(row.player_id), row]));
+  const selectedByPlayer = new Map(selectedRows.map(row => [String(row.player_id), row]));
+  const removableIds = (existing || [])
+    .filter(row => !selectedByPlayer.has(String(row.player_id)))
+    .map(row => row.player_id);
+
+  if(removableIds.length){
+    const { error: deleteErr } = await supa
+      .from('treas_event_payments')
+      .delete()
+      .eq('treas_event_id', treasEventId)
+      .in('player_id', removableIds);
+    if(deleteErr) throw deleteErr;
+  }
+
+  const rows = selectedRows.map(row => {
+    const previous = previousByPlayer.get(String(row.player_id));
+    const wasPaid = !!previous?.paid;
+    return {
+      ...row,
+      paid: wasPaid,
+      paid_at: wasPaid ? (previous.paid_at || new Date().toISOString()) : null
+    };
+  });
+
+  if(rows.length){
+    const { error: upsertErr } = await supa
+      .from('treas_event_payments')
+      .upsert(rows, { onConflict: 'treas_event_id,player_id' });
+    if(upsertErr) throw upsertErr;
+  }
+}
 document.getElementById('te_team')?.addEventListener('change', ()=>{
   loadTreasEventPlayers(document.getElementById('te_team').value, editingTreasEventId);
 });
@@ -2744,6 +2802,7 @@ document.getElementById('treasEventModalBg')?.addEventListener('click', e=>{ if(
 document.getElementById('btnSaveTreasEvent')?.addEventListener('click', async ()=>{
   const title = document.getElementById('te_title').value.trim();
   if(!title){ alert('Falta el nombre del evento'); return; }
+  const selectedRows = getSelectedTreasEventPaymentRows(null);
   const payload = {
     title,
     amount: Number(document.getElementById('te_amount').value)||0,
@@ -2754,33 +2813,27 @@ document.getElementById('btnSaveTreasEvent')?.addEventListener('click', async ()
   try{
     let evId = editingTreasEventId;
     if(evId){
-      await supa.from('treas_events').update(payload).eq('id',evId);
+      const { error } = await supa.from('treas_events').update(payload).eq('id',evId);
+      if(error) throw error;
     } else {
-      const {data} = await supa.from('treas_events').insert([payload]).select('id');
+      const {data,error} = await supa.from('treas_events').insert([payload]).select('id');
+      if(error) throw error;
       evId = data?.[0]?.id;
+      if(!evId) throw new Error('No se pudo crear el cobro');
     }
-    // Save player amounts
-    const rows = document.querySelectorAll('.te-player-chk');
-    const upserts = [];
-    rows.forEach(chk=>{
-      if(!chk.checked) return;
-      const pid = chk.dataset.pid;
-      const amtEl = document.querySelector('.treas-amount-input[data-pid="'+pid+'"]');
-      upserts.push({ treas_event_id:evId, player_id:pid, amount:Number(amtEl?.value)||0, paid:false });
-    });
-    if(upserts.length){
-      await supa.from('treas_event_payments').upsert(upserts,{onConflict:'treas_event_id,player_id'});
-    }
-    closeTreasEventModal(); renderTreasKPIs();
+    selectedRows.forEach(row => { row.treas_event_id = evId; });
+    await syncTreasEventPayments(evId, selectedRows);
+    closeTreasEventModal();
+    await renderTreasEvents();
+    renderTreasKPIs();
     showToast('✅ Evento guardado');
   } catch(e){ alert('Error: '+(e.message||e)); }
 });
-
 document.getElementById('btnDeleteTreasEvent')?.addEventListener('click', async ()=>{
   if(!editingTreasEventId || !confirm('¿Eliminar este evento?')) return;
   await supa.from('treas_event_payments').delete().eq('treas_event_id',editingTreasEventId);
   await supa.from('treas_events').delete().eq('id',editingTreasEventId);
-  closeTreasEventModal(); renderTreasKPIs();
+  closeTreasEventModal(); renderTreasEvents(); renderTreasKPIs();
 });
 
 /* ═══════════════════════════════════════════════════════════
