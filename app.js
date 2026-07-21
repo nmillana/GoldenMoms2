@@ -1934,10 +1934,18 @@ async function openFeeModal(fee=null){
     let filtered=allPlayers;
     if(teamFilter!=='Todos') filtered=filtered.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(teamFilter));
 
-    // Load existing payments if editing
+    // Load existing payments if editing. If there are payment rows, they are the assigned list.
+    let existingPaymentIds = new Set();
     if(fee?.id){
-      const {data:payments}=await supa.from('fee_payments').select('player_id,paid').eq('fee_id',fee.id);
-      for(const pay of (payments||[])){ feePaymentsState[pay.player_id]=pay.paid; }
+      const {data:payments,error}=await supa.from('fee_payments').select('player_id,paid,paid_at').eq('fee_id',fee.id);
+      if(error) throw error;
+      for(const pay of (payments||[])){
+        existingPaymentIds.add(String(pay.player_id));
+        feePaymentsState[pay.player_id]=!!pay.paid;
+      }
+    }
+    if(fee?.id && existingPaymentIds.size){
+      filtered=filtered.filter(p=>existingPaymentIds.has(String(p.id)));
     }
 
     renderFeePaymentsGrid(filtered);
@@ -1982,6 +1990,63 @@ function renderFeePaymentsGrid(players){
   }
 }
 
+function getSelectedFeePaymentRows(feeId){
+  const grid=document.getElementById('fee_payments_grid');
+  if(!grid) return [];
+  const seen=new Set();
+  return [...grid.querySelectorAll('.fee-player-row[data-pid]')]
+    .map(row=>{
+      const playerId=row.dataset.pid;
+      if(!playerId || seen.has(playerId)) return null;
+      seen.add(playerId);
+      return {
+        fee_id:feeId,
+        player_id:playerId,
+        paid:!!feePaymentsState[playerId]
+      };
+    })
+    .filter(Boolean);
+}
+
+async function syncFeePayments(feeId, selectedRows){
+  const {data:existing,error:existingErr}=await supa
+    .from('fee_payments')
+    .select('player_id,paid,paid_at')
+    .eq('fee_id',feeId);
+  if(existingErr) throw existingErr;
+
+  const previousByPlayer=new Map((existing||[]).map(row=>[String(row.player_id),row]));
+  const selectedByPlayer=new Map(selectedRows.map(row=>[String(row.player_id),row]));
+  const removableIds=(existing||[])
+    .filter(row=>!selectedByPlayer.has(String(row.player_id)))
+    .map(row=>row.player_id);
+
+  if(removableIds.length){
+    const {error:deleteErr}=await supa
+      .from('fee_payments')
+      .delete()
+      .eq('fee_id',feeId)
+      .in('player_id',removableIds);
+    if(deleteErr) throw deleteErr;
+  }
+
+  const rows=selectedRows.map(row=>{
+    const previous=previousByPlayer.get(String(row.player_id));
+    const paid=!!row.paid;
+    return {
+      ...row,
+      paid,
+      paid_at: paid ? (previous?.paid_at || new Date().toISOString()) : null
+    };
+  });
+
+  if(rows.length){
+    const {error:upsertErr}=await supa
+      .from('fee_payments')
+      .upsert(rows,{onConflict:'fee_id,player_id'});
+    if(upsertErr) throw upsertErr;
+  }
+}
 document.getElementById('fee_team').addEventListener('change', ()=>{
   if(!allPlayers.length) return;
   const t=document.getElementById('fee_team').value;
@@ -1989,7 +2054,7 @@ document.getElementById('fee_team').addEventListener('change', ()=>{
   renderFeePaymentsGrid(filtered);
 });
 
-function closeFeeModal(){ closeDialog(feeModalBg); editingFeeId=null; feePaymentsState={}; }
+function closeFeeModal(){ closeDialog(feeModalBg); editingFeeId=null; feePaymentsState={}; feeExcludedPlayers=new Set(); }
 document.getElementById('btnNewFee').addEventListener('click',()=>openFeeModal());
 document.getElementById('btnCloseFee').addEventListener('click',closeFeeModal);
 feeModalBg.addEventListener('click',e=>{ if(e.target===feeModalBg) closeFeeModal(); });
@@ -2026,23 +2091,9 @@ document.getElementById('btnSaveFee').addEventListener('click', async ()=>{
       if(error) throw error;
       feeId=data?.[0]?.id;
     }
-    // Upsert payments
     if(feeId){
-      // Delete payments for excluded players
-      if(feeExcludedPlayers.size > 0){
-        await supa.from('fee_payments')
-          .delete()
-          .eq('fee_id', feeId)
-          .in('player_id', [...feeExcludedPlayers]);
-      }
-      const upserts=Object.entries(feePaymentsState).map(([player_id,paid])=>({
-        fee_id:feeId, player_id, paid,
-        paid_at: paid ? new Date().toISOString() : null
-      }));
-      if(upserts.length){
-        const {error}=await supa.from('fee_payments').upsert(upserts,{onConflict:'fee_id,player_id'});
-        if(error) console.warn('fee_payments upsert:',error);
-      }
+      const selectedRows=getSelectedFeePaymentRows(feeId);
+      await syncFeePayments(feeId, selectedRows);
     }
   } catch(err){ alert('Error: '+(err.message||err)); return; }
   closeFeeModal(); renderFees();
@@ -2059,7 +2110,7 @@ async function renderFees(){
 
     for(const fee of fees){
       // Load payments for this fee — MUST filter by fee_id
-      const {data:payments}=await supa.from('fee_payments').select('player_id,paid').eq('fee_id', fee.id);
+      const {data:payments}=await supa.from('fee_payments').select('player_id,paid,paid_at,players(id,apodo,nombre,celular,equipos,estado)').eq('fee_id', fee.id);
       const paidSet=new Set((payments||[]).filter(p=>p.paid).map(p=>p.player_id));
       const totalPayers=(payments||[]).length;
       const paidCount=paidSet.size;
@@ -2090,46 +2141,40 @@ async function renderFees(){
       // Collapsible body with per-player status
       const body=document.createElement('div');body.className='fee-body fee-collapsed';
       {
-        // Load ALL active players for this team
-        const {data:pl}=await supa.from('players').select('id,apodo,nombre,celular,equipos,estado')
-          .eq('estado','activo').order('apodo',{ascending:true});
-        const allActivePlayers = (pl||[]).filter(p=>fee.team==='Golden Moms'||( Array.isArray(p.equipos)&&p.equipos.includes(fee.team)));
-        const paidMap = Object.fromEntries((payments||[]).map(p=>[p.player_id,p]));
-        const pay_list = allActivePlayers.map(p=>({ player_id:p.id, paid: paidMap[p.id]?.paid||false, _player:p }));
+        const pay_list=(payments||[])
+          .map(pay=>({ player_id:pay.player_id, paid:!!pay.paid, _player:pay.players }))
+          .filter(pay=>pay._player)
+          .sort((a,b)=>(a._player.apodo||a._player.nombre||'').localeCompare(b._player.apodo||b._player.nombre||'', 'es'));
         if(pay_list.length){
         for(const pay of pay_list){
           const pl=pay._player;
-          if(!pl) continue;
           const row=document.createElement('div');row.className='fee-player-row';
           const nm=document.createElement('span');nm.className='fee-player-name';nm.textContent=pl.apodo||pl.nombre||'—';
           const status=document.createElement('span');
           status.className='fee-toggle '+(pay.paid?'paid':'unpaid');
           status.textContent=pay.paid?'✅ Pagó':'❌ Debe';
-          // Toggle payment inline
           status.style.cursor='pointer';
           status.addEventListener('click', async ()=>{
             const newPaid=!pay.paid;
             try{
-              await supa.from('fee_payments').upsert([{fee_id:fee.id,player_id:pay.player_id,paid:newPaid,paid_at:newPaid?new Date().toISOString():null}],{onConflict:'fee_id,player_id'});
+              const {error}=await supa.from('fee_payments').upsert([{fee_id:fee.id,player_id:pay.player_id,paid:newPaid,paid_at:newPaid?new Date().toISOString():null}],{onConflict:'fee_id,player_id'});
+              if(error) throw error;
               pay.paid=newPaid;
               status.className='fee-toggle '+(newPaid?'paid':'unpaid');
               status.textContent=newPaid?'✅ Pagó':'❌ Debe';
               waReminder.style.display = newPaid ? 'none' : '';
+              renderTreasKPIs();
             } catch(e){ console.warn(e); }
           });
-          // WA reminder — only visible if unpaid
           const waReminder = document.createElement('a');
           waReminder.className='btn-wa'; waReminder.target='_blank'; waReminder.rel='noopener noreferrer';
           const playerName = pl.apodo||pl.nombre||'';
           const playerPhone = pl.celular ? pl.celular.replace(/\D/g,'') : '';
           const feeMsg = `Hola ${playerName} 👋 Te recordamos que tienes pendiente la cuota *${fee.title}*${fee.amount?' por $'+Number(fee.amount).toLocaleString('es-CL'):''} del equipo Golden Moms 💚`;
-          // If we have their number, send direct; otherwise open chat selector
           if(playerPhone){
-            // Direct chat with pre-filled message (works for individual wa.me links)
             const cleanPhone = playerPhone.replace(/^\+?56/,'').replace(/\D/g,'');
             waReminder.href = `https://wa.me/56${cleanPhone}?text=${encodeURIComponent(feeMsg)}`;
           } else {
-            // No phone: copy message and open group
             waReminder.href = '#';
             waReminder.addEventListener('click', e=>{
               e.preventDefault();
@@ -2140,9 +2185,10 @@ async function renderFees(){
           waReminder.style.display = pay.paid ? 'none' : '';
           row.appendChild(nm);row.appendChild(status);row.appendChild(waReminder);body.appendChild(row);
         }
-        } // end if pay_list.length
+        } else {
+          body.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0">Sin jugadoras asignadas. Edita la cuota para agregar cobros.</div>';
+        }
 
-        // Group WA reminder button inside fee body
         const unpaidList = pay_list.filter(p=>!p.paid);
         if(unpaidList.length){
           const grpRow = document.createElement('div'); grpRow.style.cssText='padding:8px 0 2px;border-top:1px solid var(--line);margin-top:6px';
