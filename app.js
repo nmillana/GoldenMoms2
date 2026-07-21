@@ -1229,9 +1229,7 @@ function showView(v){
   if(v==='fees'){
     if(checkTreasAuth()){
       hideTreasLock();
-      renderFees();
-      renderTreasKPIs();
-      renderExpenses();
+      renderTreasury();
     } else {
       showTreasLock();
     }
@@ -1905,53 +1903,180 @@ async function renderBoard(){
 const feeModalBg=document.getElementById('feeModalBg');
 let editingFeeId=null;
 let feePaymentsState={}; // player_id → boolean
+let feePaymentAmounts={}; // player_id → monto individual
 let feeAssignedPlayers = new Set();
 let feeModalPlayers = [];
+let feeSchema={checked:false,paymentAmount:false,feeMeta:false};
+
+function isMissingColumnError(error){
+  const msg=(error?.message||error?.details||'').toLowerCase();
+  return error?.code==='42703' || (msg.includes('column') && msg.includes('does not exist'));
+}
+function money(n){ return '$'+Number(n||0).toLocaleString('es-CL'); }
+function normalizeTeamList(equipos){
+  if(Array.isArray(equipos)) return equipos;
+  if(typeof equipos==='string'){
+    try{ const parsed=JSON.parse(equipos); return Array.isArray(parsed)?parsed:[equipos]; }
+    catch(e){ return equipos.split(',').map(x=>x.trim()).filter(Boolean); }
+  }
+  return [];
+}
+function playerInTeam(player, team){
+  if(team==='Todos') return true;
+  const equipos=normalizeTeamList(player?.equipos);
+  if(!equipos.length) return team===TEAMS.GM;
+  return equipos.includes(team);
+}
+function feePayAmount(pay, fee){ return pay?.amount!=null ? Number(pay.amount)||0 : Number(fee?.amount)||0; }
+async function detectTreasurySchema(){
+  if(feeSchema.checked) return feeSchema;
+  feeSchema.checked=true;
+  if(!supa||!IS_CONNECTED) return feeSchema;
+  try{
+    const {error}=await supa.from('fee_payments').select('amount').limit(1);
+    feeSchema.paymentAmount=!error;
+    if(error && !isMissingColumnError(error)) console.warn('fee_payments.amount check', error);
+  } catch(e){ feeSchema.paymentAmount=false; }
+  try{
+    const {error}=await supa.from('fees').select('total_amount,split_between_players,advance_player_id,advance_total,advance_credit,advance_notes').limit(1);
+    feeSchema.feeMeta=!error;
+    if(error && !isMissingColumnError(error)) console.warn('fees meta check', error);
+  } catch(e){ feeSchema.feeMeta=false; }
+  return feeSchema;
+}
+function feePlayerSelect(){
+  return feeSchema.paymentAmount
+    ? 'player_id,paid,paid_at,amount,players(id,apodo,nombre,celular,equipos,estado)'
+    : 'player_id,paid,paid_at,players(id,apodo,nombre,celular,equipos,estado)';
+}
+function setFeeAmountLabel(){
+  const label=document.getElementById('feeAmountLabel');
+  if(label) label.textContent=document.getElementById('fee_split_chk')?.checked?'Monto total ($)':'Monto por jugadora ($)';
+}
+function selectedFeeIds(){ return [...feeAssignedPlayers].filter(Boolean); }
+function updateFeeSplitHint(){
+  const hint=document.getElementById('fee_split_hint');
+  if(!hint) return;
+  const count=selectedFeeIds().length;
+  const total=Number(document.getElementById('fee_amount')?.value)||0;
+  if(document.getElementById('fee_split_chk')?.checked){
+    hint.textContent=count ? count+' seleccionadas · aprox. '+money(Math.round(total/count))+' c/u' : 'Selecciona jugadoras';
+  } else {
+    hint.textContent=count ? count+' seleccionadas' : '';
+  }
+}
+function recalcFeeAmounts(forceAll=false){
+  const ids=selectedFeeIds().sort((a,b)=>a.localeCompare(b));
+  const total=Math.round(Number(document.getElementById('fee_amount')?.value)||0);
+  const split=document.getElementById('fee_split_chk')?.checked;
+  if(split && ids.length){
+    const base=Math.floor(total/ids.length);
+    let rem=total-base*ids.length;
+    ids.forEach(pid=>{ feePaymentAmounts[pid]=base+(rem-- > 0 ? 1 : 0); });
+  } else if(forceAll){
+    ids.forEach(pid=>{ feePaymentAmounts[pid]=total; });
+  } else {
+    ids.forEach(pid=>{ if(feePaymentAmounts[pid]==null) feePaymentAmounts[pid]=total; });
+  }
+  document.querySelectorAll('#fee_payments_grid .fee-amount-input').forEach(inp=>{ inp.value=feePaymentAmounts[inp.dataset.pid] ?? ''; });
+  updateFeeSplitHint(); updateFeeAdvanceOptions(); updateFeeAdvanceCredit();
+}
+function updateFeeAdvanceFields(){
+  const fields=document.getElementById('fee_advance_fields');
+  if(fields) fields.style.display=document.getElementById('fee_advance_chk')?.checked?'':'none';
+  updateFeeAdvanceOptions(); updateFeeAdvanceCredit();
+}
+function updateFeeAdvanceOptions(){
+  const sel=document.getElementById('fee_advance_player');
+  if(!sel) return;
+  const current=sel.value;
+  const map=new Map((allPlayers||[]).map(p=>[String(p.id),p]));
+  sel.innerHTML='';
+  selectedFeeIds().forEach(pid=>{
+    const p=map.get(String(pid));
+    const opt=document.createElement('option'); opt.value=pid; opt.textContent=p?.apodo||p?.nombre||'—'; sel.appendChild(opt);
+  });
+  if(current && selectedFeeIds().includes(current)) sel.value=current;
+}
+function updateFeeAdvanceCredit(){
+  const out=document.getElementById('fee_advance_credit');
+  if(!out) return;
+  if(!document.getElementById('fee_advance_chk')?.checked){ out.textContent=''; return; }
+  const pid=document.getElementById('fee_advance_player')?.value;
+  const total=Number(document.getElementById('fee_advance_total')?.value)||0;
+  const own=Number(feePaymentAmounts[pid]||0);
+  out.textContent=pid ? 'Saldo a favor: '+money(Math.max(total-own,0))+' (descontando su cuota '+money(own)+')' : '';
+}
 
 async function openFeeModal(fee=null){
+  await detectTreasurySchema();
   editingFeeId=fee?.id||null;
   feePaymentsState={};
+  feePaymentAmounts={};
   feeAssignedPlayers=new Set();
   feeModalPlayers=[];
   feeExcludedPlayers=new Set();
   document.getElementById('feeModalTitle').textContent=fee?'Editar cuota':'Nueva cuota';
   document.getElementById('fee_id').value=fee?.id||'';
   document.getElementById('fee_title').value=fee?.title||'';
-  document.getElementById('fee_amount').value=fee?.amount||'';
+  const feeAmountValue=fee ? (fee.split_between_players ? (fee.total_amount ?? fee.amount ?? '') : (fee.amount ?? fee.total_amount ?? '')) : '';
+  document.getElementById('fee_amount').value=feeAmountValue;
   document.getElementById('fee_due').value=fee?.due_date||'';
   document.getElementById('fee_team').value=fee?.team||'Golden Moms';
+  document.getElementById('fee_split_chk').checked=!!fee?.split_between_players;
+  document.getElementById('fee_advance_chk').checked=!!fee?.advance_player_id || Number(fee?.advance_total||0)>0;
+  document.getElementById('fee_advance_total').value=fee?.advance_total||'';
+  document.getElementById('fee_advance_notes').value=fee?.advance_notes||'';
   document.getElementById('btnDeleteFee').style.display=fee?'':'none';
+  setFeeAmountLabel();
 
-  // Load payment statuses
   const pgrid=document.getElementById('fee_payments_grid');
   pgrid.innerHTML='<div style="color:var(--muted);font-size:12px;padding:8px">Cargando jugadoras…</div>';
   openDialog(feeModalBg, document.getElementById('fee_title'));
 
   if(!supa||!IS_CONNECTED){ pgrid.innerHTML='<div style="color:var(--muted)">Sin conexión</div>'; return; }
   try{
-    // Load players
-    if(!allPlayers.length){
-      const {data}=await supa.from('players').select('id,apodo,nombre,numero_camiseta,equipos').order('apodo',{ascending:true});
-      allPlayers=data||[];
-    }
+    const {data:players,error:playersErr}=await supa.from('players').select('id,apodo,nombre,numero_camiseta,equipos,estado,celular').order('apodo',{ascending:true});
+    if(playersErr) throw playersErr;
+    allPlayers=players||[];
     const teamFilter=document.getElementById('fee_team').value;
-    let filtered=allPlayers;
-    if(teamFilter!=='Todos') filtered=filtered.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(teamFilter));
 
-    // Load existing payments if editing. Payment rows are assigned cobranza rows.
     if(fee?.id){
-      const {data:payments,error}=await supa.from('fee_payments').select('player_id,paid,paid_at').eq('fee_id',fee.id);
+      const {data:payments,error}=await supa.from('fee_payments').select(feePlayerSelect()).eq('fee_id',fee.id);
       if(error) throw error;
       for(const pay of (payments||[])){
-        feeAssignedPlayers.add(String(pay.player_id));
-        feePaymentsState[pay.player_id]=!!pay.paid;
+        const pid=String(pay.player_id);
+        feeAssignedPlayers.add(pid);
+        feePaymentsState[pid]=!!pay.paid;
+        feePaymentAmounts[pid]=feePayAmount(pay, fee);
       }
     } else {
-      filtered.forEach(p=>feeAssignedPlayers.add(String(p.id)));
+      allPlayers
+        .filter(p=>p.estado==='activo' && playerInTeam(p, teamFilter))
+        .forEach(p=>{
+          const pid=String(p.id);
+          feeAssignedPlayers.add(pid);
+          feePaymentsState[pid]=false;
+          feePaymentAmounts[pid]=Number(document.getElementById('fee_amount').value)||0;
+        });
+      recalcFeeAmounts(true);
     }
 
-    renderFeePaymentsGrid(filtered);
-  } catch(err){ pgrid.innerHTML='<div style="color:var(--danger)">Error cargando jugadoras</div>'; }
+    const visible=allPlayers
+      .filter(p=>playerInTeam(p, teamFilter) || feeAssignedPlayers.has(String(p.id)))
+      .sort((a,b)=>{
+        const aa=feeAssignedPlayers.has(String(a.id))?0:1;
+        const bb=feeAssignedPlayers.has(String(b.id))?0:1;
+        if(aa!==bb) return aa-bb;
+        const sa=a.estado==='activo'?0:1;
+        const sb=b.estado==='activo'?0:1;
+        if(sa!==sb) return sa-sb;
+        return (a.apodo||a.nombre||'').localeCompare(b.apodo||b.nombre||'', 'es');
+      });
+    renderFeePaymentsGrid(visible);
+    if(fee?.advance_player_id) document.getElementById('fee_advance_player').value=String(fee.advance_player_id);
+    updateFeeAdvanceFields();
+  } catch(err){ console.error('openFeeModal',err); pgrid.innerHTML='<div style="color:var(--danger)">Error cargando jugadoras</div>'; }
 }
 
 // Track which players are excluded from this fee
@@ -1973,8 +2098,13 @@ function renderFeePaymentsGrid(players){
     av.textContent=(p.apodo||p.nombre||'?')[0].toUpperCase();
     const nm=document.createElement('div');nm.className='fee-player-name';nm.style.flex='1';nm.textContent=p.apodo||p.nombre||'—';
     row.appendChild(av);row.appendChild(nm);
+    if(p.estado==='reposo'){
+      const state=document.createElement('span');state.className='fee-player-state';state.textContent='Reposo';row.appendChild(state);
+    }
 
     if(assigned){
+      const amountInput=document.createElement('input');amountInput.type='number';amountInput.min='0';amountInput.className='fee-amount-input';amountInput.dataset.pid=pid;amountInput.value=feePaymentAmounts[pid] ?? '';
+      amountInput.addEventListener('input',()=>{ feePaymentAmounts[pid]=Number(amountInput.value)||0; updateFeeAdvanceCredit(); });
       const toggle=document.createElement('button');toggle.type='button';
       toggle.className='fee-toggle '+(paid?'paid':'unpaid');
       toggle.textContent=paid?'✅ Pagó':'❌ Debe';
@@ -1985,15 +2115,21 @@ function renderFeePaymentsGrid(players){
         toggle.textContent=feePaymentsState[pid]?'✅ Pagó':'❌ Debe';
       });
       const removeBtn=document.createElement('button');removeBtn.type='button';
-      removeBtn.style.cssText='background:none;border:none;color:var(--muted-2);font-size:15px;cursor:pointer;padding:2px 4px;margin-left:4px;line-height:1;border-radius:4px';
+      removeBtn.className='fee-remove-btn';
       removeBtn.title='Quitar de esta cuota';
       removeBtn.textContent='✕';
       removeBtn.addEventListener('click',()=>{
+        if(feePaymentsState[pid]){
+          const ok=confirm('Esta jugadora ya está marcada como pagada. Si la quitas, ese pago saldrá de esta lista de cobro. ¿Continuar?');
+          if(!ok) return;
+        }
         feeAssignedPlayers.delete(pid);
         feePaymentsState[pid]=false;
+        delete feePaymentAmounts[pid];
+        if(document.getElementById('fee_split_chk')?.checked) recalcFeeAmounts(true);
         renderFeePaymentsGrid(feeModalPlayers);
       });
-      row.appendChild(toggle);row.appendChild(removeBtn);
+      row.appendChild(amountInput);row.appendChild(toggle);row.appendChild(removeBtn);
     } else {
       const addBtn=document.createElement('button');addBtn.type='button';
       addBtn.className='btn';
@@ -2002,12 +2138,15 @@ function renderFeePaymentsGrid(players){
       addBtn.addEventListener('click',()=>{
         feeAssignedPlayers.add(pid);
         if(!(pid in feePaymentsState)) feePaymentsState[pid]=false;
+        if(!(pid in feePaymentAmounts)) feePaymentAmounts[pid]=Number(document.getElementById('fee_amount')?.value)||0;
+        if(document.getElementById('fee_split_chk')?.checked) recalcFeeAmounts(true);
         renderFeePaymentsGrid(feeModalPlayers);
       });
       row.appendChild(addBtn);
     }
     pgrid.appendChild(row);
   }
+  recalcFeeAmounts(false);
 }
 function getSelectedFeePaymentRows(feeId){
   const grid=document.getElementById('fee_payments_grid');
@@ -2021,6 +2160,7 @@ function getSelectedFeePaymentRows(feeId){
       return {
         fee_id:feeId,
         player_id:playerId,
+        amount:Number(feePaymentAmounts[playerId]||0),
         paid:!!feePaymentsState[playerId]
       };
     })
@@ -2028,9 +2168,10 @@ function getSelectedFeePaymentRows(feeId){
 }
 
 async function syncFeePayments(feeId, selectedRows){
+  await detectTreasurySchema();
   const {data:existing,error:existingErr}=await supa
     .from('fee_payments')
-    .select('player_id,paid,paid_at')
+    .select(feeSchema.paymentAmount?'player_id,paid,paid_at,amount':'player_id,paid,paid_at')
     .eq('fee_id',feeId);
   if(existingErr) throw existingErr;
 
@@ -2052,11 +2193,13 @@ async function syncFeePayments(feeId, selectedRows){
   const rows=selectedRows.map(row=>{
     const previous=previousByPlayer.get(String(row.player_id));
     const paid=!!row.paid;
-    return {
+    const out={
       ...row,
       paid,
       paid_at: paid ? (previous?.paid_at || new Date().toISOString()) : null
     };
+    if(!feeSchema.paymentAmount) delete out.amount;
+    return out;
   });
 
   if(rows.length){
@@ -2069,11 +2212,26 @@ async function syncFeePayments(feeId, selectedRows){
 document.getElementById('fee_team').addEventListener('change', ()=>{
   if(!allPlayers.length) return;
   const t=document.getElementById('fee_team').value;
-  const filtered=t==='Todos'?allPlayers:allPlayers.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(t));
+  if(!editingFeeId){
+    feeAssignedPlayers=new Set(); feePaymentsState={}; feePaymentAmounts={};
+    allPlayers.filter(p=>p.estado==='activo' && playerInTeam(p,t)).forEach(p=>{
+      const pid=String(p.id);
+      feeAssignedPlayers.add(pid);
+      feePaymentsState[pid]=false;
+      feePaymentAmounts[pid]=Number(document.getElementById('fee_amount')?.value)||0;
+    });
+    recalcFeeAmounts(true);
+  }
+  const filtered=allPlayers.filter(p=>playerInTeam(p,t) || feeAssignedPlayers.has(String(p.id)));
   renderFeePaymentsGrid(filtered);
 });
+document.getElementById('fee_split_chk')?.addEventListener('change',()=>{ setFeeAmountLabel(); recalcFeeAmounts(true); });
+document.getElementById('fee_amount')?.addEventListener('input',()=>{ recalcFeeAmounts(true); });
+document.getElementById('fee_advance_chk')?.addEventListener('change',updateFeeAdvanceFields);
+document.getElementById('fee_advance_player')?.addEventListener('change',updateFeeAdvanceCredit);
+document.getElementById('fee_advance_total')?.addEventListener('input',updateFeeAdvanceCredit);
 
-function closeFeeModal(){ closeDialog(feeModalBg); editingFeeId=null; feePaymentsState={}; feeAssignedPlayers=new Set(); feeModalPlayers=[]; feeExcludedPlayers=new Set(); }
+function closeFeeModal(){ closeDialog(feeModalBg); editingFeeId=null; feePaymentsState={}; feePaymentAmounts={}; feeAssignedPlayers=new Set(); feeModalPlayers=[]; feeExcludedPlayers=new Set(); }
 document.getElementById('btnNewFee').addEventListener('click',()=>openFeeModal());
 document.getElementById('btnCloseFee').addEventListener('click',closeFeeModal);
 feeModalBg.addEventListener('click',e=>{ if(e.target===feeModalBg) closeFeeModal(); });
@@ -2086,20 +2244,49 @@ document.getElementById('btnDeleteFee').addEventListener('click', async ()=>{
     const {error}=await supa.from('fees').delete().eq('id',editingFeeId);
     if(error) throw error;
   } catch(err){ alert('Error: '+(err.message||err)); return; }
-  closeFeeModal(); renderFees();
+  closeFeeModal(); renderTreasury();
 });
 
 document.getElementById('btnSaveFee').addEventListener('click', async ()=>{
   const title=document.getElementById('fee_title').value.trim();
   if(!title){ alert('El título es obligatorio.'); return; }
   if(!supa||!IS_CONNECTED){ alert('Sin conexión.'); return; }
-  const amount=document.getElementById('fee_amount').value;
+  await detectTreasurySchema();
+  const amount=Number(document.getElementById('fee_amount').value)||0;
+  const split=document.getElementById('fee_split_chk').checked;
+  const selectedRows=getSelectedFeePaymentRows(null);
+  if(!selectedRows.length){ alert('Selecciona al menos una jugadora para cobrar.'); return; }
+  if(split && !feeSchema.paymentAmount){ alert('Falta aplicar la migración de Supabase para guardar montos divididos por jugadora.'); return; }
+
+  const advanceChecked=document.getElementById('fee_advance_chk').checked;
+  let advancePlayerId=null, advanceTotal=null, advanceCredit=null;
+  if(advanceChecked){
+    if(!feeSchema.feeMeta){ alert('Falta aplicar la migración de Supabase para registrar pagos adelantados.'); return; }
+    advancePlayerId=document.getElementById('fee_advance_player').value||null;
+    advanceTotal=Number(document.getElementById('fee_advance_total').value)||0;
+    if(!advancePlayerId || !advanceTotal){ alert('Completa la jugadora y el total pagado.'); return; }
+    const payer=selectedRows.find(row=>String(row.player_id)===String(advancePlayerId));
+    if(!payer){ alert('La jugadora que pagó debe estar en la lista de cobro.'); return; }
+    payer.paid=true;
+    feePaymentsState[String(advancePlayerId)]=true;
+    advanceCredit=Math.max(advanceTotal-Number(payer.amount||0),0);
+  }
+
+  const totalAssigned=selectedRows.reduce((s,row)=>s+Number(row.amount||0),0);
   const payload={
     title,
-    amount: amount?parseFloat(amount):null,
+    amount: amount||null,
     due_date: document.getElementById('fee_due').value||null,
     team: document.getElementById('fee_team').value,
   };
+  if(feeSchema.feeMeta){
+    payload.split_between_players=split;
+    payload.total_amount=split ? amount : totalAssigned;
+    payload.advance_player_id=advanceChecked?advancePlayerId:null;
+    payload.advance_total=advanceChecked?advanceTotal:null;
+    payload.advance_credit=advanceChecked?advanceCredit:null;
+    payload.advance_notes=advanceChecked?(document.getElementById('fee_advance_notes').value.trim()||null):null;
+  }
   try{
     let feeId=editingFeeId;
     if(editingFeeId){
@@ -2111,11 +2298,11 @@ document.getElementById('btnSaveFee').addEventListener('click', async ()=>{
       feeId=data?.[0]?.id;
     }
     if(feeId){
-      const selectedRows=getSelectedFeePaymentRows(feeId);
+      selectedRows.forEach(row=>{ row.fee_id=feeId; });
       await syncFeePayments(feeId, selectedRows);
     }
   } catch(err){ alert('Error: '+(err.message||err)); return; }
-  closeFeeModal(); renderFees();
+  closeFeeModal(); renderTreasury(); showToast('✅ Cuota guardada');
 });
 
 async function renderFees(){
@@ -2123,30 +2310,44 @@ async function renderFees(){
   list.innerHTML='';
   if(!supa||!IS_CONNECTED){ list.innerHTML='<div class="empty-state">Sin conexión</div>'; return; }
   try{
+    await detectTreasurySchema();
     const {data:fees,error}=await supa.from('fees').select('*').order('created_at',{ascending:false});
     if(error) throw error;
     if(!fees?.length){ list.innerHTML='<div class="empty-state"><span class="empty-state-icon">💰</span>No hay cuotas. ¡Crea la primera!</div>'; return; }
 
     for(const fee of fees){
       // Load payments for this fee — MUST filter by fee_id
-      const {data:payments}=await supa.from('fee_payments').select('player_id,paid,paid_at,players(id,apodo,nombre,celular,equipos,estado)').eq('fee_id', fee.id);
+      const {data:payments}=await supa.from('fee_payments').select(feePlayerSelect()).eq('fee_id', fee.id);
       const paidSet=new Set((payments||[]).filter(p=>p.paid).map(p=>p.player_id));
       const totalPayers=(payments||[]).length;
       const paidCount=paidSet.size;
       const pct=totalPayers>0?Math.round(paidCount/totalPayers*100):0;
+      const totalAmount=(payments||[]).reduce((s,p)=>s+feePayAmount(p, fee),0) || Number(fee.total_amount||fee.amount||0);
+      const paidAmount=(payments||[]).filter(p=>p.paid).reduce((s,p)=>s+feePayAmount(p, fee),0);
 
       const card=document.createElement('div');card.className='fee-card';
 
       const header=document.createElement('div');header.className='fee-header';
       const left=document.createElement('div');
-      const title=document.createElement('div');title.className='fee-title';title.textContent=fee.title;
+      const title=document.createElement('div');title.className='fee-title';title.innerHTML='<span class="fee-type-badge charge">Cuota</span>'+escapeHTML(fee.title||'');
       const meta=document.createElement('div');meta.className='fee-meta';
       const parts=[];
-      if(fee.amount) parts.push('$'+Number(fee.amount).toLocaleString('es-CL'));
-      if(fee.due_date) parts.push('Vence: '+safeDateOnly(fee.due_date)?.toLocaleDateString('es-CL',{day:'2-digit',month:'short'})||fee.due_date);
+      if(totalAmount) parts.push(money(totalAmount));
+      if(fee.due_date){
+        const due=safeDateOnly(fee.due_date);
+        parts.push('Vence: '+(due ? due.toLocaleDateString('es-CL',{day:'2-digit',month:'short'}) : fee.due_date));
+      }
       parts.push(fee.team);
+      if(fee.split_between_players) parts.push('dividido');
       meta.textContent=parts.join(' · ');
-      left.appendChild(title);left.appendChild(meta);
+      const sumLine=document.createElement('div');sumLine.className='fee-meta';sumLine.style.marginTop='2px';
+      sumLine.innerHTML='<span style="color:#16a34a;font-weight:700">'+money(paidAmount)+' cobrado</span> / <span style="color:var(--muted)">'+money(totalAmount)+' total</span>';
+      left.appendChild(title);left.appendChild(meta);left.appendChild(sumLine);
+      if(Number(fee.advance_credit||0)>0){
+        const adv=document.createElement('div');adv.className='fee-meta';adv.style.marginTop='2px';adv.style.color='#d97706';adv.style.fontWeight='700';
+        adv.textContent='Saldo a favor registrado: '+money(fee.advance_credit);
+        left.appendChild(adv);
+      }
 
       const right=document.createElement('div');right.style.display='flex';right.style.alignItems='center';right.style.gap='10px';
       const progWrap=document.createElement('div');progWrap.className='fee-progress-wrap';
@@ -2161,7 +2362,7 @@ async function renderFees(){
       const body=document.createElement('div');body.className='fee-body fee-collapsed';
       {
         const pay_list=(payments||[])
-          .map(pay=>({ player_id:pay.player_id, paid:!!pay.paid, _player:pay.players }))
+          .map(pay=>({ player_id:pay.player_id, paid:!!pay.paid, amount:feePayAmount(pay, fee), _player:pay.players }))
           .filter(pay=>pay._player)
           .sort((a,b)=>(a._player.apodo||a._player.nombre||'').localeCompare(b._player.apodo||b._player.nombre||'', 'es'));
         if(pay_list.length){
@@ -2169,6 +2370,7 @@ async function renderFees(){
           const pl=pay._player;
           const row=document.createElement('div');row.className='fee-player-row';
           const nm=document.createElement('span');nm.className='fee-player-name';nm.textContent=pl.apodo||pl.nombre||'—';
+          const amt=document.createElement('span');amt.style.cssText='font-size:12px;color:var(--muted);margin-right:6px;flex-shrink:0';amt.textContent=money(pay.amount);
           const status=document.createElement('span');
           status.className='fee-toggle '+(pay.paid?'paid':'unpaid');
           status.textContent=pay.paid?'✅ Pagó':'❌ Debe';
@@ -2176,12 +2378,14 @@ async function renderFees(){
           status.addEventListener('click', async ()=>{
             const newPaid=!pay.paid;
             try{
-              const {error}=await supa.from('fee_payments').upsert([{fee_id:fee.id,player_id:pay.player_id,paid:newPaid,paid_at:newPaid?new Date().toISOString():null}],{onConflict:'fee_id,player_id'});
+              const {error}=await supa.from('fee_payments').update({paid:newPaid,paid_at:newPaid?new Date().toISOString():null}).eq('fee_id',fee.id).eq('player_id',pay.player_id);
               if(error) throw error;
               pay.paid=newPaid;
               status.className='fee-toggle '+(newPaid?'paid':'unpaid');
               status.textContent=newPaid?'✅ Pagó':'❌ Debe';
               waReminder.style.display = newPaid ? 'none' : '';
+              const newPaidAmount=pay_list.filter(p=>p.paid).reduce((s,p)=>s+Number(p.amount||0),0);
+              sumLine.innerHTML='<span style="color:#16a34a;font-weight:700">'+money(newPaidAmount)+' cobrado</span> / <span style="color:var(--muted)">'+money(totalAmount)+' total</span>';
               renderTreasKPIs();
             } catch(e){ console.warn(e); }
           });
@@ -2189,7 +2393,7 @@ async function renderFees(){
           waReminder.className='btn-wa'; waReminder.target='_blank'; waReminder.rel='noopener noreferrer';
           const playerName = pl.apodo||pl.nombre||'';
           const playerPhone = pl.celular ? pl.celular.replace(/\D/g,'') : '';
-          const feeMsg = `Hola ${playerName} 👋 Te recordamos que tienes pendiente la cuota *${fee.title}*${fee.amount?' por $'+Number(fee.amount).toLocaleString('es-CL'):''} del equipo Golden Moms 💚`;
+          const feeMsg = 'Hola '+playerName+' 👋 Te recordamos que tienes pendiente la cuota *'+fee.title+'* por '+money(pay.amount)+' del equipo Golden Moms 💚';
           if(playerPhone){
             const cleanPhone = playerPhone.replace(/^\+?56/,'').replace(/\D/g,'');
             waReminder.href = `https://wa.me/56${cleanPhone}?text=${encodeURIComponent(feeMsg)}`;
@@ -2202,7 +2406,7 @@ async function renderFees(){
           }
           waReminder.innerHTML = WA_ICON + (playerPhone ? ' Recordar' : ' Recordar (grupo)');
           waReminder.style.display = pay.paid ? 'none' : '';
-          row.appendChild(nm);row.appendChild(status);row.appendChild(waReminder);body.appendChild(row);
+          row.appendChild(nm);row.appendChild(amt);row.appendChild(status);row.appendChild(waReminder);body.appendChild(row);
         }
         } else {
           body.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0">Sin jugadoras asignadas. Edita la cuota para agregar cobros.</div>';
@@ -2215,7 +2419,7 @@ async function renderFees(){
           grpBtn.textContent='📢 Recordatorio grupal (' + unpaidList.length + ' deben)';
           grpBtn.addEventListener('click', ()=>{
             const names = unpaidList.map(p=>p._player.apodo||p._player.nombre||'').filter(Boolean);
-            const msg = '💰 *Recordatorio cuota — ' + fee.title + '*\n\nFaltan por pagar:\n' + names.map(n=>'• '+n).join('\n') + (fee.amount?'\n\nMonto: $'+Number(fee.amount).toLocaleString('es-CL'):'') + '\n\n💚 Golden Moms';
+            const msg = '💰 *Recordatorio cuota — ' + fee.title + '*\n\nFaltan por pagar:\n' + unpaidList.map(p=>'• '+(p._player.apodo||p._player.nombre||'')+' — '+money(p.amount)).join('\n') + '\n\n💚 Golden Moms';
             if(navigator.share){ navigator.share({text:msg}).catch(()=>{}); }
             else if(navigator.clipboard){ navigator.clipboard.writeText(msg).then(()=>showToast('📋 Mensaje copiado')); }
           });
@@ -2525,11 +2729,15 @@ function clearTreasAuth(){
   try { sessionStorage.removeItem(TREAS_KEY); } catch(e){}
 }
 function resetTreasView(){
-  document.getElementById('feesList').innerHTML = '';
-  document.getElementById('expensesList').innerHTML = '';
-  document.getElementById('kIncome').textContent = '$0';
-  document.getElementById('kExpense').textContent = '$0';
-  document.getElementById('kBalance').textContent = '$0';
+  const feesList = document.getElementById('feesList');
+  const expensesList = document.getElementById('expensesList');
+  if(feesList) feesList.innerHTML = '';
+  if(expensesList) expensesList.innerHTML = '';
+  const zero = '$0';
+  if(document.getElementById('kIncome')) document.getElementById('kIncome').textContent = zero;
+  if(document.getElementById('kPending')) document.getElementById('kPending').textContent = zero;
+  if(document.getElementById('kExpense')) document.getElementById('kExpense').textContent = zero;
+  if(document.getElementById('kBalance')) document.getElementById('kBalance').textContent = zero;
 }
 function showTreasLock(){
   const lock = document.getElementById('treasLock');
@@ -2595,9 +2803,7 @@ document.getElementById('treasUnlockBtn')?.addEventListener('click', async () =>
     updateUserUI();
     addAdminControls();
     hideTreasLock();
-    renderFees();
-    renderTreasKPIs();
-    renderExpenses();
+    renderTreasury();
   } catch(e) {
     console.warn('Treasury auth error', e);
     if(err) err.textContent = 'No se pudo validar el acceso';
@@ -2648,33 +2854,50 @@ async function preloadMonthlyCuotas(){
 async function renderTreasKPIs(){
   if(!supa || !IS_CONNECTED) return;
   try{
-    // Income: all paid fee_payments * their fee amount
-    const { data:fees } = await supa.from('fees').select('id,amount');
+    await detectTreasurySchema();
+    const { data:fees } = await supa.from('fees').select('*');
     const feeAmounts = Object.fromEntries((fees||[]).map(f=>[f.id, Number(f.amount)||0]));
 
-    const { data:payments } = await supa.from('fee_payments').select('fee_id,paid');
+    const paySelect = feeSchema.paymentAmount ? 'fee_id,paid,amount' : 'fee_id,paid';
+    const { data:payments } = await supa.from('fee_payments').select(paySelect);
     let income = 0;
-    (payments||[]).forEach(p => { if(p.paid) income += feeAmounts[p.fee_id]||0; });
+    let pending = 0;
+    (payments||[]).forEach(p => {
+      const amount = p.amount!=null ? Number(p.amount)||0 : feeAmounts[p.fee_id]||0;
+      if(p.paid) income += amount;
+      else pending += amount;
+    });
 
-    // Treas events income
     const { data:tevents } = await supa.from('treas_events').select('id,amount');
     const tevAmounts = Object.fromEntries((tevents||[]).map(t=>[t.id, Number(t.amount)||0]));
     const { data:tpays } = await supa.from('treas_event_payments').select('treas_event_id,amount,paid');
-    (tpays||[]).forEach(p => { if(p.paid) income += Number(p.amount)||tevAmounts[p.treas_event_id]||0; });
+    (tpays||[]).forEach(p => {
+      const amount = Number(p.amount)||tevAmounts[p.treas_event_id]||0;
+      if(p.paid) income += amount;
+      else pending += amount;
+    });
 
-    // Expenses from expenses table
     const {data:expenses}=await supa.from('expenses').select('total_amount');
-    const expense=(expenses||[]).reduce((s,e)=>s+Number(e.total_amount||0),0);
+    const expenseBase=(expenses||[]).reduce((s,e)=>s+Number(e.total_amount||0),0);
+    const advanceDebt=(fees||[]).reduce((s,f)=>s+Number(f.advance_credit||0),0);
+    const expense=expenseBase+advanceDebt;
     const balance = income - expense;
 
-    const fmt = v => '$' + Math.abs(v).toLocaleString('es-CL');
+    const fmt = v => (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString('es-CL');
     const el = id => document.getElementById(id);
     if(el('kIncome'))  el('kIncome').textContent  = fmt(income);
-    if(el('kExpense')) el('kExpense').textContent  = fmt(expense);
-    if(el('kBalance')) el('kBalance').textContent  = fmt(balance);
+    if(el('kPending')) el('kPending').textContent = fmt(pending);
+    if(el('kExpense')) el('kExpense').textContent = fmt(expense);
+    if(el('kBalance')) el('kBalance').textContent = fmt(balance);
     const balEl = document.querySelector('.treas-kpi.balance .treas-kpi-val');
     if(balEl) balEl.style.color = balance >= 0 ? 'var(--win)' : 'var(--danger)';
   } catch(e){ console.warn('renderTreasKPIs', e); }
+}
+
+async function renderTreasury(){
+  await renderFees();
+  await renderExpenses();
+  await renderTreasKPIs();
 }
 
 // ── Treasurer events ─────────────────────────────────────
@@ -3356,11 +3579,13 @@ function renderGroupStandings(teams, results, allGroups, multiGroup){
 let editingExpenseId = null;
 
 async function renderExpenses(){
-  const list=document.getElementById('expensesList');
+  const standaloneList=document.getElementById('expensesList');
+  const list=standaloneList||document.getElementById('feesList');
   if(!list||!supa||!IS_CONNECTED) return;
-  list.innerHTML='';
+  if(standaloneList) list.innerHTML='';
   const {data:expenses}=await supa.from('expenses').select('*').order('created_at',{ascending:false});
-  if(!expenses?.length){ list.innerHTML='<div class="empty-state"><span class="empty-state-icon">📤</span>Sin egresos registrados</div>'; return; }
+  if(expenses?.length && !standaloneList && list.children.length===1 && list.firstElementChild?.classList.contains('empty-state')) list.innerHTML='';
+  if(!expenses?.length){ if(standaloneList) list.innerHTML='<div class="empty-state"><span class="empty-state-icon">📤</span>Sin egresos registrados</div>'; return; }
   for(const exp of expenses){
     const {data:pays}=await supa.from('expense_payments').select('*,players(apodo,nombre,celular)').eq('expense_id',exp.id);
     const paidAmt=(pays||[]).filter(p=>p.paid).reduce((s,p)=>s+Number(p.amount||0),0);
@@ -3374,9 +3599,10 @@ async function renderExpenses(){
     // ── Header (clickable to expand/collapse) ─────────
     const header=document.createElement('div'); header.className='fee-header'; header.style.cursor='pointer';
     const left=document.createElement('div'); left.style.flex='1';
-    const titleEl=document.createElement('div'); titleEl.className='fee-title'; titleEl.textContent=exp.title||'';
+    const titleEl=document.createElement('div'); titleEl.className='fee-title'; titleEl.innerHTML='<span class="fee-type-badge expense">Egreso</span>'+escapeHTML(exp.title||'');
     const meta=document.createElement('div'); meta.className='fee-meta';
     const metaParts=[];
+    if(totalAmt) metaParts.push(money(totalAmt));
     if(exp.date) metaParts.push(exp.date);
     if(exp.team) metaParts.push(exp.team);
     if(exp.notes) metaParts.push(exp.notes);
@@ -3618,7 +3844,7 @@ document.getElementById('btnSaveExpense')?.addEventListener('click', async()=>{
       await syncExpensePayments(eid, selectedRows);
     }
     closeExpenseModal();
-    renderExpenses(); renderTreasKPIs(); showToast('✅ Egreso guardado');
+    renderTreasury(); showToast('✅ Egreso guardado');
   } catch(e){ alert('Error: '+(e.message||e)); }
 });
 document.getElementById('btnDeleteExpense')?.addEventListener('click',async()=>{
@@ -3626,7 +3852,7 @@ document.getElementById('btnDeleteExpense')?.addEventListener('click',async()=>{
   await supa.from('expense_payments').delete().eq('expense_id',editingExpenseId);
   await supa.from('expenses').delete().eq('id',editingExpenseId);
   closeExpenseModal();
-  renderExpenses(); renderTreasKPIs();
+  renderTreasury();
 });
 
 document.getElementById('btnNewExpense')?.addEventListener('click',()=>openExpenseModal());

@@ -437,11 +437,11 @@ body.auth-loading>.toast{visibility:hidden}
           <input id="fee_title" class="input" placeholder="Ej: Cuota Marzo 2025">
         </div>
         <div class="form-group">
-          <label class="form-label">Monto ($)</label>
+          <label class="form-label" id="feeAmountLabel">Monto ($)</label>
           <input id="fee_amount" class="input" type="number" min="0" placeholder="10000">
         </div>
       </div>
-      <div class="form-row" style="margin-bottom:14px">
+      <div class="form-row" style="margin-bottom:10px">
         <div class="form-group">
           <label class="form-label">Vencimiento</label>
           <input id="fee_due" class="input" type="date">
@@ -456,7 +456,34 @@ body.auth-loading>.toast{visibility:hidden}
           </select>
         </div>
       </div>
-      <div class="form-section-title">Pagos por jugadora</div>
+      <div style="display:flex;align-items:center;gap:10px;margin:8px 0 10px">
+        <label style="font-size:13px;font-weight:600;color:var(--ink);cursor:pointer">
+          <input type="checkbox" id="fee_split_chk" style="margin-right:6px"/>
+          Dividir entre jugadoras
+        </label>
+        <span id="fee_split_hint" style="font-size:12px;color:var(--muted)"></span>
+      </div>
+      <div class="fee-advance-box">
+        <label style="font-size:13px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px;cursor:pointer">
+          <input type="checkbox" id="fee_advance_chk"/>
+          Pago adelantado por jugadora
+        </label>
+        <div id="fee_advance_fields" style="display:none;margin-top:10px">
+          <div class="form-row" style="margin-bottom:8px">
+            <div class="form-group">
+              <label class="form-label">Pagado por</label>
+              <select id="fee_advance_player" class="input"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total pagado ($)</label>
+              <input id="fee_advance_total" class="input" type="number" min="0" placeholder="0">
+            </div>
+          </div>
+          <input id="fee_advance_notes" class="input" placeholder="Nota opcional">
+          <div id="fee_advance_credit" style="font-size:12px;color:var(--muted);margin-top:7px"></div>
+        </div>
+      </div>
+      <div class="form-section-title">Cobro por jugadora</div>
       <div id="fee_payments_grid" style="display:flex;flex-direction:column;gap:5px;max-height:45vh;overflow-y:auto"></div>
       <div class="modal-actions">
         <button class="btn danger" id="btnDeleteFee" style="margin-right:auto;display:none">🗑 Eliminar</button>
@@ -570,27 +597,20 @@ body.auth-loading>.toast{visibility:hidden}
     </div>
     <!-- KPI row -->
     <div class="treas-kpi-row" id="treasKpiRow">
-      <div class="treas-kpi income"><div class="treas-kpi-val" id="kIncome">$0</div><div class="treas-kpi-lbl">Ingresos</div></div>
+      <div class="treas-kpi income"><div class="treas-kpi-val" id="kIncome">$0</div><div class="treas-kpi-lbl">Cobrado</div></div>
+      <div class="treas-kpi pending"><div class="treas-kpi-val" id="kPending">$0</div><div class="treas-kpi-lbl">Pendiente</div></div>
       <div class="treas-kpi expense"><div class="treas-kpi-val" id="kExpense">$0</div><div class="treas-kpi-lbl">Egresos</div></div>
-      <div class="treas-kpi balance"><div class="treas-kpi-val" id="kBalance">$0</div><div class="treas-kpi-lbl">Balance</div></div>
+      <div class="treas-kpi balance"><div class="treas-kpi-val" id="kBalance">$0</div><div class="treas-kpi-lbl">Saldo</div></div>
     </div>
 
-    <!-- Mensualidades -->
     <div class="section-header" style="margin-bottom:10px">
       <div><div class="section-title">Tesorera</div><div class="section-sub">Cuotas, pagos y egresos del equipo</div></div>
-      <button class="btn p" id="btnNewFee">＋ Nueva cuota</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn p" id="btnNewFee">＋ Nueva cuota</button>
+        <button class="btn" id="btnNewExpense">＋ Nuevo egreso</button>
+      </div>
     </div>
     <div id="feesList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px"></div>
-
-
-
-    <!-- Egresos -->
-    <div class="treas-section-title" style="margin-top:24px">📤 Registro de Egresos</div>
-    <div class="section-header" style="margin-bottom:10px;margin-top:0">
-      <div class="section-sub">Gastos del equipo: torneos, materiales, etc.</div>
-      <button class="btn" id="btnNewExpense">＋ Nuevo egreso</button>
-    </div>
-    <div id="expensesList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px"></div>
   </section>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -879,6 +899,6 @@ if('serviceWorker' in navigator){
 </script>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=20260721-4" defer></script>
+  <script src="app.js?v=20260721-5" defer></script>
 </body>
 </html>

@@ -213,7 +213,7 @@ body.modal-open { overflow: hidden; }
   .modal { margin: 8px; max-height: 96vh; }
   .form-row { flex-direction: column; gap: 8px; }
   .section-header { flex-wrap: wrap; gap: 8px; align-items: center; }
-  .treas-kpi-row { grid-template-columns: repeat(3,1fr); gap:6px; }
+  .treas-kpi-row { grid-template-columns: repeat(2,1fr); gap:6px; }
   .treas-kpi-val { font-size: 16px; }
   .standings-table th, .standings-table td { padding: 7px 5px; font-size: 11px; }
   .standings-table th:nth-child(n+7), .standings-table td:nth-child(n+7) { display:none; } /* hide DIF on small */
@@ -224,7 +224,7 @@ body.modal-open { overflow: hidden; }
   .nav .tab { font-size: 10px; padding: 5px 6px; }
   #connStatus { display: none; }
   .bell-btn { width: 30px; height: 30px; font-size: 15px; }
-  .treas-kpi-row { grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+  .treas-kpi-row { grid-template-columns: 1fr 1fr; gap: 4px; }
   .treas-kpi { padding: 10px 6px; }
 }
 
@@ -954,13 +954,14 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 .treas-lock-err { font-size:12px; color:var(--danger); margin-bottom:10px; min-height:16px; }
 
 /* KPI tesorera */
-.treas-kpi-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+.treas-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px; }
 .treas-kpi { background:var(--surface); border:1px solid var(--line-2); border-radius:var(--r-md);
   padding:14px 10px; text-align:center; }
 .treas-kpi-val  { font-family:var(--font-head); font-weight:800; font-size:20px; color:var(--ink); }
 .treas-kpi-lbl  { font-size:10px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
   color:var(--muted-2); margin-top:4px; }
 .treas-kpi.income .treas-kpi-val { color:#16a34a; }
+.treas-kpi.pending .treas-kpi-val { color:#d97706; }
 .treas-kpi.expense .treas-kpi-val { color:var(--danger); }
 .treas-kpi.balance .treas-kpi-val { color:var(--lime); }
 
@@ -1013,6 +1014,14 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
 }
 .fee-toggle.paid   { background: var(--win-bg); border-color: #86efac; color: var(--win); }
 .fee-toggle.unpaid { background: var(--loss-bg); border-color: #fca5a5; color: var(--loss); }
+.fee-type-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; padding:2px 7px; border-radius:99px; border:1px solid var(--line-2); margin-right:6px; }
+.fee-type-badge.charge { color:#166534; background:#f0fdf4; border-color:#bbf7d0; }
+.fee-type-badge.expense { color:#991b1b; background:#fef2f2; border-color:#fecaca; }
+.fee-amount-input { width:96px; padding:4px 8px; border:1px solid var(--line-2); border-radius:var(--r-xs); font-size:13px; text-align:right; }
+.fee-advance-box { border:1px solid var(--line); border-radius:var(--r-sm); padding:10px 12px; background:var(--surface-2); margin:8px 0 12px; }
+.fee-remove-btn { background:none; border:none; color:var(--muted-2); font-size:15px; cursor:pointer; padding:2px 4px; margin-left:2px; line-height:1; border-radius:4px; }
+.fee-remove-btn:hover { color:var(--danger); background:var(--loss-bg); }
+.fee-player-state { font-size:11px; font-weight:700; color:var(--muted-2); flex-shrink:0; }
 .fee-collapsed { display: none; }
 .fee-edit-btn {
   font-size: 11px; font-weight: 600; background: none;
