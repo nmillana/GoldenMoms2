@@ -10,7 +10,10 @@
     snapshot: null,
     players: [],
     playerMap: new Map(),
-    movementFilter: 'all'
+    movementFilter: 'all',
+    sessionToken: '',
+    sessionExpiresAt: 0,
+    rpcClient: null
   };
 
   const incomeTypes = [
@@ -40,11 +43,38 @@
   function player(id){ return GT.playerMap.get(String(id)); }
   function pname(p){ return (p && (p.apodo || p.nombre)) || 'Sin nombre'; }
   function pnameById(id){ return pname(player(id)); }
+  const TREAS_RPC_KEY = 'gm_treasury_rpc_session';
+  function loadTreasuryRpcSession(){
+    try{
+      const raw=sessionStorage.getItem(TREAS_RPC_KEY); if(!raw) return false;
+      const parsed=JSON.parse(raw); const exp=Date.parse(parsed.expires_at||'') || Number(parsed.expiresAt||0);
+      if(!parsed.session_token || !exp || exp<=Date.now()){ sessionStorage.removeItem(TREAS_RPC_KEY); GT.sessionToken=''; GT.sessionExpiresAt=0; GT.rpcClient=null; return false; }
+      GT.sessionToken=parsed.session_token; GT.sessionExpiresAt=exp; return true;
+    }catch(e){ GT.sessionToken=''; GT.sessionExpiresAt=0; GT.rpcClient=null; return false; }
+  }
+  function saveTreasuryRpcSession(data){
+    const token=data&&data.session_token; const exp=data&&data.expires_at; if(!token||!exp) return false;
+    GT.sessionToken=token; GT.sessionExpiresAt=Date.parse(exp)||0; GT.rpcClient=null;
+    try{ sessionStorage.setItem(TREAS_RPC_KEY, JSON.stringify({session_token:token,expires_at:exp})); }catch(e){}
+    return true;
+  }
+  function clearTreasuryRpcSession(){ GT.sessionToken=''; GT.sessionExpiresAt=0; GT.rpcClient=null; try{ sessionStorage.removeItem(TREAS_RPC_KEY); }catch(e){} }
+  function hasTreasuryRpcSession(){ return loadTreasuryRpcSession(); }
+  function rpcClient(){
+    if(!hasTreasuryRpcSession()) return supa;
+    if(GT.rpcClient) return GT.rpcClient;
+    try{
+      const factory = (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) ? window.supabase.createClient : (typeof createClient === 'function' ? createClient : null);
+      if(!factory || typeof SUPA_CONFIG === 'undefined') return supa;
+      GT.rpcClient = factory(SUPA_CONFIG.url, SUPA_CONFIG.key, { global:{ headers:{ 'x-gm-treasury-session': GT.sessionToken } } });
+      return GT.rpcClient;
+    }catch(e){ return supa; }
+  }
 
   async function select(table, cols, opts){
     try{
       if(!supa || !IS_CONNECTED) return { data:[], error:new Error('Sin conexion') };
-      let q = supa.from(table).select(cols || '*');
+      let q = rpcClient().from(table).select(cols || '*');
       (opts && opts.eq || []).forEach(x => { q = q.eq(x[0], x[1]); });
       (opts && opts.order || []).forEach(x => { q = q.order(x[0], { ascending: !!x[1] }); });
       if(opts && opts.limit) q = q.limit(opts.limit);
@@ -57,7 +87,7 @@
     if(GT.engineReady !== null && !force) return GT.engineReady;
     GT.engineError = '';
     if(!supa || !IS_CONNECTED){ GT.engineReady=false; GT.engineError='Sin conexion'; return false; }
-    const r = await supa.from('treasury_movements').select('id').limit(1);
+    const r = await rpcClient().from('treasury_movements').select('id').limit(1);
     if(r.error){ GT.engineReady=false; GT.engineError = isMissing(r.error) ? 'Tablas nuevas no aplicadas' : (r.error.message || 'No se pudo leer Tesoreria'); return false; }
     GT.engineReady=true; return true;
   }
@@ -118,7 +148,7 @@
   }
 
   async function load(force){ return (await detectEngine(force)) ? loadNew() : loadLegacy(); }
-  async function rpc(name,args,msg){ if(!(await detectEngine(true))){ toast(missingMsg()); return null; } const r=await supa.rpc(name,args||{}); if(r.error){ toast(isMissing(r.error)?missingMsg():(r.error.message||'No se pudo ejecutar')); console.warn('[Treasury RPC]',name,r.error); return null; } if(msg) toast(msg); await render(true); return r.data; }
+  async function rpc(name,args,msg){ if(!hasTreasuryRpcSession()){ toast('Ingresa nuevamente a Tesorera para autorizar operaciones.'); renderLock(); return null; } if(!(await detectEngine(true))){ toast(missingMsg()); return null; } const r=await rpcClient().rpc(name,args||{}); if(r.error){ toast(isMissing(r.error)?missingMsg():(r.error.message||'No se pudo ejecutar')); console.warn('[Treasury RPC]',name,r.error); return null; } if(msg) toast(msg); await render(true); return r.data; }
   function requireEngine(){ if(!GT.engineReady){ toast(missingMsg()); return false; } return true; }
 
   function shell(){
@@ -127,7 +157,7 @@
   }
   function ensureShell(){ const sec=document.getElementById('v-fees'); if(!sec) return; if(!sec.querySelector('#treasuryRedesign')){ sec.innerHTML=shell(); sec.querySelector('#treasuryRefreshBtn').addEventListener('click',()=>render(true)); sec.querySelectorAll('[data-treas-view]').forEach(b=>b.addEventListener('click',()=>{GT.view=b.dataset.treasView; body();})); } }
   function kpi(label,value,sub,tone){ return '<div class="treasury-kpi '+(tone||'')+'"><div class="treasury-kpi-value">'+h(value)+'</div><div class="treasury-kpi-label">'+h(label)+'</div>'+(sub?'<div class="treasury-kpi-sub">'+h(sub)+'</div>':'')+'</div>'; }
-  function banner(){ const b=document.getElementById('treasuryModeBanner'); if(!b) return; b.className='treasury-mode '+(GT.engineReady?'ready':'legacy'); b.textContent=GT.engineReady?'Motor financiero nuevo detectado. Operaciones criticas usan RPCs.':'Modo local-only/legacy: SQL y RPCs preparados, pendientes de ejecutar y validar en Supabase. '+(GT.engineError||''); }
+  function banner(){ const b=document.getElementById('treasuryModeBanner'); if(!b) return; b.className='treasury-mode '+(GT.engineReady?'ready':'legacy'); b.textContent=GT.engineReady?(hasTreasuryRpcSession()?'Motor financiero nuevo detectado. Operaciones criticas usan RPCs.':'Motor financiero nuevo detectado. Ingresa a Tesorera para autorizar operaciones.'):'Modo local-only/legacy: SQL y RPCs preparados, pendientes de ejecutar y validar en Supabase. '+(GT.engineError||''); }
   function kpis(){ const s=GT.snapshot||{}; const personal=(s.personalAdvances||[]).reduce((x,a)=>x+n(a.pending_amount),0); const el=document.getElementById('treasuryKpis'); if(!el) return; el.innerHTML=kpi('Saldo disponible',money(s.availableBalance),'Derivado de movimientos',s.availableBalance>=0?'good':'danger')+kpi('Adelantos por devolver',money(personal),(s.personalAdvances||[]).length+' persona(s)',personal?'warn':'good')+kpi('Jugadoras con pendientes',String((s.pendingPlayers||new Set()).size||0),'Cuotas o deudas','warn')+kpi('Pago DT pendiente',money(s.dtPending&&s.dtPending.amount),(s.dtPending&&s.dtPending.count||0)+' cuota(s)',s.dtPending&&s.dtPending.amount?'danger':'good')+kpi('Ingresos por confirmar',money(s.pendingIncomeAmount||0),(s.pendingIncomeCount||0)+' registro(s)',s.pendingIncomeAmount?'warn':''); }
   function body(){ document.querySelectorAll('#treasuryRedesign [data-treas-view]').forEach(b=>b.classList.toggle('active',b.dataset.treasView===GT.view)); banner(); kpis(); if(GT.view==='ingresos') incomes(); else if(GT.view==='actividades') activities(); else if(GT.view==='config') config(); else home(); bindActions(); }
 
@@ -155,15 +185,36 @@
   async function addDebtModal(id){ if(!requireEngine()) return; await loadPlayers(); const options=GT.players.map(p=>'<option value="'+p.id+'">'+h(pname(p))+(p.estado==='reposo'?' (reposo)':'')+'</option>').join(''); modal('Agregar persona','<label class="form-label">Jugadora</label><select name="player_id" class="input" required>'+options+'</select><label class="form-label">Monto</label><input name="assigned_amount" class="input" type="number" min="1" required>', fd=>rpc('treasury_add_activity_debt',{p_activity_id:id,p_player_id:fd.get('player_id'),p_assigned_amount:Number(fd.get('assigned_amount')),p_idempotency_key:opKey('add-debt')},'Persona agregada')); }  function settingModal(){ if(!requireEngine()) return; modal('Configuracion anual','<div class="form-row"><div class="form-group"><label class="form-label">Ano</label><input name="year" class="input" type="number" value="'+year()+'" required></div><div class="form-group"><label class="form-label">Valor cuota</label><input name="monthly_fee_amount" class="input" type="number" required></div></div><div class="form-row"><div class="form-group"><label class="form-label">Monto DT</label><input name="dt_amount" class="input" type="number" required></div><div class="form-group"><label class="form-label">Monto fondo</label><input name="team_fund_amount" class="input" type="number" required></div></div><label class="form-label">Vigente desde</label><input name="valid_from" class="input" type="date" value="'+today()+'"><label class="form-label">Observacion</label><textarea name="notes" class="input" rows="3"></textarea>', fd=>{ const p=Object.fromEntries(fd); if(n(p.monthly_fee_amount)!==n(p.dt_amount)+n(p.team_fund_amount)){ toast('La cuota debe ser igual a DT + Fondo.'); return; } return rpc('treasury_upsert_settings',{p_payload:p,p_idempotency_key:opKey('settings')},'Configuracion guardada'); }); }
   function adjustmentModal(){ if(!requireEngine()) return; modal('Ajuste historico','<label class="form-label">Tipo</label><select name="adjustment_type" class="input"><option value="initial_balance">Saldo inicial</option><option value="positive_correction">Correccion positiva</option><option value="negative_correction">Correccion negativa</option><option value="other">Otro</option></select><label class="form-label">Monto</label><input name="amount" class="input" type="number" min="1" required><label class="form-label">Motivo</label><input name="reason" class="input" required><label class="form-label">Descripcion</label><textarea name="description" class="input" rows="3"></textarea>', fd=>rpc('treasury_create_historical_adjustment',{p_payload:Object.fromEntries(fd),p_idempotency_key:opKey('adjustment')},'Ajuste registrado')); }
 
-  async function render(force){ if(!isTreasuryRole(user()) && !storedSession()){ renderLock(); return; } hideLock(); ensureShell(); const b=document.getElementById('treasuryViewBody'); if(b && !GT.snapshot) b.innerHTML='<div class="empty-state">Cargando Tesoreria...</div>'; await load(force); if(GT.view==='config'&&!canConfigure()) GT.view='inicio'; body(); }
+  async function render(force){ if(!hasTreasuryRpcSession()){ renderLock(); return; } hideLock(); ensureShell(); const b=document.getElementById('treasuryViewBody'); if(b && !GT.snapshot) b.innerHTML='<div class="empty-state">Cargando Tesoreria...</div>'; await load(force); if(GT.view==='config'&&!canConfigure()) GT.view='inicio'; body(); }
   function storedSession(){ try{ const raw=sessionStorage.getItem(TREAS_KEY); if(!raw) return false; const parsed=raw==='1'?{role:'admin',expiresAt:Date.now()+1}:JSON.parse(raw); return isTreasuryRole(parsed) && (!parsed.expiresAt || parsed.expiresAt>Date.now()); }catch(e){ return false; } }
-  function renderLock(){ const sec=document.getElementById('v-fees'); if(!sec) return; sec.innerHTML='<div class="treas-lock" id="treasLock" style="display:flex"><div class="treas-lock-box"><div class="treas-lock-icon">$</div><div class="treas-lock-title">Tesorera</div><div class="treas-lock-sub">Ingresa una cuenta administradora o capitana para abrir este modulo</div><input id="treasUserInput" class="treas-lock-input" placeholder="Usuario"><input type="password" id="treasPwdInput" class="treas-lock-input treas-lock-pass" placeholder="Contrasena"><div class="treas-lock-err" id="treasPwdErr"></div><button class="btn p" id="treasUnlockBtn" type="button" style="width:100%">Entrar</button></div></div>'; document.getElementById('treasUnlockBtn').addEventListener('click',unlock); document.getElementById('treasPwdInput').addEventListener('keydown',e=>{if(e.key==='Enter') unlock();}); }
-  async function unlock(){ const username=(document.getElementById('treasUserInput').value||'').trim().toLowerCase(); const password=document.getElementById('treasPwdInput').value||''; const err=document.getElementById('treasPwdErr'); if(!username||!password){err.textContent='Ingresa usuario y contrasena'; return;} const r=await supa.from('player_users').select('*, players(id,apodo,nombre,numero_camiseta,foto,rol,email)').eq('username',username).eq('active',true).maybeSingle(); if(r.error||!r.data){err.textContent='Usuario no encontrado'; return;} const u=typeof buildSessionUser==='function'?buildSessionUser(r.data):{username:r.data.username,role:r.data.role,player_id:r.data.player_id}; if(!isTreasuryRole(u)){err.textContent='Esta cuenta no tiene acceso a Tesorera'; return;} const ok=typeof verifyPlayerUserPassword==='function'?await verifyPlayerUserPassword(r.data,password):false; if(!ok){err.textContent='Usuario o contrasena incorrectos'; return;} if(typeof saveSession==='function') saveSession(u); setTreasAuth(u); if(typeof hideLoginScreen==='function') hideLoginScreen(); if(typeof updateUserUI==='function') updateUserUI(); if(typeof addAdminControls==='function') addAdminControls(); render(true); }
+  function renderLock(){ const sec=document.getElementById('v-fees'); if(!sec) return; sec.innerHTML='<div class="treas-lock" id="treasLock" style="display:flex"><div class="treas-lock-box"><div class="treas-lock-icon">$</div><div class="treas-lock-title">Tesorera</div><div class="treas-lock-sub">Ingresa una cuenta administradora, capitana o tesorera para abrir este modulo</div><input id="treasUserInput" class="treas-lock-input" placeholder="Usuario"><input type="password" id="treasPwdInput" class="treas-lock-input treas-lock-pass" placeholder="Contrasena"><div class="treas-lock-err" id="treasPwdErr"></div><button class="btn p" id="treasUnlockBtn" type="button" style="width:100%">Entrar</button></div></div>'; document.getElementById('treasUnlockBtn').addEventListener('click',unlock); document.getElementById('treasPwdInput').addEventListener('keydown',e=>{if(e.key==='Enter') unlock();}); }
+  async function unlock(){
+    const username=(document.getElementById('treasUserInput').value||'').trim().toLowerCase();
+    const password=document.getElementById('treasPwdInput').value||'';
+    const err=document.getElementById('treasPwdErr');
+    if(!username||!password){err.textContent='Ingresa usuario y contrasena'; return;}
+    try{
+      const sr=await supa.rpc('treasury_create_session',{p_username:username,p_password:password});
+      if(sr.error) throw sr.error;
+      saveTreasuryRpcSession(sr.data||{});
+      const u=(sr.data&&sr.data.user)||{username,role:'tesorera'};
+      if(typeof saveSession==='function') saveSession(u);
+      setTreasAuth(u, sr.data);
+      if(typeof hideLoginScreen==='function') hideLoginScreen();
+      if(typeof updateUserUI==='function') updateUserUI();
+      if(typeof addAdminControls==='function') addAdminControls();
+      render(true);
+      return;
+    }catch(authErr){
+      if(isMissing(authErr)){ err.textContent='Ejecuta 009_treasury_custom_auth_bridge.sql en Supabase.'; return; }
+      err.textContent=authErr.message||'No se pudo autorizar Tesorera';
+    }
+  }
   function hideLock(){ const l=document.getElementById('treasLock'); if(l) l.style.display='none'; }
 
   window.GoldenTreasury = { render, detectEngine, callRpc:rpc, isTreasuryRole, buildWhatsAppReminder:(x)=>wa(x.player,x.concept,x.amount) };
-  window.checkTreasAuth = function(){ return isTreasuryRole(user()) || storedSession(); };
-  window.setTreasAuth = function(u){ try{ sessionStorage.setItem(TREAS_KEY, JSON.stringify({username:u&&u.username||'',role:u&&u.role||'admin',expiresAt:Date.now()+TREAS_SESSION_MS})); }catch(e){} try{ treasUnlocked=true; }catch(e){} };
+  window.checkTreasAuth = function(){ return hasTreasuryRpcSession(); };
+  window.setTreasAuth = function(u, sessionData){ if(sessionData) saveTreasuryRpcSession(sessionData); try{ sessionStorage.setItem(TREAS_KEY, JSON.stringify({username:u&&u.username||'',role:u&&u.role||'admin',expiresAt:Date.now()+TREAS_SESSION_MS})); }catch(e){} try{ treasUnlocked=true; }catch(e){} };
   window.showTreasLock = renderLock;
   window.hideTreasLock = hideLock;
   window.renderTreasury = render;

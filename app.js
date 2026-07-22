@@ -109,6 +109,7 @@ function resolveUserRole(playerUser, player){
   const roles = [playerUser?.role, player?.rol].filter(Boolean).map(role => String(role).toLowerCase());
   if(roles.includes('admin')) return 'admin';
   if(roles.includes('capitana')) return 'capitana';
+  if(roles.includes('tesorera')) return 'tesorera';
   return 'jugadora';
 }
 function canManageAttendance(user = currentUser){
@@ -120,6 +121,7 @@ function isRestrictedAttendanceUser(user = currentUser){
 function userRoleLabel(role){
   if(role === 'admin') return 'Administradora';
   if(role === 'capitana') return 'Capitana';
+  if(role === 'tesorera') return 'Tesorera';
   return 'Jugadora';
 }
 
