@@ -173,6 +173,19 @@ begin
     'movements', (select count(*) from public.treasury_movements where migration_batch_id=v_batch)
   )
   where batch_key = v_batch;
+
+  insert into public.treasury_audit_log(
+    operation_id, idempotency_key, action, entity_type, entity_id,
+    actor_role, payload, after_data, legacy_source_table, legacy_source_id,
+    migration_batch_id, migrated_at
+  )
+  select
+    v_batch, v_batch || '-audit-completed', 'migration.completed', 'treasury_migration_runs', mr.id,
+    'migration', jsonb_build_object('batch_key', mr.batch_key), to_jsonb(mr),
+    'legacy_treasury', v_batch, v_batch, now()
+  from public.treasury_migration_runs mr
+  where mr.batch_key = v_batch
+  on conflict do nothing;
 end;
 $$;
 
