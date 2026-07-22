@@ -79,17 +79,17 @@ having count(*) > 1;
 
 -- 6) Roles actuales
 select
-  coalesce(role,'(sin role)') as player_user_role,
+  coalesce(role::text,'(sin role)') as player_user_role,
   count(*) as users
 from public.player_users
-group by coalesce(role,'(sin role)')
+group by coalesce(role::text,'(sin role)')
 order by users desc;
 
 select
-  coalesce(rol,'(sin rol)') as player_rol,
+  coalesce(rol::text,'(sin rol)') as player_rol,
   count(*) as players
 from public.players
-group by coalesce(rol,'(sin rol)')
+group by coalesce(rol::text,'(sin rol)')
 order by players desc;
 
 -- 7) Estado RLS
