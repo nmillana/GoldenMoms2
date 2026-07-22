@@ -21,7 +21,7 @@ begin
   )
   select
     coalesce(f.title, 'Legacy fee ' || f.id::text), 'otro', coalesce(f.due_date, f.created_at::date),
-    coalesce((select sum(coalesce(fp.amount, f.amount, 0)) from public.fee_payments fp where fp.fee_id = f.id), coalesce(f.amount,0)),
+    round(coalesce((select sum(coalesce(fp.amount, f.amount, 0)) from public.fee_payments fp where fp.fee_id = f.id), coalesce(f.amount,0)))::integer,
     0, null, 'individual', 'open', coalesce(f.team,''),
     v_batch || '-fee-' || f.id::text,
     'fees', f.id::text, v_batch, now()
@@ -35,8 +35,8 @@ begin
     idempotency_key, legacy_source_table, legacy_source_id, migration_batch_id, migrated_at
   )
   select a.id, fp.player_id, null,
-    coalesce(fp.amount, f.amount, 0),
-    case when fp.paid is true then coalesce(fp.amount, f.amount, 0) else 0 end,
+    round(coalesce(fp.amount, f.amount, 0))::integer,
+    case when fp.paid is true then round(coalesce(fp.amount, f.amount, 0))::integer else 0 end,
     case when fp.paid is true then 'paid' else 'pending' end,
     fp.paid_at,
     v_batch || '-fee-payment-debt-' || fp.id::text,
@@ -55,7 +55,7 @@ begin
     legacy_source_table, legacy_source_id, migration_batch_id, migrated_at
   )
   select coalesce(e.title, 'Legacy expense ' || e.id::text), 'materiales', coalesce(e.date, e.created_at::date),
-    coalesce(e.total_amount,0), 0, null, 'individual', 'open', coalesce(e.notes, e.team, ''),
+    round(coalesce(e.total_amount,0))::integer, 0, null, 'individual', 'open', coalesce(e.notes, e.team, ''),
     v_batch || '-expense-' || e.id::text,
     'expenses', e.id::text, v_batch, now()
   from public.expenses e
@@ -68,7 +68,7 @@ begin
     source_table, source_id, status, idempotency_key,
     legacy_source_table, legacy_source_id, migration_batch_id, migrated_at
   )
-  select 'legacy_expense', 'out', coalesce(e.total_amount,0), coalesce(e.title,'Legacy expense'), coalesce(e.date::timestamptz, e.created_at), 'team_fund',
+  select 'legacy_expense', 'out', round(coalesce(e.total_amount,0))::integer, coalesce(e.title,'Legacy expense'), coalesce(e.date::timestamptz, e.created_at), 'team_fund',
     'treasury_activities', a.id, 'posted', v_batch || '-expense-movement-' || e.id::text,
     'expenses', e.id::text, v_batch, now()
   from public.expenses e
@@ -81,7 +81,7 @@ begin
     idempotency_key, legacy_source_table, legacy_source_id, migration_batch_id, migrated_at
   )
   select a.id, ep.player_id, null,
-    coalesce(ep.amount,0), case when ep.paid is true then coalesce(ep.amount,0) else 0 end,
+    round(coalesce(ep.amount,0))::integer, case when ep.paid is true then round(coalesce(ep.amount,0))::integer else 0 end,
     case when ep.paid is true then 'paid' else 'pending' end,
     ep.paid_at,
     v_batch || '-expense-payment-debt-' || ep.id::text,
@@ -100,7 +100,7 @@ begin
     legacy_source_table, legacy_source_id, migration_batch_id, migrated_at
   )
   select coalesce(te.title, 'Legacy treasury event ' || te.id::text), 'otro', coalesce(te.date, te.created_at::date),
-    coalesce((select sum(coalesce(tp.amount, te.amount,0)) from public.treas_event_payments tp where tp.treas_event_id=te.id), coalesce(te.amount,0)),
+    round(coalesce((select sum(coalesce(tp.amount, te.amount,0)) from public.treas_event_payments tp where tp.treas_event_id=te.id), coalesce(te.amount,0)))::integer,
     0, null, 'individual', 'open', coalesce(te.notes, te.team, ''),
     v_batch || '-treas-event-' || te.id::text,
     'treas_events', te.id::text, v_batch, now()
@@ -114,7 +114,7 @@ begin
     idempotency_key, legacy_source_table, legacy_source_id, migration_batch_id, migrated_at
   )
   select a.id, tp.player_id, null,
-    coalesce(tp.amount, te.amount,0), case when tp.paid is true then coalesce(tp.amount, te.amount,0) else 0 end,
+    round(coalesce(tp.amount, te.amount,0))::integer, case when tp.paid is true then round(coalesce(tp.amount, te.amount,0))::integer else 0 end,
     case when tp.paid is true then 'paid' else 'pending' end,
     tp.paid_at,
     v_batch || '-treas-event-payment-debt-' || tp.id::text,
