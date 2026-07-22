@@ -21,7 +21,7 @@ begin
   )
   select
     coalesce(f.title, 'Legacy fee ' || f.id::text), 'otro', coalesce(f.due_date, f.created_at::date),
-    round(coalesce((select sum(coalesce(fp.amount, f.amount, 0)) from public.fee_payments fp where fp.fee_id = f.id), coalesce(f.amount,0)))::integer,
+    round(coalesce(f.total_amount, (select sum(coalesce(fp.amount, f.amount, 0)) from public.fee_payments fp where fp.fee_id = f.id), f.amount, 0))::integer,
     0, null, 'individual', 'open', coalesce(f.team,''),
     v_batch || '-fee-' || f.id::text,
     'fees', f.id::text, v_batch, now()

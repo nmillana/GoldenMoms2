@@ -61,7 +61,25 @@ select 'expense_payments_paid', coalesce(sum(amount),0) from public.expense_paym
 union all
 select 'treas_event_payments_paid', coalesce(sum(amount),0) from public.treas_event_payments where paid is true;
 
--- 5) Duplicados legacy que podrian romper migracion idempotente
+-- 5) Resumen de cobros legacy por fee para evitar paginacion del SQL Editor
+select
+  f.id as fee_id,
+  f.title,
+  round(coalesce(f.amount,0))::integer as amount_per_player,
+  round(coalesce(f.total_amount,0))::integer as fee_total_amount,
+  count(fp.player_id) as assigned_players,
+  count(fp.player_id) filter (where fp.paid is true) as paid_players,
+  count(fp.player_id) filter (where coalesce(fp.paid,false) is false) as pending_players,
+  round(coalesce(sum(coalesce(fp.amount, f.amount, 0)),0))::integer as assigned_total,
+  round(coalesce(sum(coalesce(fp.amount, f.amount, 0)) filter (where fp.paid is true),0))::integer as paid_total,
+  round(coalesce(sum(coalesce(fp.amount, f.amount, 0)) filter (where coalesce(fp.paid,false) is false),0))::integer as pending_total,
+  round(coalesce(f.total_amount,0) - coalesce(sum(coalesce(fp.amount, f.amount, 0)),0))::integer as parent_child_difference
+from public.fees f
+left join public.fee_payments fp on fp.fee_id = f.id
+group by f.id, f.title, f.amount, f.total_amount
+order by f.created_at desc nulls last;
+
+-- 6) Duplicados legacy que podrian romper migracion idempotente
 select 'fee_payments' as table_name, fee_id::text as parent_id, player_id::text, count(*)
 from public.fee_payments
 group by fee_id, player_id
@@ -77,7 +95,7 @@ from public.treas_event_payments
 group by treas_event_id, player_id
 having count(*) > 1;
 
--- 6) Roles actuales
+-- 7) Roles actuales
 select
   coalesce(role::text,'(sin role)') as player_user_role,
   count(*) as users
@@ -92,7 +110,7 @@ from public.players
 group by coalesce(rol::text,'(sin rol)')
 order by players desc;
 
--- 7) Estado RLS
+-- 8) Estado RLS
 select
   n.nspname as schema_name,
   c.relname as table_name,
@@ -109,7 +127,7 @@ where n.nspname = 'public'
   )
 order by c.relname;
 
--- 8) Politicas vigentes
+-- 9) Politicas vigentes
 select
   schemaname,
   tablename,
@@ -128,7 +146,7 @@ where schemaname = 'public'
   )
 order by tablename, policyname;
 
--- 9) Funciones/RPC treasury existentes
+-- 10) Funciones/RPC treasury existentes
 select
   n.nspname as schema_name,
   p.proname as function_name,
@@ -139,7 +157,7 @@ where n.nspname = 'public'
   and p.proname like 'treasury_%'
 order by p.proname;
 
--- 10) Muestra legacy para validar mapeo historico manualmente
+-- 11) Muestra legacy para validar mapeo historico manualmente
 select * from public.fees order by created_at desc nulls last limit 20;
 select * from public.expenses order by created_at desc nulls last limit 20;
 select * from public.treas_events order by created_at desc nulls last limit 20;
