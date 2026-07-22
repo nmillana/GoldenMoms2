@@ -39,13 +39,13 @@ begin
     case when fp.paid is true then round(coalesce(fp.amount, f.amount, 0))::integer else 0 end,
     case when fp.paid is true then 'paid' else 'pending' end,
     fp.paid_at,
-    v_batch || '-fee-payment-debt-' || fp.id::text,
-    'fee_payments', fp.id::text, v_batch, now()
+    v_batch || '-fee-payment-debt-' || concat(fp.fee_id::text, '-', fp.player_id::text),
+    'fee_payments', concat(fp.fee_id::text, '-', fp.player_id::text), v_batch, now()
   from public.fee_payments fp
   join public.fees f on f.id = fp.fee_id
   join public.treasury_activities a on a.legacy_source_table='fees' and a.legacy_source_id=f.id::text
   where not exists (
-    select 1 from public.activity_debts d where d.legacy_source_table='fee_payments' and d.legacy_source_id=fp.id::text
+    select 1 from public.activity_debts d where d.legacy_source_table='fee_payments' and d.legacy_source_id=concat(fp.fee_id::text, '-', fp.player_id::text)
   );
 
   -- Legacy expenses become activities with a real team_fund outgoing movement.
@@ -84,13 +84,13 @@ begin
     round(coalesce(ep.amount,0))::integer, case when ep.paid is true then round(coalesce(ep.amount,0))::integer else 0 end,
     case when ep.paid is true then 'paid' else 'pending' end,
     ep.paid_at,
-    v_batch || '-expense-payment-debt-' || ep.id::text,
-    'expense_payments', ep.id::text, v_batch, now()
+    v_batch || '-expense-payment-debt-' || concat(ep.expense_id::text, '-', ep.player_id::text),
+    'expense_payments', concat(ep.expense_id::text, '-', ep.player_id::text), v_batch, now()
   from public.expense_payments ep
   join public.expenses e on e.id = ep.expense_id
   join public.treasury_activities a on a.legacy_source_table='expenses' and a.legacy_source_id=e.id::text
   where not exists (
-    select 1 from public.activity_debts d where d.legacy_source_table='expense_payments' and d.legacy_source_id=ep.id::text
+    select 1 from public.activity_debts d where d.legacy_source_table='expense_payments' and d.legacy_source_id=concat(ep.expense_id::text, '-', ep.player_id::text)
   );
 
   -- Legacy treasurer events become activity-style charge records.
@@ -117,13 +117,13 @@ begin
     round(coalesce(tp.amount, te.amount,0))::integer, case when tp.paid is true then round(coalesce(tp.amount, te.amount,0))::integer else 0 end,
     case when tp.paid is true then 'paid' else 'pending' end,
     tp.paid_at,
-    v_batch || '-treas-event-payment-debt-' || tp.id::text,
-    'treas_event_payments', tp.id::text, v_batch, now()
+    v_batch || '-treas-event-payment-debt-' || concat(tp.treas_event_id::text, '-', tp.player_id::text),
+    'treas_event_payments', concat(tp.treas_event_id::text, '-', tp.player_id::text), v_batch, now()
   from public.treas_event_payments tp
   join public.treas_events te on te.id = tp.treas_event_id
   join public.treasury_activities a on a.legacy_source_table='treas_events' and a.legacy_source_id=te.id::text
   where not exists (
-    select 1 from public.activity_debts d where d.legacy_source_table='treas_event_payments' and d.legacy_source_id=tp.id::text
+    select 1 from public.activity_debts d where d.legacy_source_table='treas_event_payments' and d.legacy_source_id=concat(tp.treas_event_id::text, '-', tp.player_id::text)
   );
 
   -- Paid migrated debts receive payment records and team_fund incoming movements.
