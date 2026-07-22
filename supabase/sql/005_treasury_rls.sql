@@ -1,8 +1,8 @@
 -- 005_treasury_rls.sql
--- Proposed RLS for the new Treasury tables.
--- Prepared only. Validate Supabase Auth/JWT role mapping before execution.
--- Current frontend has a custom login in player_users; this SQL expects a future JWT claim role: admin, capitana or tesorera.
--- Direct financial writes are intentionally not granted to authenticated clients. New writes must go through RPC functions in 004.
+-- RLS for the new Treasury tables.
+-- For the current custom login, execute 009_treasury_custom_auth_bridge.sql first.
+-- The app sends x-gm-treasury-session on Treasury reads/RPCs; policies resolve role through treasury_current_role().
+-- Direct financial writes are intentionally not granted to clients. New writes must go through RPC functions in 004.
 
 begin;
 
@@ -41,7 +41,7 @@ begin
     execute format('drop policy if exists treasury_insert on public.%I', t);
     execute format('drop policy if exists treasury_update on public.%I', t);
     execute format('drop policy if exists treasury_delete on public.%I', t);
-    execute format('create policy treasury_select on public.%I for select to authenticated using (public.treasury_can_read())', t);
+    execute format('create policy treasury_select on public.%I for select to anon, authenticated using (public.treasury_can_read())', t);
   end loop;
 end;
 $$;
@@ -61,25 +61,33 @@ revoke insert, update, delete on public.dt_payment_fees from anon, authenticated
 revoke insert, update, delete on public.treasury_audit_log from anon, authenticated;
 revoke insert, update, delete on public.treasury_migration_runs from anon, authenticated;
 
-grant usage on schema public to authenticated, service_role;
-grant select on public.treasury_settings to authenticated;
-grant select on public.treasury_income to authenticated;
-grant select on public.monthly_fees to authenticated;
-grant select on public.player_credits to authenticated;
-grant select on public.credit_applications to authenticated;
-grant select on public.treasury_activities to authenticated;
-grant select on public.activity_debts to authenticated;
-grant select on public.payments to authenticated;
-grant select on public.payment_allocations to authenticated;
-grant select on public.treasury_movements to authenticated;
-grant select on public.dt_payments to authenticated;
-grant select on public.dt_payment_fees to authenticated;
-grant select on public.treasury_audit_log to authenticated;
-grant select on public.treasury_migration_runs to authenticated;
-grant select on public.personal_advances to authenticated;
-grant select on public.treasury_balance_by_class to authenticated;
-grant select on public.treasury_available_balance to authenticated;
-grant execute on function public.treasury_can_read() to authenticated, service_role;
-grant execute on function public.treasury_can_write() to authenticated, service_role;
+do $$
+begin
+  begin execute 'alter view public.personal_advances set (security_invoker = true)'; exception when others then raise notice 'personal_advances security_invoker not changed: %', sqlerrm; end;
+  begin execute 'alter view public.treasury_balance_by_class set (security_invoker = true)'; exception when others then raise notice 'treasury_balance_by_class security_invoker not changed: %', sqlerrm; end;
+  begin execute 'alter view public.treasury_available_balance set (security_invoker = true)'; exception when others then raise notice 'treasury_available_balance security_invoker not changed: %', sqlerrm; end;
+end;
+$$;
+
+grant usage on schema public to anon, authenticated, service_role;
+grant select on public.treasury_settings to anon, authenticated;
+grant select on public.treasury_income to anon, authenticated;
+grant select on public.monthly_fees to anon, authenticated;
+grant select on public.player_credits to anon, authenticated;
+grant select on public.credit_applications to anon, authenticated;
+grant select on public.treasury_activities to anon, authenticated;
+grant select on public.activity_debts to anon, authenticated;
+grant select on public.payments to anon, authenticated;
+grant select on public.payment_allocations to anon, authenticated;
+grant select on public.treasury_movements to anon, authenticated;
+grant select on public.dt_payments to anon, authenticated;
+grant select on public.dt_payment_fees to anon, authenticated;
+grant select on public.treasury_audit_log to anon, authenticated;
+grant select on public.treasury_migration_runs to anon, authenticated;
+grant select on public.personal_advances to anon, authenticated;
+grant select on public.treasury_balance_by_class to anon, authenticated;
+grant select on public.treasury_available_balance to anon, authenticated;
+grant execute on function public.treasury_can_read() to anon, authenticated, service_role;
+grant execute on function public.treasury_can_write() to anon, authenticated, service_role;
 
 commit;
