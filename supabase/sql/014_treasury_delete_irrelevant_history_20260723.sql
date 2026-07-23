@@ -30,7 +30,6 @@ declare
     '%cuoata abril 2026%'
   ];
   v_legacy_fee_ids uuid[] := array[]::uuid[];
-  v_legacy_fee_payment_ids uuid[] := array[]::uuid[];
   v_activity_ids uuid[] := array[]::uuid[];
   v_debt_ids uuid[] := array[]::uuid[];
   v_payment_ids uuid[] := array[]::uuid[];
@@ -54,10 +53,6 @@ begin
     raise exception 'Proteccion activa: el conjunto a eliminar incluye Liga invierno colegio Mayor';
   end if;
 
-  select coalesce(array_agg(fp.id), array[]::uuid[])
-    into v_legacy_fee_payment_ids
-  from public.fee_payments fp
-  where fp.fee_id = any(v_legacy_fee_ids);
 
   select coalesce(array_agg(a.id), array[]::uuid[])
     into v_activity_ids
@@ -79,10 +74,7 @@ begin
   select coalesce(array_agg(d.id), array[]::uuid[])
     into v_debt_ids
   from public.activity_debts d
-  where d.activity_id = any(v_activity_ids)
-     or (d.legacy_source_table = 'fee_payments' and d.legacy_source_id = any(
-       select unnest(v_legacy_fee_payment_ids)::text
-     ));
+  where d.activity_id = any(v_activity_ids);
 
   select coalesce(array_agg(distinct payment_id), array[]::uuid[])
     into v_payment_ids
@@ -102,11 +94,6 @@ begin
         (m.source_table = 'activity_debts' and coalesce(m.source_id = any(v_debt_ids), false))
         or (m.source_table = 'treasury_activities' and coalesce(m.source_id = any(v_activity_ids), false))
       )
-    union
-    select p.id
-    from public.payments p
-    where p.legacy_source_table = 'fee_payments'
-      and p.legacy_source_id = any(select unnest(v_legacy_fee_payment_ids)::text)
   ) ids
   where payment_id is not null;
 
@@ -116,7 +103,6 @@ begin
   where (m.source_table = 'activity_debts' and coalesce(m.source_id = any(v_debt_ids), false))
      or (m.source_table = 'treasury_activities' and coalesce(m.source_id = any(v_activity_ids), false))
      or coalesce(m.payment_id = any(v_payment_ids), false)
-     or (m.legacy_source_table = 'fee_payments' and m.legacy_source_id = any(select unnest(v_legacy_fee_payment_ids)::text))
      or (m.legacy_source_table = 'fees' and m.legacy_source_id = any(select unnest(v_legacy_fee_ids)::text));
 
   select coalesce(array_agg(ca.id), array[]::uuid[])
