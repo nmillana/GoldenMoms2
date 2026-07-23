@@ -187,24 +187,12 @@ body.auth-loading>.toast{visibility:hidden}
   <section id="v-dash" class="view-enter" role="tabpanel" aria-labelledby="tab-dash">
 
     <!-- KPIs -->
-    <div class="kpi-grid">
-      <div class="kpi-card">
+    <div class="kpi-grid dashboard-kpi-grid">
+      <div class="kpi-card roster-kpi-card">
         <div class="kpi-label">Plantel</div>
         <div class="kpi-value" id="kRoster">—</div>
-        <div class="kpi-sub">Jugadoras</div>
+        <div class="kpi-sub" id="kRosterMeta">Jugadoras</div>
         <span class="kpi-accent">👥</span>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Partidos</div>
-        <div class="kpi-value" id="kGames">—</div>
-        <div class="kpi-sub" id="kRecord"></div>
-        <span class="kpi-accent">⚽</span>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Último resultado</div>
-        <div class="kpi-value" id="kLastMatch" style="font-size:38px">—</div>
-        <div class="kpi-sub" id="kLastMatchMeta"></div>
-        <span class="kpi-accent">🏆</span>
       </div>
     </div>
 
@@ -836,7 +824,7 @@ if('serviceWorker' in navigator){
 </script>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=20260723-8" defer></script>
+  <script src="app.js?v=20260723-9" defer></script>
   <script src="treasury-redesign.js?v=20260723-6" defer></script>
 </body>
 </html>

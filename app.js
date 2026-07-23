@@ -912,32 +912,15 @@ document.querySelectorAll('#teamFilters .team-chip').forEach(btn => {
 async function renderKPIs(){
   try{
     if(supa&&IS_CONNECTED){
-      const { count } = await supa.from('players').select('*',{count:'exact',head:true});
-      animateNumber('kRoster', count??0);
+      const { data, count } = await supa.from('players').select('estado',{count:'exact'});
+      const rows = data || [];
+      const active = rows.filter(p => String(p.estado||'').toLowerCase()==='activo').length;
+      const rest = rows.filter(p => String(p.estado||'').toLowerCase()==='reposo').length;
+      animateNumber('kRoster', count ?? rows.length);
+      const meta = document.getElementById('kRosterMeta');
+      if(meta) meta.textContent = active + ' activas · ' + rest + ' reposo';
     }
   } catch(err){ console.warn('kRoster', err); }
-
-  try{
-    if(supa&&IS_CONNECTED){
-      const { data: ms } = await supa.from('matches').select('id,goals_for,goals_against,team,opponent,date').order('date',{ascending:false});
-      const matches = ms||[];
-      animateNumber('kGames', matches.length);
-      let w=0,d=0,l=0;
-      for(const m of matches){
-        const gf=m.goals_for??0, ga=m.goals_against??0;
-        if(gf>ga)w++; else if(gf===ga)d++; else l++;
-      }
-      document.getElementById('kRecord').textContent = matches.length ? `${w}G · ${d}E · ${l}P` : '';
-      if(matches.length){
-        const last=matches[0];
-        const gf=last.goals_for??'?', ga=last.goals_against??'?';
-        const kl=document.getElementById('kLastMatch');
-        kl.textContent=`${gf} – ${ga}`;
-        kl.style.color = gf>ga?'#a8e63d':gf<ga?'#f87171':'rgba(255,255,255,0.7)';
-        document.getElementById('kLastMatchMeta').textContent = last.opponent?`vs ${last.opponent}`:'';
-      }
-    }
-  } catch(err){ console.warn('kGames', err); }
 }
 
 function animateNumber(id, target){
