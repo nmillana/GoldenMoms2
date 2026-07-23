@@ -10,59 +10,6 @@
 
 begin;
 
-create temp table gm_treasury_reset_protected_activity_ids(
-  id uuid primary key
-) on commit drop;
-
-insert into gm_treasury_reset_protected_activity_ids(id)
-select id
-from public.treasury_activities
-where lower(trim(name)) = lower('Liga invierno colegio Mayor')
-on conflict do nothing;
-
-create temp table gm_treasury_reset_protected_debt_ids(
-  id uuid primary key
-) on commit drop;
-
-insert into gm_treasury_reset_protected_debt_ids(id)
-select d.id
-from public.activity_debts d
-join gm_treasury_reset_protected_activity_ids a on a.id = d.activity_id
-on conflict do nothing;
-
-create temp table gm_treasury_reset_protected_payment_ids(
-  id uuid primary key
-) on commit drop;
-
-insert into gm_treasury_reset_protected_payment_ids(id)
-select d.payment_id
-from public.activity_debts d
-join gm_treasury_reset_protected_debt_ids pd on pd.id = d.id
-where d.payment_id is not null
-on conflict do nothing;
-
-insert into gm_treasury_reset_protected_payment_ids(id)
-select pa.payment_id
-from public.payment_allocations pa
-join gm_treasury_reset_protected_debt_ids d on d.id = pa.target_id
-where pa.target_type = 'activity_debt'
-on conflict do nothing;
-
-insert into gm_treasury_reset_protected_payment_ids(id)
-select m.payment_id
-from public.treasury_movements m
-where m.payment_id is not null
-  and (
-    (m.source_table = 'treasury_activities' and exists (
-      select 1 from gm_treasury_reset_protected_activity_ids a where a.id = m.source_id
-    ))
-    or
-    (m.source_table = 'activity_debts' and exists (
-      select 1 from gm_treasury_reset_protected_debt_ids d where d.id = m.source_id
-    ))
-  )
-on conflict do nothing;
-
 insert into public.treasury_migration_runs(batch_key, status, notes)
 values (
   'tesorera-closing-20260723',
@@ -84,6 +31,9 @@ declare
   v_janga_id uuid;
   v_count integer;
   v_setting public.treasury_settings%rowtype;
+  v_liga_activity_ids uuid[] := array[]::uuid[];
+  v_liga_debt_ids uuid[] := array[]::uuid[];
+  v_liga_payment_ids uuid[] := array[]::uuid[];
   v_month integer;
   v_fee_id uuid;
   v_payment_id uuid;
@@ -99,6 +49,39 @@ declare
   v_reset_credits integer := 0;
   v_reset_credit_apps integer := 0;
 begin
+  select coalesce(array_agg(id), array[]::uuid[])
+    into v_liga_activity_ids
+  from public.treasury_activities
+  where lower(trim(name)) = lower('Liga invierno colegio Mayor');
+
+  select coalesce(array_agg(d.id), array[]::uuid[])
+    into v_liga_debt_ids
+  from public.activity_debts d
+  where d.activity_id = any(v_liga_activity_ids);
+
+  select coalesce(array_agg(distinct payment_id), array[]::uuid[])
+    into v_liga_payment_ids
+  from (
+    select d.payment_id
+    from public.activity_debts d
+    where d.id = any(v_liga_debt_ids) and d.payment_id is not null
+    union
+    select pa.payment_id
+    from public.payment_allocations pa
+    where pa.target_type = 'activity_debt'
+      and pa.target_id = any(v_liga_debt_ids)
+    union
+    select m.payment_id
+    from public.treasury_movements m
+    where m.payment_id is not null
+      and (
+        (m.source_table = 'treasury_activities' and coalesce(m.source_id = any(v_liga_activity_ids), false))
+        or
+        (m.source_table = 'activity_debts' and coalesce(m.source_id = any(v_liga_debt_ids), false))
+      )
+  ) protected
+  where payment_id is not null;
+
   select count(*), (array_agg(id order by id))[1]
     into v_count, v_marce_id
   from public.players
@@ -126,7 +109,7 @@ begin
     raise exception 'No se puede resolver Janga de forma unica. Coincidencias: %', v_count;
   end if;
 
-  select count(*) into v_count from gm_treasury_reset_protected_activity_ids;
+  v_count := coalesce(array_length(v_liga_activity_ids, 1), 0);
   if v_count < 1 then
     raise exception 'No se encontro la actividad protegida "Liga invierno colegio Mayor". No se aplico el corte.';
   end if;
@@ -143,23 +126,9 @@ begin
          reversal_reason = coalesce(m.reversal_reason, v_reason)
    where m.status = 'posted'
      and coalesce(m.migration_batch_id,'') <> v_batch
-     and not exists (
-       select 1
-       from gm_treasury_reset_protected_activity_ids a
-       where m.source_table = 'treasury_activities'
-         and a.id = m.source_id
-     )
-     and not exists (
-       select 1
-       from gm_treasury_reset_protected_debt_ids d
-       where m.source_table = 'activity_debts'
-         and d.id = m.source_id
-     )
-     and not exists (
-       select 1
-       from gm_treasury_reset_protected_payment_ids p
-       where p.id = m.payment_id
-     );
+     and not (m.source_table = 'treasury_activities' and coalesce(m.source_id = any(v_liga_activity_ids), false))
+     and not (m.source_table = 'activity_debts' and coalesce(m.source_id = any(v_liga_debt_ids), false))
+     and (m.payment_id is null or not (m.payment_id = any(v_liga_payment_ids)));
   get diagnostics v_rows = row_count;
   v_reversed_movements := v_rows;
 
@@ -169,17 +138,8 @@ begin
          reversal_reason = coalesce(pa.reversal_reason, v_reason)
    where pa.status = 'posted'
      and coalesce(pa.migration_batch_id,'') <> v_batch
-     and not exists (
-       select 1
-       from gm_treasury_reset_protected_payment_ids p
-       where p.id = pa.payment_id
-     )
-     and not (
-       pa.target_type = 'activity_debt'
-       and exists (
-         select 1 from gm_treasury_reset_protected_debt_ids d where d.id = pa.target_id
-       )
-     );
+     and not (pa.payment_id = any(v_liga_payment_ids))
+     and not (pa.target_type = 'activity_debt' and coalesce(pa.target_id = any(v_liga_debt_ids), false));
   get diagnostics v_rows = row_count;
   v_reversed_allocations := v_rows;
 
@@ -189,11 +149,7 @@ begin
          reversal_reason = coalesce(p.reversal_reason, v_reason)
    where p.status = 'posted'
      and coalesce(p.migration_batch_id,'') <> v_batch
-     and not exists (
-       select 1
-       from gm_treasury_reset_protected_payment_ids pp
-       where pp.id = p.id
-     );
+     and not (p.id = any(v_liga_payment_ids));
   get diagnostics v_rows = row_count;
   v_reversed_payments := v_rows;
 
@@ -221,11 +177,7 @@ begin
          no_charge_reason = coalesce(d.no_charge_reason, v_reason)
    where d.status in ('pending','paid','no_charge')
      and coalesce(d.migration_batch_id,'') <> v_batch
-     and not exists (
-       select 1
-       from gm_treasury_reset_protected_debt_ids pd
-       where pd.id = d.id
-     );
+     and not (d.id = any(v_liga_debt_ids));
   get diagnostics v_rows = row_count;
   v_reset_debts := v_rows;
 
@@ -242,11 +194,7 @@ begin
          cancellation_reason = coalesce(a.cancellation_reason, v_reason)
    where a.administrative_status not in ('cancelled','reversed')
      and coalesce(a.migration_batch_id,'') <> v_batch
-     and not exists (
-       select 1
-       from gm_treasury_reset_protected_activity_ids pa
-       where pa.id = a.id
-     );
+     and not (a.id = any(v_liga_activity_ids));
   get diagnostics v_rows = row_count;
   v_reset_activities := v_rows;
 
@@ -421,9 +369,9 @@ begin
      set status = 'completed',
          completed_at = v_now,
          totals = jsonb_build_object(
-           'protected_liga_activities', (select count(*) from gm_treasury_reset_protected_activity_ids),
-           'protected_liga_debts', (select count(*) from gm_treasury_reset_protected_debt_ids),
-           'protected_liga_payments', (select count(*) from gm_treasury_reset_protected_payment_ids),
+           'protected_liga_activities', coalesce(array_length(v_liga_activity_ids, 1), 0),
+           'protected_liga_debts', coalesce(array_length(v_liga_debt_ids, 1), 0),
+           'protected_liga_payments', coalesce(array_length(v_liga_payment_ids, 1), 0),
            'personal_advance_activities', (
              select count(*)
              from public.treasury_activities
