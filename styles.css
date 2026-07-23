@@ -1322,6 +1322,13 @@ body.auth-loading > .toast {
 .treasury-panel { border:1px solid var(--line-2); background:var(--surface); border-radius:var(--r-md); padding:12px; margin-bottom:10px; }
 .treasury-panel-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
 .treasury-panel-title { font-family:var(--font-head); font-weight:900; font-size:14px; color:var(--ink); margin-bottom:8px; }
+.treasury-section-title { font-family:var(--font-head); font-weight:900; font-size:13px; color:var(--ink); margin:4px 0 8px; }
+.treasury-subpanel { background:var(--surface-2); }
+.treasury-activity-head { align-items:flex-start; }
+.treasury-collapse-btn { flex:1; min-width:0; display:flex; align-items:flex-start; gap:9px; border:0; background:transparent; color:inherit; padding:0; text-align:left; cursor:pointer; }
+.treasury-collapse-btn .treasury-panel-title { display:block; margin-bottom:3px; }
+.treasury-caret { width:22px; height:22px; border-radius:999px; border:1px solid var(--line-2); display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; font-size:13px; font-weight:900; color:var(--muted); background:var(--surface-2); }
+.treasury-activity.open .treasury-caret { color:#166534; border-color:#bbf7d0; background:#f0fdf4; }
 .treasury-row, .treasury-card-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:13px; }
 .treasury-row:last-child, .treasury-card-row:last-child { border-bottom:0; }
 .treasury-card-row { align-items:flex-start; }
