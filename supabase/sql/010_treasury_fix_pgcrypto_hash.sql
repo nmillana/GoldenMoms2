@@ -1,5 +1,5 @@
 -- 010_treasury_fix_pgcrypto_hash.sql
--- Fixes pgcrypto hashing for Supabase projects where digest(text, text) is unavailable.
+-- Fixes pgcrypto hashing for Supabase projects where pgcrypto functions live in the extensions schema.
 -- Run after 009_treasury_custom_auth_bridge.sql if Treasury login shows a generic 009 error.
 
 begin;
@@ -36,7 +36,7 @@ begin
     select s.role into v_session_role
     from public.treasury_auth_sessions s
     join public.player_users pu on pu.id = s.player_user_id
-    where s.token_hash = encode(digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex')
+    where s.token_hash = encode(extensions.digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex')
       and s.revoked_at is null
       and s.expires_at > now()
       and pu.active is true
@@ -90,7 +90,7 @@ begin
     raise exception 'Usuario no encontrado' using errcode = '42501';
   end if;
 
-  v_password_hash := encode(digest(convert_to(p_password, 'UTF8'), 'sha256'), 'hex');
+  v_password_hash := encode(extensions.digest(convert_to(p_password, 'UTF8'), 'sha256'), 'hex');
   if coalesce(v_user.pwd_hash, '') <> v_password_hash then
     raise exception 'Usuario o contrasena incorrectos' using errcode = '42501';
   end if;
@@ -108,7 +108,7 @@ begin
   v_token := gen_random_uuid()::text || '-' || gen_random_uuid()::text;
 
   insert into public.treasury_auth_sessions(player_user_id, player_id, username, role, token_hash, expires_at)
-  values (v_user.player_user_id, v_user.player_id, v_user.username, v_role, encode(digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex'), v_expires_at);
+  values (v_user.player_user_id, v_user.player_id, v_user.username, v_role, encode(extensions.digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex'), v_expires_at);
 
   return jsonb_build_object(
     'session_token', v_token,
@@ -140,7 +140,7 @@ begin
   end if;
   update public.treasury_auth_sessions
   set revoked_at = now()
-  where token_hash = encode(digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex')
+  where token_hash = encode(extensions.digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex')
     and revoked_at is null;
 end;
 $$;
