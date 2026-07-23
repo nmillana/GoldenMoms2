@@ -191,7 +191,7 @@ begin
     select p.id
     from public.players p
     where (
-      lower(coalesce(p.estado,'')) = 'activo'
+      lower(coalesce(p.estado::text,'')) = 'activo'
       and (p_team = 'Todos' or coalesce(p.equipos::text,'') ilike '%' || p_team || '%')
     )
     or p.id = any(coalesce(p_extra_player_ids, '{}'::uuid[]))
