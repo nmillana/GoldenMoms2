@@ -5,8 +5,8 @@ Este proyecto queda preparado por la via 2: codigo local + SQL preparado. Nada d
 ## Estado
 
 - Implementado en codigo local: `treasury-redesign.js`, cargado despues de `app.js` desde `index.html`.
-- Preparado en SQL: `supabase/sql/001_treasury_diagnostic_queries.sql` a `009_treasury_custom_auth_bridge.sql`.
-- Pendiente despues de la migracion historica: ejecutar `009_treasury_custom_auth_bridge.sql`, ejecutar `005_treasury_rls.sql` y validar acceso desde la app.
+- Preparado en SQL: `supabase/sql/001_treasury_diagnostic_queries.sql` a `009_treasury_custom_auth_bridge.sql` y, si ya habias ejecutado una version anterior, `010_treasury_fix_pgcrypto_hash.sql`.
+- Pendiente despues de la migracion historica: ejecutar `009_treasury_custom_auth_bridge.sql`, aplicar `010_treasury_fix_pgcrypto_hash.sql` si corresponde, ejecutar `005_treasury_rls.sql` y validar acceso desde la app.
 
 ## Orden recomendado
 
@@ -19,9 +19,10 @@ Este proyecto queda preparado por la via 2: codigo local + SQL preparado. Nada d
 7. Ejecutar `006_treasury_historical_migration.sql`.
 8. Ejecutar completo `007_treasury_validation_queries.sql` y comparar saldos.
 9. Ejecutar `009_treasury_custom_auth_bridge.sql` para compatibilidad con el login custom actual.
-10. Ejecutar `005_treasury_rls.sql` para activar RLS usando la sesion temporal de Tesorera.
-11. Ejecutar completo `007_treasury_validation_queries.sql` y probar ingreso a Tesorera desde la app.
-12. Si algo no cuadra, usar `008_treasury_rollback.sql` con el batch legacy-treasury-20260722.
+10. Si ya habias ejecutado una version anterior de `009` y el login muestra error tecnico, ejecutar `010_treasury_fix_pgcrypto_hash.sql`.
+11. Ejecutar `005_treasury_rls.sql` para activar RLS usando la sesion temporal de Tesorera.
+12. Ejecutar completo `007_treasury_validation_queries.sql` y probar ingreso a Tesorera desde la app.
+13. Si algo no cuadra, usar `008_treasury_rollback.sql` con el batch legacy-treasury-20260722.
 
 ## Resultados que necesito para validar
 
@@ -36,6 +37,6 @@ Este proyecto queda preparado por la via 2: codigo local + SQL preparado. Nada d
 
 ## Advertencias
 
-- El login actual de la app es custom sobre `player_users`; `009_treasury_custom_auth_bridge.sql` habilita sesiones temporales y `005_treasury_rls.sql` valida esas sesiones con `x-gm-treasury-session`.
+- El login actual de la app es custom sobre `player_users`; `009_treasury_custom_auth_bridge.sql` habilita sesiones temporales, `010_treasury_fix_pgcrypto_hash.sql` corrige compatibilidad pgcrypto si aplica y `005_treasury_rls.sql` valida esas sesiones con `x-gm-treasury-session`.
 - El overlay local lee legacy si las tablas nuevas no existen, pero las operaciones financieras nuevas llaman RPC. En modo legacy no simula transacciones.
 - La migracion historica no borra datos antiguos ni borra filas nuevas en rollback; usa trazabilidad, estados y movimientos compensatorios.

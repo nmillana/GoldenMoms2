@@ -76,7 +76,7 @@ begin
     select s.role into v_session_role
     from public.treasury_auth_sessions s
     join public.player_users pu on pu.id = s.player_user_id
-    where s.token_hash = encode(digest(v_token, 'sha256'), 'hex')
+    where s.token_hash = encode(digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex')
       and s.revoked_at is null
       and s.expires_at > now()
       and pu.active is true
@@ -147,7 +147,7 @@ begin
     raise exception 'Usuario no encontrado' using errcode = '42501';
   end if;
 
-  v_password_hash := encode(digest(p_password, 'sha256'), 'hex');
+  v_password_hash := encode(digest(convert_to(p_password, 'UTF8'), 'sha256'), 'hex');
   if coalesce(v_user.pwd_hash, '') <> v_password_hash then
     raise exception 'Usuario o contrasena incorrectos' using errcode = '42501';
   end if;
@@ -165,7 +165,7 @@ begin
   v_token := gen_random_uuid()::text || '-' || gen_random_uuid()::text;
 
   insert into public.treasury_auth_sessions(player_user_id, player_id, username, role, token_hash, expires_at)
-  values (v_user.player_user_id, v_user.player_id, v_user.username, v_role, encode(digest(v_token, 'sha256'), 'hex'), v_expires_at);
+  values (v_user.player_user_id, v_user.player_id, v_user.username, v_role, encode(digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex'), v_expires_at);
 
   return jsonb_build_object(
     'session_token', v_token,
@@ -197,7 +197,7 @@ begin
   end if;
   update public.treasury_auth_sessions
   set revoked_at = now()
-  where token_hash = encode(digest(v_token, 'sha256'), 'hex')
+  where token_hash = encode(digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex')
     and revoked_at is null;
 end;
 $$;
@@ -282,5 +282,7 @@ grant execute on function public.treasury_add_activity_debt(uuid,uuid,integer,te
 grant execute on function public.treasury_register_activity_debt_payment(uuid,timestamptz,text) to anon, authenticated, service_role;
 grant execute on function public.treasury_mark_debt_no_charge(uuid,text,text) to anon, authenticated, service_role;
 grant execute on function public.treasury_create_historical_adjustment(jsonb,text) to anon, authenticated, service_role;
+
+notify pgrst, 'reload schema';
 
 commit;

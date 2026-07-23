@@ -39,7 +39,7 @@
   function toast(msg){ if(typeof showToast === 'function') showToast(msg, 4200); else alert(msg); }
   function opKey(kind){ const c = typeof crypto !== 'undefined' ? crypto : null; return 'gm-' + kind + '-' + (c && c.randomUUID ? c.randomUUID() : Date.now() + '-' + Math.random().toString(16).slice(2)); }
   function missingMsg(){ return 'Motor financiero pendiente: ejecuta y valida los SQL 001-005 en Supabase. Esta accion esta preparada como RPC y no se ejecuta en modo legacy.'; }
-  function isMissing(error){ const m=String((error&&error.message)||'').toLowerCase(); return error && (error.code === '42P01' || m.includes('does not exist') || m.includes('schema cache') || m.includes('could not find')); }
+  function isMissing(error){ const m=String((error&&error.message)||'').toLowerCase(); const c=String((error&&error.code)||''); return error && (c === '42P01' || c === 'PGRST202' || m.includes('schema cache') || (m.includes('could not find') && m.includes('treasury')) || (m.includes('relation') && m.includes('does not exist')) || (m.includes('function public.treasury_') && m.includes('does not exist'))); }
   function player(id){ return GT.playerMap.get(String(id)); }
   function pname(p){ return (p && (p.apodo || p.nombre)) || 'Sin nombre'; }
   function pnameById(id){ return pname(player(id)); }
