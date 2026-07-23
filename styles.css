@@ -1338,6 +1338,8 @@ body.auth-loading > .toast {
 .treasury-player-picker { display:flex; flex-direction:column; gap:6px; max-height:38vh; overflow:auto; border:1px solid var(--line); border-radius:var(--r-sm); padding:8px; background:var(--surface-2); }
 .treasury-player-picker.compact { max-height:28vh; }
 .treasury-check { display:grid; grid-template-columns:auto 1fr minmax(82px, 110px); gap:8px; align-items:center; padding:7px 8px; border-radius:var(--r-xs); background:var(--surface); border:1px solid var(--line); font-size:13px; }
+.treasury-check.no-amount { grid-template-columns:auto 1fr; }
+.treasury-picker-tools { align-items:center; }
 .treasury-check:has(input[type="checkbox"]:checked) { border-color:var(--lime-soft); background:var(--lime-pale); }
 .treasury-check small { color:var(--muted-2); font-size:11px; }
 .treasury-action-modal { max-width:560px; }
