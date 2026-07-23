@@ -540,30 +540,6 @@ body.modal-open { overflow: hidden; }
 .equipo-badges { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
 .equipo-badge  { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 99px; }
 
-/* ── Matches ─────────────────────────────────────────── */
-.match-card {
-  background: var(--surface); border: 1px solid var(--line);
-  border-left: 3px solid var(--line-2);
-  border-radius: var(--r-lg); padding: 14px 18px; margin-bottom: 8px;
-  display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center;
-  box-shadow: var(--sh-1); transition: border-color 0.13s;
-}
-.match-card:hover { border-color: var(--line-2); }
-.match-card.win  { border-left-color: var(--win); }
-.match-card.loss { border-left-color: var(--loss); }
-.match-card.draw { border-left-color: var(--muted-2); }
-.match-title  { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-.match-meta   { font-size: 12px; color: var(--muted); margin-top: 3px; }
-.match-scorers{ font-size: 11px; color: var(--muted); margin-top: 5px; }
-.match-obs    { font-size: 11px; color: var(--muted); margin-top: 5px; padding: 5px 8px; background: var(--surface-2); border-radius: var(--r-xs); border: 1px solid var(--line); }
-.score-badge  { font-family: var(--font-head); font-size: 28px; font-weight: 800; white-space: nowrap; letter-spacing: -1px; }
-.score-badge.win  { color: var(--win); }
-.score-badge.loss { color: var(--loss); }
-.score-badge.draw { color: var(--muted-2); }
-.score-sep    { font-size: 18px; color: var(--muted-2); font-weight: 300; margin: 0 2px; }
-.score-no     { font-size: 12px; color: var(--muted-2); }
-@media (max-width: 560px) { .match-card { grid-template-columns: 1fr; } }
-
 /* ── Modals ──────────────────────────────────────────── */
 .modal-bg {
   position: fixed; inset: 0;
@@ -909,30 +885,6 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted-
   .stats-row { grid-template-columns: 36px 1fr 50px 50px; }
   .stats-bar-wrap { display: none; }
 }
-
-/* ── Tablón ───────────────────────────────────────────── */
-.ann-card {
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-lg); padding: 16px; box-shadow: var(--sh-1);
-  position: relative; transition: border-color 0.13s;
-}
-.ann-card.pinned { border-color: var(--lime-soft); background: var(--lime-pale); }
-.ann-card:hover  { border-color: var(--line-2); }
-.ann-pin-badge {
-  display: inline-flex; align-items: center; gap: 3px;
-  font-size: 10px; font-weight: 700; color: var(--lime);
-  background: var(--surface); border: 1px solid var(--lime-soft);
-  border-radius: 99px; padding: 1px 7px; margin-bottom: 6px;
-}
-.ann-title { font-family: var(--font-head); font-size: 17px; font-weight: 800; color: var(--ink); }
-.ann-body  { font-size: 13px; color: var(--ink-2); margin-top: 5px; line-height: 1.5; white-space: pre-line; }
-.ann-meta  { font-size: 11px; color: var(--muted); margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.ann-edit-btn {
-  margin-left: auto; font-size: 11px; font-weight: 600;
-  background: none; border: 1px solid var(--line-2); border-radius: var(--r-xs);
-  padding: 2px 8px; color: var(--muted); cursor: pointer; transition: all 0.12s;
-}
-.ann-edit-btn:hover { border-color: var(--lime-soft); color: var(--lime); }
 
 /* ── Panel Tesorera ─────────────────────────────────── */
 .treas-lock {

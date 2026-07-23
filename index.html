@@ -165,18 +165,14 @@ body.auth-loading>.toast{visibility:hidden}
         <option value="dash">🏠 Dashboard</option>
         <option value="events">📅 Eventos</option>
         <option value="roster">👥 Plantel</option>
-        <option value="matches">🏆 Partidos</option>
         <option value="stats">📊 Estadísticas</option>
-        <option value="board">📌 Tablón</option>
         <option value="fees">💰 Tesorera</option>
       </select>
     <nav class="nav" role="tablist" aria-label="Navegación">
       <button class="tab active" id="tab-dash" data-view="dash" aria-controls="v-dash">Dashboard</button>
       <button class="tab" id="tab-events" data-view="events" aria-controls="v-events">Eventos</button>
       <button class="tab" id="tab-roster" data-view="roster" aria-controls="v-roster">Plantel</button>
-      <button class="tab" id="tab-matches" data-view="matches" aria-controls="v-matches">Partidos</button>
       <button class="tab" id="tab-stats" data-view="stats" aria-controls="v-stats">Estadísticas</button>
-      <button class="tab" id="tab-board" data-view="board" aria-controls="v-board">Tablón</button>
       <button class="tab" id="tab-fees" data-view="fees" aria-controls="v-fees">Tesorera</button>
     </nav>
   </div>
@@ -314,18 +310,6 @@ body.auth-loading>.toast{visibility:hidden}
     <div id="rosterGrid" class="roster-grid"></div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════
-       PARTIDOS
-       ═══════════════════════════════════════════════════════ -->
-  <section id="v-matches" style="display:none" role="tabpanel" aria-labelledby="tab-matches">
-    <div class="section-header">
-      <div>
-        <div class="section-title">Partidos</div>
-        <div class="section-sub">Historial detallado: rival, fecha, marcador, goleadoras y observaciones.</div>
-      </div>
-    </div>
-    <div id="matchesList"></div>
-  </section>
 
 </main>
 
@@ -384,44 +368,6 @@ body.auth-loading>.toast{visibility:hidden}
       <div class="modal-actions">
         <button class="btn" id="btnCloseResult">Cancelar</button>
         <button class="btn p" id="btnSaveResult">💾 Guardar resultado</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════ ANUNCIO MODAL ═══════════ -->
-  <div class="modal-bg" id="annModalBg" style="display:none" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true">
-      <div class="modal-title"><div class="modal-title-icon">📢</div><span id="annModalTitle">Nuevo anuncio</span></div>
-      <input type="hidden" id="ann_id">
-      <div class="form-group" style="margin-bottom:10px">
-        <label class="form-label">Título *</label>
-        <input id="ann_title" class="input" placeholder="Ej: Cancha suspendida por lluvia">
-      </div>
-      <div class="form-group" style="margin-bottom:10px">
-        <label class="form-label">Mensaje</label>
-        <textarea id="ann_body" class="input" rows="3" placeholder="Detalle del anuncio…" style="resize:vertical"></textarea>
-      </div>
-      <div class="form-row" style="margin-bottom:10px">
-        <div class="form-group">
-          <label class="form-label">Equipo</label>
-          <select id="ann_team" class="input">
-            <option value="Golden Moms">💚 Golden Moms</option>
-            <option value="Dreams">💜 Dreams</option>
-            <option value="Power">🧡 Power</option>
-            <option value="Todos">📣 Todos</option>
-          </select>
-        </div>
-        <div class="form-group" style="justify-content:flex-end">
-          <label class="form-label">Fijar arriba</label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;margin-top:4px">
-            <input type="checkbox" id="ann_pinned"> Destacado 📌
-          </label>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn danger" id="btnDeleteAnn" style="margin-right:auto;display:none">🗑 Eliminar</button>
-        <button class="btn" id="btnCloseAnn">Cancelar</button>
-        <button class="btn p" id="btnSaveAnn">💾 Publicar</button>
       </div>
     </div>
   </div>
@@ -570,15 +516,6 @@ body.auth-loading>.toast{visibility:hidden}
         Seleccioná o creá un torneo para ver la tabla
       </div>
     </div>
-  </section>
-
-  <!-- ═══════════ TABLÓN ═══════════ -->
-  <section id="v-board" style="display:none;padding:0 4px" role="tabpanel" aria-labelledby="tab-board">
-    <div class="section-header">
-      <div><div class="section-title">Tablón</div><div class="section-sub">Anuncios y avisos del equipo</div></div>
-      <button class="btn p" id="btnNewAnn">＋ Anuncio</button>
-    </div>
-    <div id="boardList" style="display:flex;flex-direction:column;gap:10px"></div>
   </section>
 
   <!-- ═══════════ CUOTAS ═══════════ -->
@@ -899,7 +836,7 @@ if('serviceWorker' in navigator){
 </script>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=20260721-5" defer></script>
+  <script src="app.js?v=20260723-8" defer></script>
   <script src="treasury-redesign.js?v=20260723-6" defer></script>
 </body>
 </html>

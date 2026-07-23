@@ -294,7 +294,6 @@ document.addEventListener('keydown', event => {
       playerModalBg: closePlayerModal,
       attModalBg: closeAttModal,
       resultModalBg: closeResultModal,
-      annModalBg: closeAnnModal,
       feeModalBg: closeFeeModal,
       treasEventModalBg: closeTreasEventModal,
       expenseModalBg: closeExpenseModal
@@ -1134,67 +1133,6 @@ async function renderDash(){
 }
 
 /* ═══════════════════════════════════════════════════════════
-   PARTIDOS
-   ══════════════════════════════════════════════════════════ */
-async function renderMatches(){
-  const container=document.getElementById('matchesList');
-  container.innerHTML='<div class="empty-state"><span class="empty-state-icon" style="animation:spin 1s linear infinite;display:inline-block">⚽</span>Cargando partidos…</div>';
-  if(!supa||!IS_CONNECTED){ container.innerHTML='<div class="empty-state"><span class="empty-state-icon">⚽</span>Sin conexión</div>'; return; }
-  try{
-    const { data:matches, error } = await supa
-      .from('matches').select('*, events(title, datetime, location, team, opponent)').order('date',{ascending:false});
-    if(error) throw error;
-    if(!matches?.length){ container.innerHTML='<div class="empty-state"><span class="empty-state-icon">⚽</span>No hay partidos registrados</div>'; return; }
-    for(const m of matches){
-      const ev=m.events;
-      const gf=m.goals_for??null, ga=m.goals_against??null;
-      const hasScore=gf!==null&&ga!==null;
-      const resultKey=!hasScore?'':'draw'+(gf>ga?'win':gf<ga?'loss':'draw').replace('drawwin','win').replace('drawloss','loss');
-      const rc=hasScore?(gf>ga?'win':gf<ga?'loss':'draw'):'';
-      const date=safeDate(ev?.datetime) || safeDateOnly(m.date);
-      const title=ev?.title||m.opponent||'Partido';
-      const team=ev?.team||m.team||TEAMS.GM;
-      const opp=ev?.opponent||m.opponent||'';
-      const loc=ev?.location||'';
-      const card=document.createElement('div'); card.className='match-card'+(rc?' '+rc:'');
-      // Left
-      const left=document.createElement('div');
-      const titleEl=document.createElement('div'); titleEl.className='match-title';
-      const badge=document.createElement('span'); badge.className='ev-team-badge '+teamBadgeClass(team); badge.textContent=team; titleEl.appendChild(badge);
-      const tname=document.createElement('span'); tname.textContent=title; titleEl.appendChild(tname);
-      const meta=document.createElement('div'); meta.className='match-meta';
-      const parts=[];
-      if(date) parts.push(date.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}));
-      if(opp&&!title.includes(opp)) parts.push('vs '+opp);
-      if(loc) parts.push(loc);
-      meta.textContent=parts.join(' · ');
-      left.appendChild(titleEl); left.appendChild(meta);
-      if(Array.isArray(m.scorers)&&m.scorers.length){
-        const sc=document.createElement('div'); sc.className='match-scorers';
-        sc.textContent='⚽ '+m.scorers.join(', '); left.appendChild(sc);
-      }
-      if(m.observation||m.notes){
-        const obs=document.createElement('div'); obs.className='match-obs';
-        obs.textContent=m.observation||m.notes; left.appendChild(obs);
-      }
-      // Right
-      const right=document.createElement('div');
-      if(hasScore){
-        const score=document.createElement('div'); score.className='score-badge'+(rc?' '+rc:'');
-        const gfEl=document.createElement('span'); gfEl.textContent=String(gf);
-        const sep=document.createElement('span'); sep.className='score-sep'; sep.textContent=' – ';
-        const gaEl=document.createElement('span'); gaEl.textContent=String(ga);
-        score.appendChild(gfEl); score.appendChild(sep); score.appendChild(gaEl); right.appendChild(score);
-      } else {
-        const p=document.createElement('div'); p.className='score-no'; p.textContent='Sin resultado'; right.appendChild(p);
-      }
-      card.appendChild(left); card.appendChild(right);
-      container.appendChild(card);
-    }
-  } catch(err){ console.error('renderMatches', err); container.innerHTML='<div class="empty-state">Error cargando partidos</div>'; }
-}
-
-/* ═══════════════════════════════════════════════════════════
    FILTRO PLANTEL
    ══════════════════════════════════════════════════════════ */
 let currentRosterFilter='all';
@@ -1211,10 +1149,13 @@ document.getElementById('btnNewPlayer').addEventListener('click', ()=>openPlayer
 /* ═══════════════════════════════════════════════════════════
    ROUTING
    ══════════════════════════════════════════════════════════ */
+const MAIN_VIEWS = ['dash','events','roster','stats','fees'];
+function normalizeMainView(v){ return MAIN_VIEWS.includes(v) ? v : 'dash'; }
 function showView(v){
+  v = normalizeMainView(v);
   closeNotifDropdown();
   activateNavTab(v);
-  for(const id of ['dash','events','roster','matches','stats','board','fees']){
+  for(const id of MAIN_VIEWS){
     const el=document.getElementById('v-'+id);
     if(el){ el.style.display='none'; el.classList.remove('view-enter'); }
   }
@@ -1224,10 +1165,8 @@ function showView(v){
   if(v !== 'fees') hideTreasLock();
   if(v==='dash')    { renderDash(); loadNotifications(); if(currentUser) renderPlayerDash(); }
   if(v==='events')  renderMonth();
-  if(v==='matches') renderMatches();
   if(v==='roster')  renderRoster(currentRosterFilter);
   if(v==='stats')   renderStats();
-  if(v==='board')   renderBoard();
   if(v==='fees'){
     if(checkTreasAuth()){
       hideTreasLock();
@@ -1306,7 +1245,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   closePlayerModal();
   closeAttModal();
   closeResultModal();
-  closeAnnModal();
   closeFeeModal();
   closeTreasEventModal();
   closeExpenseModal();
@@ -1325,7 +1263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  const initialView = persisted || 'dash';
+  const initialView = normalizeMainView(persisted || 'dash');
   activateNavTab(initialView);
   syncTabPanels(initialView);
   } catch(err) {
@@ -1792,7 +1730,6 @@ document.getElementById('btnSaveResult').addEventListener('click', async ()=>{
       if(error) throw error;
     }
     closeResultModal();
-    if(document.querySelector('.nav .tab.active')?.dataset.view==='matches') renderMatches();
     renderKPIs();
   } catch(err){ alert('Error: '+(err.message||err)); console.error(err); }
 });
@@ -1806,98 +1743,6 @@ async function renderStats() {
 const statsTeamFilter = document.getElementById('stats_team_filter');
 if(statsTeamFilter) statsTeamFilter.addEventListener('change', renderStats);
 
-
-/* ═══════════════════════════════════════════════════════════
-   TABLÓN DE ANUNCIOS
-   ══════════════════════════════════════════════════════════ */
-const annModalBg = document.getElementById('annModalBg');
-let editingAnnId = null;
-
-function openAnnModal(ann=null){
-  editingAnnId = ann?.id||null;
-  document.getElementById('annModalTitle').textContent = ann ? 'Editar anuncio' : 'Nuevo anuncio';
-  document.getElementById('ann_id').value = ann?.id||'';
-  document.getElementById('ann_title').value = ann?.title||'';
-  document.getElementById('ann_body').value = ann?.body||'';
-  document.getElementById('ann_team').value = ann?.team||'Golden Moms';
-  document.getElementById('ann_pinned').checked = ann?.pinned||false;
-  document.getElementById('btnDeleteAnn').style.display = ann ? '' : 'none';
-  openDialog(annModalBg, document.getElementById('ann_title'));
-}
-function closeAnnModal(){ closeDialog(annModalBg); editingAnnId=null; }
-
-document.getElementById('btnNewAnn').addEventListener('click',()=>openAnnModal());
-document.getElementById('btnCloseAnn').addEventListener('click',closeAnnModal);
-annModalBg.addEventListener('click',e=>{if(e.target===annModalBg)closeAnnModal();});
-
-document.getElementById('btnDeleteAnn').addEventListener('click', async ()=>{
-  if(!editingAnnId||!supa||!IS_CONNECTED) return;
-  if(!confirm('¿Eliminar este anuncio?')) return;
-  try{
-    const {error}=await supa.from('announcements').delete().eq('id',editingAnnId);
-    if(error) throw error;
-  } catch(err){ alert('Error: '+(err.message||err)); return; }
-  closeAnnModal(); renderBoard();
-});
-
-document.getElementById('btnSaveAnn').addEventListener('click', async ()=>{
-  const title=document.getElementById('ann_title').value.trim();
-  if(!title){ alert('El título es obligatorio.'); return; }
-  if(!supa||!IS_CONNECTED){ alert('Sin conexión.'); return; }
-  const payload={
-    title,
-    body: document.getElementById('ann_body').value.trim()||null,
-    team: document.getElementById('ann_team').value,
-    pinned: document.getElementById('ann_pinned').checked,
-  };
-  try{
-    if(editingAnnId){
-      const {error}=await supa.from('announcements').update(payload).eq('id',editingAnnId);
-      if(error) throw error;
-    } else {
-      const {error}=await supa.from('announcements').insert([payload]);
-      if(error) throw error;
-    }
-  } catch(err){ alert('Error: '+(err.message||err)); return; }
-  closeAnnModal(); renderBoard();
-});
-
-async function renderBoard(){
-  const list=document.getElementById('boardList');
-  list.innerHTML='';
-  if(!supa||!IS_CONNECTED){ list.innerHTML='<div class="empty-state">Sin conexión</div>'; return; }
-  try{
-    const {data,error}=await supa.from('announcements').select('*').order('pinned',{ascending:false}).order('created_at',{ascending:false});
-    if(error) throw error;
-    if(!data?.length){ list.innerHTML='<div class="empty-state"><span class="empty-state-icon">📢</span>Sin anuncios. ¡Publica el primero!</div>'; return; }
-    for(const ann of data){
-      const card=document.createElement('div');card.className='ann-card'+(ann.pinned?' pinned':'');
-      if(ann.pinned){
-        const pin=document.createElement('div');pin.className='ann-pin-badge';pin.textContent='📌 Destacado';card.appendChild(pin);
-      }
-      const title=document.createElement('div');title.className='ann-title';title.textContent=ann.title;card.appendChild(title);
-      if(ann.body){const body=document.createElement('div');body.className='ann-body';body.textContent=ann.body;card.appendChild(body);}
-      const meta=document.createElement('div');meta.className='ann-meta';
-      const d=safeDate(ann.created_at);
-      const teamBadge=document.createElement('span');
-      teamBadge.className='ev-team-badge '+teamBadgeClass(ann.team==='Todos'?TEAMS.GM:ann.team);
-      teamBadge.textContent=ann.team;
-      meta.appendChild(teamBadge);
-      if(d){ const dt=document.createElement('span');dt.textContent=d.toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'});meta.appendChild(dt); }
-      const editBtn=document.createElement('button');editBtn.className='ann-edit-btn';editBtn.textContent='✏️ Editar';
-      editBtn.addEventListener('click',()=>openAnnModal(ann));meta.appendChild(editBtn);
-      // WhatsApp share
-      const waText = '📢 *' + ann.title + '*' + (ann.body ? '\n\n' + ann.body : '') + '\n\n_Golden Moms_';
-      const waBtn = document.createElement('button');
-      waBtn.className='btn-wa';
-      waBtn.innerHTML = WA_ICON + ' Compartir al grupo';
-      waBtn.addEventListener('click', () => waGroupSend(waText));
-      meta.appendChild(waBtn);
-      card.appendChild(meta);
-      list.appendChild(card);
-    }
-  } catch(err){ console.error('renderBoard',err); list.innerHTML='<div class="empty-state">Error cargando anuncios</div>'; }
-}
 
 /* ═══════════════════════════════════════════════════════════
    CUOTAS
