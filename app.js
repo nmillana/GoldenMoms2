@@ -1132,7 +1132,7 @@ document.getElementById('btnNewPlayer').addEventListener('click', ()=>openPlayer
 /* ═══════════════════════════════════════════════════════════
    ROUTING
    ══════════════════════════════════════════════════════════ */
-const MAIN_VIEWS = ['dash','events','roster','stats','fees'];
+const MAIN_VIEWS = ['dash','events','roster','fitness','stats','fees'];
 function normalizeMainView(v){ return MAIN_VIEWS.includes(v) ? v : 'dash'; }
 function showView(v){
   v = normalizeMainView(v);
@@ -1149,6 +1149,7 @@ function showView(v){
   if(v==='dash')    { renderDash(); loadNotifications(); if(currentUser) renderPlayerDash(); }
   if(v==='events')  renderMonth();
   if(v==='roster')  renderRoster(currentRosterFilter);
+  if(v==='fitness' && window.renderFitnessChallenge) window.renderFitnessChallenge();
   if(v==='stats')   renderStats();
   if(v==='fees'){
     if(checkTreasAuth()){
@@ -4096,6 +4097,7 @@ async function registerPlayerAccess(){
     }
 
     showToast('Cuenta creada con exito.');
+    await window.GoldenFitness?.rememberLogin?.(username, password);
     await completeLoginFromPlayerUser(createdUser);
   } catch(err) {
     console.warn('registerPlayerAccess', err);
@@ -4265,6 +4267,7 @@ async function loginStep2() {
       return;
     }
 
+    await window.GoldenFitness?.rememberLogin?.(loginFoundUser.username, pwd);
     await completeLoginFromPlayerUser(loginFoundUser);
   } catch(err) {
     err2.textContent = 'Error de conexion, intenta de nuevo';
@@ -4298,6 +4301,7 @@ function showLogoutMenu() {
   if(confirm('Cerrar sesion de ' + name + '?')) {
     clearSession();
     clearTreasAuth();
+    window.GoldenFitness?.clearSession?.();
     if(supa?.auth) supa.auth.signOut().catch(() => {});
     document.getElementById('loginUser').value='';
     document.getElementById('loginPwd').value='';

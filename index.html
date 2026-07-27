@@ -33,7 +33,7 @@ body.auth-loading>.toast{visibility:hidden}
 </style>
 
 <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260727-1">
 </head>
 <body class="auth-loading">
 <div id="bootScreen" aria-hidden="true">
@@ -165,6 +165,7 @@ body.auth-loading>.toast{visibility:hidden}
         <option value="dash">🏠 Dashboard</option>
         <option value="events">📅 Eventos</option>
         <option value="roster">👥 Plantel</option>
+        <option value="fitness">💪 Desafío físico</option>
         <option value="stats">📊 Estadísticas</option>
         <option value="fees">💰 Tesorera</option>
       </select>
@@ -172,6 +173,7 @@ body.auth-loading>.toast{visibility:hidden}
       <button class="tab active" id="tab-dash" data-view="dash" aria-controls="v-dash">Dashboard</button>
       <button class="tab" id="tab-events" data-view="events" aria-controls="v-events">Eventos</button>
       <button class="tab" id="tab-roster" data-view="roster" aria-controls="v-roster">Plantel</button>
+      <button class="tab" id="tab-fitness" data-view="fitness" aria-controls="v-fitness">Desafío físico</button>
       <button class="tab" id="tab-stats" data-view="stats" aria-controls="v-stats">Estadísticas</button>
       <button class="tab" id="tab-fees" data-view="fees" aria-controls="v-fees">Tesorera</button>
     </nav>
@@ -298,6 +300,10 @@ body.auth-loading>.toast{visibility:hidden}
     <div id="rosterGrid" class="roster-grid"></div>
   </section>
 
+  <!-- DESAFIO FISICO -->
+  <section id="v-fitness" style="display:none" role="tabpanel" aria-labelledby="tab-fitness">
+    <div id="fitnessRoot"></div>
+  </section>
 
 </main>
 
@@ -824,7 +830,8 @@ if('serviceWorker' in navigator){
 </script>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=20260723-9" defer></script>
+  <script src="app.js?v=20260727-1" defer></script>
+  <script src="fitness-challenge.js?v=20260727-1" defer></script>
   <script src="treasury-redesign.js?v=20260723-6" defer></script>
 </body>
 </html>
