@@ -443,7 +443,7 @@
   }
 
   function videoCard(video, completed){
-    const material = video.equipment || 'Sin material indicado';
+    const material = (video.equipment || '').trim();
     const duration = video.duration_minutes ? `${video.duration_minutes} min` : '';
     const canSave = !!storedSession();
     const toggleClass = canSave && !completed ? 'p' : '';
@@ -455,7 +455,7 @@
       <div class="fitness-video-order">${Number(video.sort_order || 0)}</div>
       <div class="fitness-video-main">
         <div class="fitness-video-title">${h(video.title || 'Video')}</div>
-        <div class="fitness-video-meta">${h(material)}${duration ? ' · ' + h(duration) : ''}</div>
+        ${(material || duration) ? `<div class="fitness-video-meta">${h(material)}${material && duration ? ' · ' : ''}${duration ? h(duration) : ''}</div>` : ''}
         <div class="fitness-video-state">${completed ? 'Completado' : 'Pendiente'}</div>
       </div>
       <div class="fitness-video-actions">
@@ -472,11 +472,7 @@
     const yt = getYouTubeVideoData(video.original_url || video.youtube_url || '');
     const original = yt.isValid ? yt.originalUrl : (video.source_page_url || video.original_url || '');
     return `<div class="${cardClass}">
-      <div class="fitness-player-head">
-        <div>
-          <div class="dash-card-title"><span class="dash-card-icon">▶</span>${h(video.title || 'Video')}</div>
-          <div class="section-sub">${h(video.equipment || 'Sin material indicado')}</div>
-        </div>
+      <div class="fitness-player-head fitness-player-head-compact">
         <button class="btn btn-icon" type="button" title="Cerrar reproductor" data-fitness-action="close-video">×</button>
       </div>
       ${yt.isValid ? `<div class="fitness-iframe-wrap"><iframe src="${h(yt.embedUrl)}" title="${h(video.title || 'Video')}" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>` : `<div class="fitness-embed-warning">Este video debe abrirse directamente en YouTube.</div>`}

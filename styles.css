@@ -1560,6 +1560,11 @@ body.auth-loading > .toast {
   align-items: flex-start;
   margin-bottom: 10px;
 }
+.fitness-player-head-compact {
+  justify-content: flex-end;
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
 .fitness-iframe-wrap {
   width: 100%;
   aspect-ratio: 16 / 9;
