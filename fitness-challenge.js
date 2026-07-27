@@ -422,9 +422,14 @@
     const dayVideos = videosForDay(day.id);
     if(!dayVideos.length) return '<div class="card fitness-state">Sin videos cargados para este dia.</div>';
     const done = progressSet();
+    const needsSession = !!current()?.player_id && !storedSession();
+    const sessionWarning = needsSession
+      ? '<div class="fitness-embed-warning">Tu sesion es anterior al Desafio fisico. Reingresa una vez para activar el guardado de progreso.<div class="fitness-player-actions"><button class="btn p" type="button" data-fitness-action="reauth-fitness">Reingresar</button></div></div>'
+      : '';
     return `<div class="fitness-grid">
       <div class="card">
         <div class="dash-card-title"><span class="dash-card-icon">▶</span>Videos del dia</div>
+        ${sessionWarning}
         <div class="fitness-video-list">
           ${dayVideos.map(video => videoCard(video, done.has(String(video.id)))).join('')}
         </div>
@@ -436,6 +441,12 @@
   function videoCard(video, completed){
     const material = video.equipment || 'Sin material indicado';
     const duration = video.duration_minutes ? `${video.duration_minutes} min` : '';
+    const canSave = !!storedSession();
+    const toggleClass = canSave && !completed ? 'p' : '';
+    const toggleAttrs = canSave
+      ? `data-fitness-toggle="${h(video.id)}"`
+      : 'data-fitness-action="reauth-fitness"';
+    const toggleLabel = canSave ? (completed ? 'Desmarcar' : 'Completar') : 'Reingresar';
     return `<div class="fitness-video-card ${completed ? 'done' : ''}">
       <div class="fitness-video-order">${Number(video.sort_order || 0)}</div>
       <div class="fitness-video-main">
@@ -445,7 +456,7 @@
       </div>
       <div class="fitness-video-actions">
         <button class="btn" type="button" data-fitness-video="${h(video.id)}">Ver video</button>
-        <button class="btn ${completed ? '' : 'p'}" type="button" data-fitness-toggle="${h(video.id)}">${completed ? 'Desmarcar' : 'Completar'}</button>
+        <button class="btn ${toggleClass}" type="button" ${toggleAttrs}>${toggleLabel}</button>
       </div>
     </div>`;
   }
@@ -686,7 +697,24 @@
     }
   }
 
+  function forceFitnessRelogin(){
+    clearFitnessSession();
+    if(typeof clearSession === 'function') clearSession();
+    if(typeof clearTreasAuth === 'function') clearTreasAuth();
+    if(supa?.auth) supa.auth.signOut().catch(() => {});
+    if(typeof updateUserUI === 'function') updateUserUI();
+    if(typeof showView === 'function') showView('dash');
+    if(typeof showLoginScreen === 'function') showLoginScreen();
+    if(typeof returnToLoginStep1 === 'function') returnToLoginStep1();
+    const loginErr = document.getElementById('loginErr1');
+    if(loginErr) loginErr.textContent = 'Ingresa nuevamente para activar el progreso del Desafio fisico.';
+  }
+
   async function handleAction(action){
+    if(action === 'reauth-fitness'){
+      forceFitnessRelogin();
+      return;
+    }
     if(action === 'reload'){
       state.loaded = false;
       await loadFitnessData(true);
@@ -740,7 +768,8 @@
       return;
     }
     if(!storedSession()){
-      toast('Vuelve a ingresar para guardar progreso de forma segura.');
+      toast('Reingresa una vez para activar el progreso del Desafio fisico.');
+      rerender();
       return;
     }
     const video = state.videos.find(item => String(item.id) === String(videoId));
@@ -751,20 +780,29 @@
     const done = progressSet().has(String(videoId));
     const next = !done;
     try{
-      const { error } = await fitnessClient().from('fitness_progress').upsert({
-        player_id: user.player_id,
-        fitness_video_id: videoId,
-        completed: next,
-        completed_at: next ? new Date().toISOString() : null
-      }, { onConflict: 'player_id,fitness_video_id' });
-      if(error) throw error;
+      const db = fitnessClient();
+      const rpcResult = await db.rpc('fitness_set_progress', {
+        p_fitness_video_id: videoId,
+        p_completed: next
+      });
+      if(rpcResult.error){
+        if(!isMissing(rpcResult.error)) throw rpcResult.error;
+        const { error } = await db.from('fitness_progress').upsert({
+          player_id: user.player_id,
+          fitness_video_id: videoId,
+          completed: next,
+          completed_at: next ? new Date().toISOString() : null
+        }, { onConflict: 'player_id,fitness_video_id' });
+        if(error) throw error;
+      }
       state.loaded = false;
       await loadFitnessData(true);
       toast(next ? 'Progreso guardado' : 'Progreso desmarcado');
       rerender();
     } catch(error){
       console.warn('toggleProgress', error);
-      toast('No se pudo guardar el progreso.');
+      const msg = String(error?.message || '');
+      toast(msg.includes('Sesion fitness invalida') ? 'Reingresa una vez para activar el progreso.' : 'No se pudo guardar el progreso.');
     }
   }
 
