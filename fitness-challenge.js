@@ -319,10 +319,10 @@
     if(!state.month) return noMonthView();
     return [
       headerView(),
+      rankingView(),
       selectedRoutineView(),
       calendarView(),
       videosView(),
-      rankingView(),
       adminView()
     ].join('');
   }
@@ -490,9 +490,9 @@
     if(state.month && state.month.ranking_enabled === false) return '<div class="card fitness-state">Ranking desactivado para este mes.</div>';
     if(!state.ranking.length) return '<div class="card fitness-state">Ranking mensual sin datos todavia.</div>';
     return `<div class="card fitness-ranking">
-      <div class="dash-card-title"><span class="dash-card-icon">🏅</span>Ranking mensual</div>
+      <div class="dash-card-title"><span class="dash-card-icon">🏅</span>Top 5 mensual</div>
       <div class="fitness-ranking-list">
-        ${state.ranking.map(row => {
+        ${state.ranking.slice(0, 5).map(row => {
           const name = row.player_alias || row.player_name || 'Jugadora';
           const initial = name.charAt(0).toUpperCase();
           return `<div class="fitness-rank-row">
