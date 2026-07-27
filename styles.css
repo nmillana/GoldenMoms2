@@ -1547,6 +1547,12 @@ body.auth-loading > .toast {
   position: sticky;
   top: calc(var(--topbar-offset, 58px) + 12px);
 }
+.fitness-player-inline {
+  display: none;
+}
+.fitness-player-sidebar {
+  display: block;
+}
 .fitness-player-head {
   display: flex;
   justify-content: space-between;
@@ -1658,6 +1664,13 @@ body.auth-loading > .toast {
   }
   .fitness-player-card {
     position: static;
+  }
+  .fitness-player-sidebar {
+    display: none;
+  }
+  .fitness-player-inline {
+    display: block;
+    margin: 2px 0 8px;
   }
 }
 @media (max-width: 560px) {

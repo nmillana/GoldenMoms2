@@ -431,10 +431,14 @@
         <div class="dash-card-title"><span class="dash-card-icon">▶</span>Videos del dia</div>
         ${sessionWarning}
         <div class="fitness-video-list">
-          ${dayVideos.map(video => videoCard(video, done.has(String(video.id)))).join('')}
+          ${dayVideos.map(video => {
+            const card = videoCard(video, done.has(String(video.id)));
+            const inlinePlayer = String(video.id) === String(state.selectedVideoId) ? playerView('fitness-player-inline') : '';
+            return card + inlinePlayer;
+          }).join('')}
         </div>
       </div>
-      ${playerView()}
+      ${playerView('fitness-player-sidebar')}
     </div>`;
   }
 
@@ -461,12 +465,13 @@
     </div>`;
   }
 
-  function playerView(){
+  function playerView(extraClass = ''){
     const video = selectedVideo();
-    if(!video) return '<div class="card fitness-player-card"><div class="empty-state">Selecciona un video para verlo.</div></div>';
+    const cardClass = ('card fitness-player-card ' + extraClass).trim();
+    if(!video) return `<div class="${cardClass}"><div class="empty-state">Selecciona un video para verlo.</div></div>`;
     const yt = getYouTubeVideoData(video.original_url || video.youtube_url || '');
     const original = yt.isValid ? yt.originalUrl : (video.source_page_url || video.original_url || '');
-    return `<div class="card fitness-player-card">
+    return `<div class="${cardClass}">
       <div class="fitness-player-head">
         <div>
           <div class="dash-card-title"><span class="dash-card-icon">▶</span>${h(video.title || 'Video')}</div>
