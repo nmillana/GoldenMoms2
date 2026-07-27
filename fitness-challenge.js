@@ -426,7 +426,7 @@
     const sessionWarning = needsSession
       ? '<div class="fitness-embed-warning">Tu sesion es anterior al Desafio fisico. Reingresa una vez para activar el guardado de progreso.<div class="fitness-player-actions"><button class="btn p" type="button" data-fitness-action="reauth-fitness">Reingresar</button></div></div>'
       : '';
-    return `<div class="fitness-grid">
+    return `<div class="fitness-grid" id="fitnessVideosSection">
       <div class="card">
         <div class="dash-card-title"><span class="dash-card-icon">▶</span>Videos del dia</div>
         ${sessionWarning}
@@ -648,6 +648,19 @@
     }
   }
 
+  function scrollToFitnessVideos(){
+    const run = () => {
+      const target = document.getElementById('fitnessVideosSection');
+      if(!target) return;
+      const styles = window.getComputedStyle(document.documentElement);
+      const topbar = parseInt(styles.getPropertyValue('--topbar-offset'), 10) || 58;
+      const top = target.getBoundingClientRect().top + window.scrollY - topbar - 10;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    };
+    if(window.requestAnimationFrame) window.requestAnimationFrame(run);
+    else window.setTimeout(run, 0);
+  }
+
   async function handleClick(event){
     const dateBtn = event.target.closest('[data-fitness-date]');
     if(dateBtn){
@@ -730,6 +743,7 @@
       const first = videosForDay(selectedDay()?.id).find(Boolean);
       if(first) state.selectedVideoId = first.id;
       rerender();
+      scrollToFitnessVideos();
     }
     if(action === 'close-video'){
       state.selectedVideoId = '';
