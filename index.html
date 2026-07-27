@@ -33,7 +33,7 @@ body.auth-loading>.toast{visibility:hidden}
 </style>
 
 <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="styles.css?v=20260727-4">
+  <link rel="stylesheet" href="styles.css?v=20260727-5">
 </head>
 <body class="auth-loading">
 <div id="bootScreen" aria-hidden="true">
@@ -195,6 +195,17 @@ body.auth-loading>.toast{visibility:hidden}
         <div class="kpi-value" id="kRoster">—</div>
         <div class="kpi-sub" id="kRosterMeta">Jugadoras</div>
         <span class="kpi-accent">👥</span>
+      </div>
+      <div class="kpi-card roster-kpi-card dashboard-action-card dashboard-fitness-card" id="dashFitnessRankCard" role="button" tabindex="0" aria-label="Abrir Desafío físico">
+        <div class="dash-fitness-head">
+          <div class="kpi-label">Desafío físico</div>
+          <span class="dash-fitness-open" aria-hidden="true">›</span>
+        </div>
+        <div class="dash-fitness-title"><span class="dash-card-icon">🏅</span>Top 5 mensual</div>
+        <div class="dash-fitness-rank-list" id="dashFitnessRankList">
+          <div class="dash-fitness-empty">Cargando ranking...</div>
+        </div>
+        <span class="kpi-accent">💪</span>
       </div>
     </div>
 
@@ -830,7 +841,7 @@ if('serviceWorker' in navigator){
 </script>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=20260727-2" defer></script>
+  <script src="app.js?v=20260727-3" defer></script>
   <script src="fitness-challenge.js?v=20260727-6" defer></script>
   <script src="treasury-redesign.js?v=20260723-6" defer></script>
 </body>

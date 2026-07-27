@@ -495,7 +495,7 @@ btnSave.addEventListener('click', async () => {
   const title=f_title.value.trim(), type=f_type.value, team=f_team.value;
   const opponent=f_opponent.value.trim(), uniform=f_uniform.value, location=f_location.value.trim();
   if(!title||!f_dt.value){ alert('Completa titulo y fecha/hora'); return; }
-  if(!supa||!IS_CONNECTED){ alert('Sin conexion.'); return; }
+  if(!supa||!IS_CONNECTED){ alert('Sin conexión.'); return; }
   const datetime=localInputToISOWithOffset(f_dt.value);
   const payload={ title, type, team, opponent, uniform, location, datetime };
   const originalLabel = btnSave.textContent;
@@ -923,6 +923,59 @@ async function renderKPIs(){
   } catch(err){ console.warn('kRoster', err); }
 }
 
+async function renderFitnessRankKPI(){
+  const list = document.getElementById('dashFitnessRankList');
+  if(!list) return;
+  list.innerHTML = '<div class="dash-fitness-empty">Cargando ranking...</div>';
+  if(!supa || !IS_CONNECTED){
+    list.innerHTML = '<div class="dash-fitness-empty">Sin conexión.</div>';
+    return;
+  }
+  try{
+    const { data:months, error:monthError } = await supa.from('fitness_months')
+      .select('id,name,year,month,ranking_enabled')
+      .eq('is_active', true)
+      .eq('status', 'published')
+      .order('year', { ascending:false })
+      .order('month', { ascending:false })
+      .limit(1);
+    if(monthError) throw monthError;
+    const month = months?.[0];
+    if(!month){
+      list.innerHTML = '<div class="dash-fitness-empty">Sin mes publicado.</div>';
+      return;
+    }
+    if(month.ranking_enabled === false){
+      list.innerHTML = '<div class="dash-fitness-empty">Ranking desactivado.</div>';
+      return;
+    }
+    const { data:ranking, error:rankingError } = await supa.rpc('fitness_month_ranking', { p_fitness_month_id: month.id });
+    if(rankingError) throw rankingError;
+    const rows = (ranking || []).slice(0, 5);
+    if(!rows.length){
+      list.innerHTML = '<div class="dash-fitness-empty">Ranking mensual sin datos todavía.</div>';
+      return;
+    }
+    list.innerHTML = rows.map((row, index) => {
+      const name = row.player_alias || row.player_name || 'Jugadora';
+      const initial = name.charAt(0).toUpperCase();
+      const photo = row.player_photo || '';
+      const pos = Number(row.position || index + 1);
+      const videos = Number(row.completed_required_videos || 0);
+      const routines = Number(row.completed_routines || 0);
+      return '<div class="dash-fitness-rank-row">' +
+        '<div class="dash-fitness-rank-pos">#' + pos + '</div>' +
+        '<div class="birth-avatar ' + (photo ? 'birth-avatar-photo' : '') + '" ' + (photo ? 'style="background-image:url(\'' + escapeHTML(photo) + '\');background-size:cover"' : '') + '>' + (photo ? '' : escapeHTML(initial)) + '</div>' +
+        '<div class="dash-fitness-rank-name">' + escapeHTML(name) + '<span>' + videos + ' videos · ' + routines + ' rutinas</span></div>' +
+        '<div class="dash-fitness-rank-score">' + Number(row.points || 0) + ' pts</div>' +
+      '</div>';
+    }).join('');
+  } catch(err){
+    console.warn('renderFitnessRankKPI', err);
+    list.innerHTML = '<div class="dash-fitness-empty">No se pudo cargar el ranking.</div>';
+  }
+}
+
 function animateNumber(id, target){
   const el = document.getElementById(id);
   if(!el) return;
@@ -1112,7 +1165,7 @@ async function renderRoster(filterTeam='all'){
 }
 
 async function renderDash(){
-  await Promise.all([renderKPIs(), renderWeekEvents(), renderBirthdays()]);
+  await Promise.all([renderKPIs(), renderFitnessRankKPI(), renderWeekEvents(), renderBirthdays()]);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1194,6 +1247,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     try{ localStorage.setItem('gm_view', view); } catch(e){}
     closeNotifDropdown();
     showView(view);
+  });
+
+  const dashFitnessRankCard = document.getElementById('dashFitnessRankCard');
+  const openFitnessFromDashboard = () => {
+    try{ localStorage.setItem('gm_view', 'fitness'); } catch(e){}
+    showView('fitness');
+  };
+  dashFitnessRankCard?.addEventListener('click', openFitnessFromDashboard);
+  dashFitnessRankCard?.addEventListener('keydown', e => {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      openFitnessFromDashboard();
+    }
   });
 
   const navTabs = [...document.querySelectorAll('.nav .tab')];
@@ -2600,7 +2666,7 @@ document.getElementById('treasUnlockBtn')?.addEventListener('click', async () =>
     return;
   }
   if(!supa || !IS_CONNECTED){
-    if(err) err.textContent = 'Sin conexion. Intenta de nuevo en un momento';
+    if(err) err.textContent = 'Sin conexión. Intenta de nuevo en un momento';
     return;
   }
 
