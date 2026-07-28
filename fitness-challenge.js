@@ -229,7 +229,7 @@
     return {
       videoId,
       originalUrl,
-      embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}`,
+      embedUrl: `https://www.youtube.com/embed/${videoId}?rel=0&playsinline=1`,
       isValid: true,
       error: ''
     };
@@ -470,14 +470,15 @@
     const cardClass = ('card fitness-player-card ' + extraClass).trim();
     if(!video) return `<div class="${cardClass}"><div class="empty-state">Selecciona un video para verlo.</div></div>`;
     const yt = getYouTubeVideoData(video.original_url || video.youtube_url || '');
-    const original = yt.isValid ? yt.originalUrl : (video.source_page_url || video.original_url || '');
+    const embedUrl = yt.isValid ? yt.embedUrl : (video.embed_url || '');
+    const original = video.source_page_url || (yt.isValid ? yt.originalUrl : (video.original_url || ''));
     return `<div class="${cardClass}">
       <div class="fitness-player-head fitness-player-head-compact">
-        <button class="btn btn-icon" type="button" title="Cerrar reproductor" data-fitness-action="close-video">×</button>
+        <button class="btn btn-icon" type="button" title="Cerrar reproductor" data-fitness-action="close-video">x</button>
       </div>
-      ${yt.isValid ? `<div class="fitness-iframe-wrap"><iframe src="${h(yt.embedUrl)}" title="${h(video.title || 'Video')}" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>` : `<div class="fitness-embed-warning">Este video debe abrirse directamente en YouTube.</div>`}
+      ${embedUrl ? `<div class="fitness-iframe-wrap"><iframe src="${h(embedUrl)}" title="${h(video.title || 'Video')}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>` : `<div class="fitness-embed-warning">Este video debe abrirse directamente en Gymvirtual.</div>`}
       <div class="fitness-player-actions">
-        ${original ? `<a class="btn" href="${h(original)}" target="_blank" rel="noopener noreferrer">Abrir original</a>` : ''}
+        ${original ? `<a class="btn" href="${h(original)}" target="_blank" rel="noopener noreferrer">Abrir en Gymvirtual</a>` : ''}
       </div>
     </div>`;
   }
