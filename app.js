@@ -564,7 +564,7 @@ function openPlayerModal(player){
   p_numero.value    = player?.numero_camiseta != null ? player.numero_camiseta : '';
   p_fecha_nac.value = player?.fecha_nacimiento ? player.fecha_nacimiento.slice(0,10) : '';
   p_rol.value       = player?.rol       || 'jugadora';
-  p_estado.value    = player?.estado    || '';
+  p_estado.value    = player?.estado    || (isNew ? 'activo' : '');
   p_celular.value   = player?.celular   || '';
   p_email.value     = player?.email     || '';
   p_tel_emerg.value = player?.telefono_emergencia || '';
@@ -3954,8 +3954,7 @@ function getResetPlayerLabel(playerUser){
   return details.length ? base + ' - ' + details.join(' | ') : base;
 }
 function suggestUsername(player){
-  const source = String(player.apodo || player.nombre || 'jugadora').toLowerCase();
-  const base = source.replace(/[^a-z0-9]+/g, '').slice(0, 12) || 'jugadora';
+  const base = credentialBaseFromPlayer(player).slice(0, 12) || 'jugadora';
   return player.numero_camiseta ? (base + player.numero_camiseta).slice(0, 18) : base;
 }
 function updateResetUsernameHint(){
@@ -4509,63 +4508,175 @@ async function loadNotifications() {
   } catch(err){ console.warn('loadNotifications', err); }
 }
 
-async function openUserManagement() {
-  if(!currentUser || currentUser.role !== 'admin') return;
-  // Load all players without accounts and show management UI
-  const { data:players } = await supa.from('players').select('id,apodo,nombre,numero_camiseta,estado').eq('estado','activo').order('apodo');
-  const { data:users } = await supa.from('player_users').select('*');
-  const userMap = Object.fromEntries((users||[]).map(u=>[u.player_id,u]));
-
-  const existing = document.getElementById('userMgmtModal');
-  if(existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id='userMgmtModal';
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:800;display:flex;align-items:center;justify-content:center;padding:16px';
-
-  const rows = (players||[]).map(p=>{
-    const u = userMap[p.id];
-    const name = p.apodo||p.nombre||'?';
-    return '<div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px">'+
-      '<span style="font-weight:600">'+name+(p.numero_camiseta?' #'+p.numero_camiseta:'')+'</span>'+
-      (u ? '<span style="color:var(--win);font-size:11px">✅ @'+u.username+'</span>' : '<span style="color:var(--muted-2);font-size:11px">Sin cuenta</span>')+
-      '<button class="btn" style="font-size:11px;padding:4px 8px" onclick="createOrEditUser(\''+p.id+'\',\''+name.replace(/'/g,'')+'\')">'+(u?'✏️ Editar':'＋ Crear')+'</button>'+
-    '</div>';
-  }).join('');
-
-  modal.innerHTML =
-    '<div style="background:var(--surface);border-radius:var(--r-lg);padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--sh-3)">'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'+
-      '<div style="font-family:var(--font-head);font-weight:800;font-size:17px">👤 Gestión de usuarios</div>'+
-      '<button class="btn" onclick="document.getElementById(\'userMgmtModal\').remove()">✕</button>'+
-    '</div>'+
-    '<div>'+rows+'</div>'+
-    '</div>';
-  document.body.appendChild(modal);
-  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+function credentialSlug(value){
+  const normalized = String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  return normalized.replace(/[^a-z0-9._-]+/g, '').slice(0, 18);
 }
 
-async function createOrEditUser(playerId, playerName) {
-  const { data:existing } = await supa.from('player_users').select('*').eq('player_id',playerId).maybeSingle();
-  const username = prompt('Usuario para '+playerName+':', existing?.username || '');
-  if(!username) return;
-  const pwd = prompt('Contraseña (dejar vacío para no cambiar):', '');
-  const role = confirm('¿Es administradora?\n(OK = Admin, Cancelar = Jugadora)') ? 'admin' : 'jugadora';
-  const upsertData = { player_id:playerId, username:username.toLowerCase().trim(), role, active:true };
-  if(pwd?.trim()) {
-    upsertData.pwd_hash = await sha256(pwd.trim());
-  } else if(!existing) {
-    // New user needs password
-    showToast('⚠️ Debes ingresar una contraseña'); return;
+function credentialBaseFromPlayer(player){
+  return credentialSlug(player?.apodo || player?.nombre) || 'jugadora';
+}
+
+async function getAvailableUsernameForPlayer(player){
+  const base = credentialBaseFromPlayer(player);
+  const suffixes = ['', player?.numero_camiseta ? String(player.numero_camiseta) : '', 'gm'];
+  const candidates = [...new Set(suffixes
+    .map(suffix => (base + suffix).slice(0, 20))
+    .filter(name => name.length >= 3))];
+
+  for(const candidate of candidates){
+    const { data, error } = await supa.from('player_users').select('id').eq('username', candidate).maybeSingle();
+    if(error) throw error;
+    if(!data) return candidate;
+  }
+
+  for(let index = 2; index < 100; index++){
+    const suffix = String(index);
+    const candidate = (base.slice(0, Math.max(3, 20 - suffix.length)) + suffix).slice(0, 20);
+    const { data, error } = await supa.from('player_users').select('id').eq('username', candidate).maybeSingle();
+    if(error) throw error;
+    if(!data) return candidate;
+  }
+
+  throw new Error('No se pudo generar un usuario disponible.');
+}
+
+function quickPasswordForUsername(username){
+  return username + 'gm';
+}
+
+async function openUserManagement() {
+  if(!currentUser || currentUser.role !== 'admin') return;
+  if(!supa || !IS_CONNECTED) {
+    showToast('Sin conexion con la base de datos');
     return;
   }
-  if(existing) {
-    await supa.from('player_users').update(upsertData).eq('id',existing.id);
-  } else {
-    await supa.from('player_users').insert([upsertData]);
+
+  try {
+    const { data:players, error:playersError } = await supa.from('players')
+      .select('id,apodo,nombre,numero_camiseta,estado')
+      .eq('estado','activo')
+      .order('apodo');
+    if(playersError) throw playersError;
+
+    const { data:users, error:usersError } = await supa.from('player_users').select('*');
+    if(usersError) throw usersError;
+
+    const userMap = Object.fromEntries((users || []).map(user => [user.player_id, user]));
+    const activePlayers = players || [];
+
+    const existing = document.getElementById('userMgmtModal');
+    if(existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'userMgmtModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:800;display:flex;align-items:center;justify-content:center;padding:16px';
+
+    const rows = activePlayers.map(player => {
+      const user = userMap[player.id];
+      const name = player.apodo || player.nombre || 'Jugadora';
+      const jersey = player.numero_camiseta ? ' #' + player.numero_camiseta : '';
+      return '<div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px">'+
+        '<span style="font-weight:600">' + escapeHTML(name + jersey) + '</span>'+
+        (user
+          ? '<span style="color:var(--win);font-size:11px">@' + escapeHTML(user.username) + '</span>'
+          : '<span style="color:var(--muted-2);font-size:11px">Sin cuenta</span>')+
+        '<button class="btn" style="font-size:11px;padding:4px 8px" data-user-player="' + escapeHTML(player.id) + '">' + (user ? 'Editar' : 'Crear rapido') + '</button>'+
+      '</div>';
+    }).join('') || '<div style="color:var(--muted);font-size:13px;padding:12px 0">No hay jugadoras activas.</div>';
+
+    modal.innerHTML =
+      '<div style="background:var(--surface);border-radius:var(--r-lg);padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--sh-3)">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'+
+        '<div style="font-family:var(--font-head);font-weight:800;font-size:17px">Gestion de usuarios</div>'+
+        '<button class="btn" data-user-mgmt-close="1">x</button>'+
+      '</div>'+
+      '<div>'+rows+'</div>'+
+      '</div>';
+
+    document.body.appendChild(modal);
+    modal.addEventListener('click', event => {
+      if(event.target === modal || event.target.closest('[data-user-mgmt-close]')) modal.remove();
+    });
+    modal.querySelectorAll('[data-user-player]').forEach(button => {
+      button.addEventListener('click', () => {
+        const player = activePlayers.find(item => String(item.id) === String(button.dataset.userPlayer));
+        if(player) createOrEditUser(player);
+      });
+    });
+  } catch(err) {
+    console.warn('openUserManagement', err);
+    showToast('No se pudo cargar la gestion de usuarios');
   }
-  showToast('✅ Usuario guardado');
-  openUserManagement();
+}
+
+async function createOrEditUser(player) {
+  if(!player?.id) return;
+  const playerName = player.apodo || player.nombre || 'Jugadora';
+
+  try {
+    const { data:existing, error:existingError } = await supa.from('player_users')
+      .select('*')
+      .eq('player_id', player.id)
+      .maybeSingle();
+    if(existingError) throw existingError;
+
+    if(!existing) {
+      const username = await getAvailableUsernameForPlayer(player);
+      const password = quickPasswordForUsername(username);
+      const ok = confirm('Crear acceso rapido para ' + playerName + '?\n\nUsuario: @' + username + '\nContrasena: ' + password);
+      if(!ok) return;
+
+      const { error:insertError } = await supa.from('player_users').insert([{
+        player_id: player.id,
+        username,
+        role: 'jugadora',
+        active: true,
+        pwd_hash: await sha256(password)
+      }]);
+      if(insertError) throw insertError;
+
+      const credentials = 'Usuario: @' + username + '\nContrasena: ' + password;
+      if(navigator.clipboard?.writeText) navigator.clipboard.writeText(credentials).catch(() => {});
+      alert('Acceso creado para ' + playerName + '.\n\n' + credentials);
+      showToast('Usuario creado: @' + username);
+      openUserManagement();
+      return;
+    }
+
+    const username = prompt('Usuario para ' + playerName + ':', existing.username || credentialBaseFromPlayer(player));
+    if(!username) return;
+    const cleanUsername = username.toLowerCase().trim();
+    if(!/^[a-z0-9._-]{3,20}$/.test(cleanUsername)){
+      alert('Usa un usuario de 3 a 20 caracteres: letras, numeros, punto, guion o guion bajo.');
+      return;
+    }
+
+    const pwd = prompt('Contrasena (dejar vacio para no cambiar):', '');
+    const role = confirm('Es administradora?\nOK = Admin, Cancelar = Jugadora') ? 'admin' : 'jugadora';
+    const updateData = { username: cleanUsername, role, active: true };
+
+    if(pwd?.trim()) {
+      const cleanPassword = pwd.trim();
+      if(cleanPassword.length < 6){
+        alert('La contrasena debe tener al menos 6 caracteres.');
+        return;
+      }
+      updateData.pwd_hash = await sha256(cleanPassword);
+    }
+
+    const { error:updateError } = await supa.from('player_users').update(updateData).eq('id', existing.id);
+    if(updateError) throw updateError;
+
+    showToast('Usuario guardado');
+    openUserManagement();
+  } catch(err) {
+    console.warn('createOrEditUser', err);
+    alert('No se pudo guardar el usuario: ' + (err.message || err));
+  }
 }
 
 // Hook into admin topbar: add users button after login
