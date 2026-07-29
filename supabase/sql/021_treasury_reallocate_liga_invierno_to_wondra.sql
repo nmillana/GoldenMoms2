@@ -193,7 +193,7 @@ begin
     select
       liga.id as liga_debt_id,
       liga.player_id,
-      liga.payment_id as liga_payment_id,
+      coalesce(liga.payment_id, lm.payment_id) as liga_payment_id,
       coalesce(liga.paid_at, now()) as original_paid_at,
       greatest(coalesce(liga.paid_amount, 0), case when liga.status = 'paid' then coalesce(liga.assigned_amount, 0) else 0 end)::integer as credit_amount,
       w1.id as wondra1_debt_id,
@@ -203,6 +203,17 @@ begin
       coalesce(w2.assigned_amount, 0)::integer as wondra2_assigned,
       coalesce(w2.paid_amount, 0)::integer as wondra2_paid
     from public.activity_debts liga
+    left join lateral (
+      select m.payment_id
+      from public.treasury_movements m
+      where m.source_table = 'activity_debts'
+        and m.source_id = liga.id
+        and m.direction = 'in'
+        and m.status = 'posted'
+        and m.payment_id is not null
+      order by m.effective_date desc, m.created_at desc
+      limit 1
+    ) lm on true
     join public.activity_debts w1
       on w1.activity_id = v_wondra1_id
      and w1.player_id = liga.player_id
@@ -253,7 +264,7 @@ begin
   end if;
 
   if exists (select 1 from tmp_liga_wondra_reallocation where liga_payment_id is null) then
-    raise exception 'Hay abonos de Liga invierno sin payment_id; revisar antes de reasignar';
+    raise exception 'Hay abonos de Liga invierno sin payment_id en deuda ni movimiento; revisar antes de reasignar';
   end if;
 
   update public.payment_allocations pa
