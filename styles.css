@@ -1374,6 +1374,12 @@ body.auth-loading > .toast {
 .treasury-row:last-child, .treasury-card-row:last-child { border-bottom:0; }
 .treasury-card-row { align-items:flex-start; }
 .treasury-actions { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex-wrap:wrap; }
+.treasury-player-balance-main { min-width:0; flex:1; }
+.treasury-player-debt-list { display:flex; flex-direction:column; gap:4px; margin-top:7px; }
+.treasury-player-debt-item { display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--muted); font-size:12px; }
+.treasury-player-debt-item span { min-width:0; overflow-wrap:anywhere; }
+.treasury-player-debt-item strong { color:var(--ink); font-weight:900; white-space:nowrap; }
+.treasury-player-balance-actions { min-width:190px; }
 .treasury-note { border:1px solid var(--line-2); border-radius:var(--r-sm); background:var(--surface-2); padding:9px 11px; font-size:12px; color:var(--muted); margin-bottom:10px; }
 .treasury-dt-box { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .treasury-player-picker { display:flex; flex-direction:column; gap:6px; max-height:38vh; overflow:auto; border:1px solid var(--line); border-radius:var(--r-sm); padding:8px; background:var(--surface-2); }
@@ -1401,6 +1407,7 @@ body.auth-loading > .toast {
   .treasury-head .btn { width:100%; justify-content:center; }
   .treasury-card-row { flex-direction:column; align-items:stretch; }
   .treasury-actions { justify-content:flex-start; }
+  .treasury-player-balance-actions { min-width:0; }
   .treasury-dt-box { align-items:stretch; flex-direction:column; }
   .treasury-dt-box .btn { width:100%; justify-content:center; }
   .treasury-check { grid-template-columns:auto 1fr; }
