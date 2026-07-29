@@ -1364,6 +1364,32 @@ body.auth-loading > .toast {
 .treasury-panel-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
 .treasury-panel-title { font-family:var(--font-head); font-weight:900; font-size:14px; color:var(--ink); margin-bottom:8px; }
 .treasury-section-title { font-family:var(--font-head); font-weight:900; font-size:13px; color:var(--ink); margin:4px 0 8px; }
+.treasury-balance-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:10px 0; }
+.treasury-mini-kpi { border:1px solid var(--line); border-radius:var(--r-sm); background:var(--surface-2); padding:10px; min-width:0; }
+.treasury-mini-kpi.good { border-color:#bbf7d0; background:#f0fdf4; }
+.treasury-mini-kpi.warn { border-color:#fde68a; background:#fffbeb; }
+.treasury-mini-kpi.danger { border-color:#fecaca; background:#fef2f2; }
+.treasury-mini-label { color:var(--muted); font-size:10px; font-weight:900; text-transform:uppercase; }
+.treasury-mini-value { color:var(--ink); font-family:var(--font-head); font-size:16px; font-weight:900; margin-top:4px; overflow-wrap:anywhere; }
+.treasury-mini-sub { color:var(--muted-2); font-size:11px; margin-top:2px; }
+.treasury-accordion { border:1px solid var(--line-2); border-radius:var(--r-sm); background:var(--surface); margin-bottom:8px; overflow:hidden; }
+.treasury-accordion summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:10px; padding:11px 12px; background:var(--surface-2); }
+.treasury-accordion summary::-webkit-details-marker { display:none; }
+.treasury-accordion-title { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.treasury-accordion-title strong { color:var(--ink); font-family:var(--font-head); font-size:13px; font-weight:900; }
+.treasury-accordion-title small { color:var(--muted); font-size:11px; }
+.treasury-accordion-amount { color:var(--ink); font-weight:900; white-space:nowrap; }
+.treasury-accordion-amount.good { color:#15803d; }
+.treasury-accordion-amount.danger { color:var(--danger); }
+.treasury-accordion-amount.warn { color:#92400e; }
+.treasury-accordion-caret { width:22px; height:22px; border-radius:999px; border:1px solid var(--line-2); display:inline-flex; align-items:center; justify-content:center; color:var(--muted); font-size:12px; font-weight:900; transition:transform .14s; }
+.treasury-accordion[open] .treasury-accordion-caret { transform:rotate(180deg); }
+.treasury-accordion-body { padding:0 12px 8px; }
+.treasury-balance-split { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-bottom:8px; }
+.treasury-balance-split span { border:1px solid var(--line); border-radius:var(--r-xs); background:var(--surface-2); padding:8px; color:var(--muted); font-size:11px; }
+.treasury-balance-split strong { display:block; color:var(--ink); font-size:13px; margin-top:2px; }
+.treasury-balance-actions { margin-top:10px; }
+.treasury-section-end { color:var(--muted-2); font-size:11px; text-align:center; padding-top:4px; }
 .treasury-subpanel { background:var(--surface-2); }
 .treasury-activity-head { align-items:flex-start; }
 .treasury-collapse-btn { flex:1; min-width:0; display:flex; align-items:flex-start; gap:9px; border:0; background:transparent; color:inherit; padding:0; text-align:left; cursor:pointer; }
@@ -1413,6 +1439,11 @@ body.auth-loading > .toast {
   .treasury-dt-box .btn { width:100%; justify-content:center; }
   .treasury-check { grid-template-columns:auto 1fr; }
   .treasury-check .input.compact { grid-column:1 / -1; width:100%; }
+  .treasury-balance-summary { grid-template-columns:1fr 1fr; }
+  .treasury-balance-split { grid-template-columns:1fr; }
+  .treasury-accordion summary { align-items:flex-start; flex-wrap:wrap; }
+  .treasury-accordion-amount { margin-left:auto; }
+  .treasury-balance-actions .btn { width:100%; justify-content:center; }
 }
 
 /* FITNESS CHALLENGE */
