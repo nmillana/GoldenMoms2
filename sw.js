@@ -1,11 +1,11 @@
-const CACHE_NAME = 'gm-shell-v26';
+const CACHE_NAME = 'gm-shell-v27';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css?v=20260727-5',
   './app.js?v=20260728-1',
   './fitness-challenge.js?v=20260728-1',
-  './treasury-redesign.js?v=20260723-6',
+  './treasury-redesign.js?v=20260729-1',
   './manifest.webmanifest',
   './Logo.webp',
   './icon-192.png',
