@@ -1425,6 +1425,7 @@ body.auth-loading > .toast {
 .pill.good { color:#166534; background:#f0fdf4; border-color:#bbf7d0; }
 .pill.warn { color:#92400e; background:#fffbeb; border-color:#fde68a; }
 .pill.danger { color:#991b1b; background:#fef2f2; border-color:#fecaca; }
+.pill.neutral { color:var(--muted); background:var(--surface-2); border-color:var(--line-2); }
 .muted { color:var(--muted); font-size:12px; }
 @media (min-width: 700px) {
   .treasury-kpi-grid { grid-template-columns:repeat(5, 1fr); }
