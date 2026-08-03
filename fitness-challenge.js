@@ -10,6 +10,8 @@
     loading: false,
     error: '',
     month: null,
+    months: [],
+    selectedMonthId: '',
     days: [],
     videos: [],
     progress: [],
@@ -83,6 +85,19 @@
     const date = new Date(Number(month.year), Number(month.month) - 1, 1);
     const label = date.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
     return label.charAt(0).toUpperCase() + label.slice(1);
+  }
+
+  function monthSwitcherView(){
+    const months = state.months || [];
+    if(months.length <= 1) return '';
+    return `<div class="fitness-month-switch" role="tablist" aria-label="Mes del desafio">
+      ${months.map(month => {
+        const active = String(month.id) === String(state.month?.id);
+        return `<button class="fitness-month-pill ${active ? 'active' : ''}" type="button" role="tab" aria-selected="${active ? 'true' : 'false'}" data-fitness-month="${h(month.id)}">
+          ${h(monthLabel(month))}${month.is_active ? '<span>Actual</span>' : ''}
+        </button>`;
+      }).join('')}
+    </div>`;
   }
 
   function dateLabel(value){
@@ -242,16 +257,20 @@
     try{
       if(!supa || !IS_CONNECTED) throw new Error('Sin conexion');
       const db = fitnessClient();
-      let query = db.from('fitness_months').select('*').eq('is_active', true).order('year', { ascending: false }).order('month', { ascending: false }).limit(1);
-      if(!isAdmin()) query = query.eq('status', 'published');
+      let query = db.from('fitness_months').select('*').eq('status', 'published').order('year', { ascending: false }).order('month', { ascending: false });
       let { data: months, error: monthError } = await query;
       if(monthError) throw monthError;
       if(!months?.length && isAdmin()){
-        const fallback = await db.from('fitness_months').select('*').order('year', { ascending: false }).order('month', { ascending: false }).limit(1);
+        const fallback = await db.from('fitness_months').select('*').order('year', { ascending: false }).order('month', { ascending: false });
         if(fallback.error) throw fallback.error;
         months = fallback.data || [];
       }
-      state.month = months?.[0] || null;
+      state.months = months || [];
+      state.month = state.months.find(month => String(month.id) === String(state.selectedMonthId))
+        || state.months.find(month => month.is_active)
+        || state.months[0]
+        || null;
+      state.selectedMonthId = state.month?.id || '';
       state.days = [];
       state.videos = [];
       state.progress = [];
@@ -287,7 +306,8 @@
         if(progressError && !isMissing(progressError)) throw progressError;
         state.progress = progress || [];
       }
-      if(!state.selectedDate){
+      const selectedInMonth = state.days.some(day => day.workout_date === state.selectedDate);
+      if(!selectedInMonth){
         const today = santiagoTodayYMD();
         const todayInMonth = state.days.find(day => day.workout_date === today);
         state.selectedDate = todayInMonth?.workout_date || state.days[0]?.workout_date || '';
@@ -348,7 +368,8 @@
     return `<div class="fitness-head">
       <div>
         <div class="section-title">Desafio fisico</div>
-        <div class="section-sub">${h(monthLabel(state.month))} · Rutinas complementarias para las Golden Moms</div>
+        <div class="section-sub">Rutinas complementarias para las Golden Moms</div>
+        ${monthSwitcherView()}
       </div>
       <div class="fitness-progress-card">
         <div class="fitness-progress-value">${stats.percent}% completado</div>
@@ -649,6 +670,16 @@
     }
   }
 
+  async function selectFitnessMonth(monthId){
+    if(!monthId || String(monthId) === String(state.month?.id)) return;
+    state.selectedMonthId = monthId;
+    state.selectedDate = '';
+    state.selectedVideoId = '';
+    state.loaded = false;
+    await loadFitnessData(true);
+    rerender();
+  }
+
   function scrollToFitnessVideos(){
     const run = () => {
       const target = document.getElementById('fitnessVideosSection');
@@ -663,6 +694,11 @@
   }
 
   async function handleClick(event){
+    const monthBtn = event.target.closest('[data-fitness-month]');
+    if(monthBtn){
+      await selectFitnessMonth(monthBtn.dataset.fitnessMonth);
+      return;
+    }
     const dateBtn = event.target.closest('[data-fitness-date]');
     if(dateBtn){
       state.selectedDate = dateBtn.dataset.fitnessDate;

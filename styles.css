@@ -1455,6 +1455,46 @@ body.auth-loading > .toast {
   align-items: stretch;
   margin-bottom: 14px;
 }
+.fitness-month-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.fitness-month-pill {
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color .14s, background .14s, color .14s;
+}
+.fitness-month-pill:hover {
+  border-color: var(--lime-soft);
+  background: var(--lime-pale);
+  color: var(--lime-dark);
+}
+.fitness-month-pill.active {
+  border-color: var(--lime-mid);
+  background: var(--lime-pale);
+  color: var(--lime-dark);
+  box-shadow: inset 0 0 0 1px var(--lime-soft);
+}
+.fitness-month-pill span {
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  background: #f0fdf4;
+  color: #166534;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 900;
+}
 .fitness-progress-card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -1801,6 +1841,18 @@ body.auth-loading > .toast {
   }
 }
 @media (max-width: 560px) {
+  .fitness-month-switch {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .fitness-month-switch::-webkit-scrollbar {
+    display: none;
+  }
+  .fitness-month-pill {
+    flex: 0 0 auto;
+  }
   .fitness-routine-card,
   .fitness-player-head {
     align-items: stretch;
