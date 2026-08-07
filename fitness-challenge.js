@@ -110,19 +110,36 @@
     });
   }
 
+  function readFitnessSession(){
+    let raw = null;
+    try { raw = localStorage.getItem(SESSION_KEY); } catch(e) {}
+    if(raw) return raw;
+    try {
+      raw = sessionStorage.getItem(SESSION_KEY);
+      if(raw) localStorage.setItem(SESSION_KEY, raw);
+    } catch(e) {}
+    return raw;
+  }
+
+  function clearFitnessSessionStorage(){
+    try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
+    try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
+  }
+
   function storedSession(){
     try{
-      const raw = sessionStorage.getItem(SESSION_KEY);
+      const raw = readFitnessSession();
       if(!raw) return null;
       const parsed = JSON.parse(raw);
       const expiresAt = Date.parse(parsed.expires_at || '');
       if(!parsed.session_token || !expiresAt || expiresAt <= Date.now()){
-        sessionStorage.removeItem(SESSION_KEY);
+        clearFitnessSessionStorage();
         state.rpcClient = null;
         return null;
       }
       return parsed;
     } catch(e){
+      clearFitnessSessionStorage();
       return null;
     }
   }
@@ -130,7 +147,7 @@
   function saveFitnessSession(data){
     if(!data?.session_token || !data?.expires_at) return false;
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
         session_token: data.session_token,
         expires_at: data.expires_at
       }));
@@ -142,7 +159,7 @@
   }
 
   function clearFitnessSession(){
-    try { sessionStorage.removeItem(SESSION_KEY); } catch(e){}
+    clearFitnessSessionStorage();
     state.rpcClient = null;
   }
 

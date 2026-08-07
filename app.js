@@ -3774,31 +3774,49 @@ async function sha256(text) {
 }
 
 // ── Session persistence ───────────────────────────────────
-const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+const SESSION_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+
+function readStoredAuthSession(){
+  let raw = null;
+  try { raw = localStorage.getItem(AUTH_KEY); } catch(e) {}
+  if(raw) return raw;
+  try {
+    raw = sessionStorage.getItem(AUTH_KEY);
+    if(raw) localStorage.setItem(AUTH_KEY, raw);
+  } catch(e) {}
+  return raw;
+}
+
+function clearStoredAuthSession(){
+  try { localStorage.removeItem(AUTH_KEY); } catch(e) {}
+  try { sessionStorage.removeItem(AUTH_KEY); } catch(e) {}
+}
 
 function loadSession() {
   currentUser = null;
   try {
-    const raw = sessionStorage.getItem(AUTH_KEY);
+    const raw = readStoredAuthSession();
     if(!raw) return;
     const parsed = JSON.parse(raw);
     if(parsed?.player_id && parsed?.username){
       currentUser = parsed;
+      saveSession(parsed);
       return;
     }
     if(parsed?.user && parsed.expiresAt > Date.now()){
       currentUser = parsed.user;
       return;
     }
-    sessionStorage.removeItem(AUTH_KEY);
+    clearStoredAuthSession();
   } catch(e) {
     currentUser = null;
+    clearStoredAuthSession();
   }
 }
 function saveSession(user) {
   currentUser = user;
   try {
-    sessionStorage.setItem(AUTH_KEY, JSON.stringify({
+    localStorage.setItem(AUTH_KEY, JSON.stringify({
       user,
       expiresAt: Date.now() + SESSION_TTL_MS
     }));
@@ -3806,7 +3824,7 @@ function saveSession(user) {
 }
 function clearSession() {
   currentUser = null;
-  try { sessionStorage.removeItem(AUTH_KEY); } catch(e) {}
+  clearStoredAuthSession();
 }
 async function findPlayerUser(username) {
   if(!supa || !IS_CONNECTED) throw new Error('Sin conexion');
