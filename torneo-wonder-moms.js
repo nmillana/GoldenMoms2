@@ -64,11 +64,11 @@
     }
   }
   function canManageTournament() {
-    return typeof currentUser !== 'undefined' && !!currentUser && ['admin', 'capitana'].includes(currentUser.role);
+    return typeof currentUser !== 'undefined' && !!currentUser && currentUser.role === 'admin';
   }
   function requireTournamentManager() {
     if (!canManageTournament()) {
-      notify('Solo administradora o capitana pueden editar el torneo');
+      notify('Solo administradora puede editar el torneo');
       return false;
     }
     if (!tournamentSessionToken()) {

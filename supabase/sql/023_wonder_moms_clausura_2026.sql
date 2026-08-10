@@ -66,7 +66,7 @@ before update on public.tournament_schedule
 for each row execute function public.set_tournament_schedule_updated_at();
 
 -- Lectura publica para que las jugadoras puedan revisar tablas.
--- Escritura limitada a sesiones RPC autorizadas de la app (admin/capitana)
+-- Escritura limitada a sesiones RPC autorizadas de la app (admin)
 -- usando el mismo puente seguro creado para Tesoreria: x-gm-treasury-session.
 alter table public.tournament_schedule enable row level security;
 drop policy if exists tournament_schedule_read on public.tournament_schedule;
@@ -75,8 +75,8 @@ create policy tournament_schedule_read on public.tournament_schedule
   for select to anon, authenticated using (true);
 create policy tournament_schedule_write on public.tournament_schedule
   for all to anon, authenticated
-  using (public.treasury_current_role() in ('service_role','admin','capitana'))
-  with check (public.treasury_current_role() in ('service_role','admin','capitana'));
+  using (public.treasury_current_role() in ('service_role','admin'))
+  with check (public.treasury_current_role() in ('service_role','admin'));
 
 grant select on public.tournament_schedule to anon, authenticated;
 grant insert, update, delete on public.tournament_schedule to anon, authenticated;
