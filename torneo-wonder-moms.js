@@ -190,7 +190,7 @@
           <label class="wm-muted" style="display:flex;align-items:center;gap:5px">Fecha final <input id="wmFinalDate" class="wm-input" style="width:145px;padding:7px" type="date"></label>
         </div>
       </div>
-      <div class="wm-warning"><strong>Importante:</strong> las bases confirman fechas, grupos y formato. La fecha 1 usa la programacion visible en las capturas; las demas jornadas quedan como fixture base editable hasta que Wondra confirme cruces y canchas.</div>
+      <div class="wm-warning"><strong>Importante:</strong> las bases confirman fechas, grupos y formato. La fecha 1 usa la programacion visible en las capturas; las demas jornadas quedan como fixture base editable hasta que Wondra confirme cruces y canchas. Para cargar o editar resultados, primero autoriza tu sesion en Tesorera.</div>
       <div class="wm-card">
         <div class="wm-section-title">Clasificacion de fase regular</div>
         <div id="wmStandings" class="wm-grid"><div class="wm-empty">Todavia no hay datos cargados.</div></div>
