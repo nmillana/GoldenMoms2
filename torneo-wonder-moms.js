@@ -206,7 +206,7 @@
     const style = document.createElement('style');
     style.id = 'wmTournamentStyles';
     style.textContent = `
-      #tournamentHeader,#groupTabsBar,#tournamentStandingsWrap{display:none!important}
+      #tournamentHeader,#groupTabsBar,#tournamentStandingsWrap,#tournamentEmpty{display:none!important}
       #wmTournamentPanel{margin-top:10px}
       .wm-card{background:var(--surface,#fff);border:1px solid var(--line-2,#d8e0ea);border-radius:var(--r-md,14px);padding:14px;margin-bottom:12px;box-shadow:var(--sh-1,0 1px 3px rgba(26,35,50,.06))}
       .wm-hero{background:linear-gradient(135deg,#1a4a2a,#2d7a4f);color:#fff;border:0;box-shadow:var(--sh-2,0 2px 10px rgba(26,35,50,.07))}
@@ -215,6 +215,13 @@
       .wm-muted{font-size:12px;color:var(--muted,#718096)}
       .wm-hero .wm-muted{color:rgba(255,255,255,.82)}
       .wm-actions,.wm-filters{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}
+      .wm-admin{padding:0;overflow:hidden}
+      .wm-admin[hidden]{display:none!important}
+      .wm-admin summary{list-style:none;cursor:pointer;padding:12px 14px;font:800 13px var(--font-head,Arial);color:var(--ink,#1a2332);display:flex;align-items:center;justify-content:space-between}
+      .wm-admin summary::-webkit-details-marker{display:none}
+      .wm-admin summary::after{content:'+';width:22px;height:22px;border:1px solid var(--line-2,#d8e0ea);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted,#718096);font-weight:900}
+      .wm-admin[open] summary::after{content:'-'}
+      .wm-admin-body{border-top:1px solid var(--line,#e8edf4);padding:12px 14px 14px}
       .wm-btn{border:1px solid var(--line-2,#d8e0ea);background:var(--surface,#fff);color:var(--ink,#1a2332);border-radius:var(--r-sm,10px);padding:8px 10px;font:700 12px var(--font-head,Arial);cursor:pointer}
       .wm-btn:hover{border-color:var(--lime-soft,#d4edba);background:var(--lime-pale,#f0f9e8)}
       .wm-btn.primary{background:var(--lime,#6db33f);border-color:var(--lime,#6db33f);color:#fff}
@@ -265,37 +272,50 @@
       .wm-help{font-size:11px;color:var(--muted,#718096);line-height:1.45;margin-top:8px}
       .wm-rules{border:1px solid var(--line-2,#d8e0ea);border-radius:var(--r-sm,10px);padding:10px;margin-top:10px;background:var(--surface-2,#f9fafb);font-size:11px;color:var(--muted,#718096)}
       .wm-rules summary{font-weight:900;color:var(--ink,#1a2332);cursor:pointer}
-      @media(max-width:600px){.wm-grid{grid-template-columns:1fr}.wm-match{grid-template-columns:58px 1fr 58px}.wm-match-teams{font-size:11px}}
+      @media(max-width:600px){.wm-grid{grid-template-columns:1fr}.wm-match{grid-template-columns:58px 1fr 58px}.wm-match-teams{font-size:11px}.wm-table{min-width:0}.wm-table th:nth-child(4),.wm-table td:nth-child(4),.wm-table th:nth-child(5),.wm-table td:nth-child(5),.wm-table th:nth-child(6),.wm-table td:nth-child(6),.wm-table th:nth-child(7),.wm-table td:nth-child(7),.wm-table th:nth-child(8),.wm-table td:nth-child(8),.wm-table th:nth-child(9),.wm-table td:nth-child(9){display:none}.wm-table th,.wm-table td{padding:8px 4px}.wm-team{white-space:normal}}
     `;
     document.head.appendChild(style);
   }
+  function hideLegacyTournamentUi() {
+    ['tournamentHeader','groupTabsBar','tournamentStandingsWrap','tournamentEmpty'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.setProperty('display', 'none', 'important');
+    });
+    const legacyControls = document.getElementById('tournamentSelect')?.closest('div');
+    if (legacyControls) legacyControls.style.setProperty('display', 'none', 'important');
+  }
   function createPanel() {
-    if (document.getElementById('wmTournamentPanel')) return document.getElementById('wmTournamentPanel');
+    if (document.getElementById('wmTournamentPanel')) { hideLegacyTournamentUi(); return document.getElementById('wmTournamentPanel'); }
     const host = document.getElementById('standView2');
     if (!host) return null;
-    ['tournamentHeader','groupTabsBar','tournamentStandingsWrap'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+    hideLegacyTournamentUi();
     const panel = document.createElement('div');
     panel.id = 'wmTournamentPanel';
     panel.innerHTML = `
       <div class="wm-card wm-hero">
-        <div class="wm-kicker">Wonder Mom's Cup · Clausura 2026</div>
+        <div class="wm-kicker">Wonder Mom's Cup - Clausura 2026</div>
         <div class="wm-title">Golden Dream y Golden Power</div>
-        <div id="wmSummary" class="wm-muted">Configura el torneo para iniciar el registro partido a partido.</div>
-        <div class="wm-actions">
-          <button class="wm-btn primary" id="wmSetup">Cargar fixture oficial</button>
-          <button class="wm-btn" id="wmFinals">Actualizar copas</button>
-          <button class="wm-btn" id="wmRefresh">Actualizar</button>
-          <label class="wm-muted" style="display:flex;align-items:center;gap:5px">Fecha final <input id="wmFinalDate" class="wm-input" style="width:145px;padding:7px" type="date"></label>
+        <div id="wmSummary" class="wm-muted">Fixture oficial de fase regular.</div>
+      </div>
+      <details class="wm-card wm-admin" id="wmAdminPanel">
+        <summary>Administracion</summary>
+        <div class="wm-admin-body">
+          <div class="wm-actions" style="margin-top:0">
+            <button class="wm-btn primary" id="wmSetup">Recargar fixture</button>
+            <button class="wm-btn" id="wmFinals">Recalcular copas</button>
+            <button class="wm-btn" id="wmRefresh">Actualizar datos</button>
+            <label class="wm-muted" style="display:flex;align-items:center;gap:5px">Final <input id="wmFinalDate" class="wm-input" style="width:145px;padding:7px" type="date"></label>
+          </div>
         </div>
-      </div>
-      <div class="wm-warning"><strong>Importante:</strong> SofaScore confirma 7 jornadas de fase regular, con fecha, hora y cruces cargados en esta vista. La fecha de definiciones todavia no aparece en SofaScore; para cargar fixture o registrar resultados, primero autoriza tu sesion en Tesorera.</div>
+      </details>
+      <div class="wm-warning"><strong>Fixture oficial:</strong> 7 jornadas confirmadas. Definiciones finales por confirmar en SofaScore.</div>
       <div class="wm-card">
-        <div class="wm-section-title">Clasificacion de fase regular</div>
+        <div class="wm-section-title">Tabla fase regular</div>
         <div id="wmStandings" class="wm-grid"><div class="wm-empty">Todavia no hay datos cargados.</div></div>
-        <details class="wm-rules"><summary>Reglas y leyenda</summary><div style="margin-top:8px;line-height:1.7">P: jugados - W: ganados - D: empatados - L: perdidos - DIFF: diferencia - GLS: goles a favor/en contra - PTS: puntos.</div><div style="line-height:1.7">Orden: puntos, diferencia de goles, goles a favor, resultado entre involucrados y sorteo. Si el sorteo aun no existe, la app marca <strong>Desempate pendiente</strong>.</div></details>
+        <details class="wm-rules"><summary>Reglas y leyenda</summary><div style="margin-top:8px;line-height:1.7">PJ: jugados - G: ganados - E: empatados - P: perdidos - DIF: diferencia - GF:GC: goles - Pts: puntos.</div><div style="line-height:1.7">Orden: puntos, diferencia de goles, goles a favor, resultado entre involucrados y sorteo. Si el sorteo aun no existe, la app marca <strong>Desempate pendiente</strong>.</div></details>
       </div>
       <div class="wm-card">
-        <div class="wm-section-title">Registro de partidos</div>
+        <div class="wm-section-title">Calendario y resultados</div>
         <div class="wm-filters">
           <select id="wmPhaseFilter" class="wm-select"><option value="all">Todas las fases</option><option value="regular">Fase regular</option><option value="final">Definiciones</option></select>
           <select id="wmTeamFilter" class="wm-select"><option value="all">Todos los equipos</option><option value="own">Golden Dream y Power</option></select>
@@ -502,6 +522,9 @@
     const completed = fixtures.filter(isCompleted).length;
     const regularCount = fixtures.filter(m => m.phase === 'regular').length;
     const finalCount = fixtures.filter(m => m.phase === 'final').length;
+    hideLegacyTournamentUi();
+    const adminPanel = document.getElementById('wmAdminPanel');
+    if (adminPanel) adminPanel.hidden = !canManageTournament();
     const summary = document.getElementById('wmSummary');
     if (summary) {
       if (!fixtures.length) {
@@ -532,7 +555,7 @@
     if (!target) return;
     target.innerHTML = ['A', 'B'].map(group => {
       const rows = teams.length ? computeStandings(group, fixtures) : TEAM_SEED[group].map(name => ({ name, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, dg: 0, pts: 0, last: [], tiePending: false }));
-      return `<div><div class="wm-section-title">Grupo ${group}</div><div class="wm-table-wrap"><table class="wm-table"><thead><tr><th>#</th><th>Equipo</th><th>P</th><th>W</th><th>D</th><th>L</th><th>DIFF</th><th>GLS</th><th>Last 5</th><th>PTS</th></tr></thead><tbody>${rows.map((r, i) => `<tr class="${isOwnTeam(r.name) ? 'own' : ''}"><td class="wm-pos">${i + 1}</td><td class="wm-team">${esc(r.name)}${isOwnTeam(r.name) ? '<span class="wm-badge">GOLDEN</span>' : ''}${r.tiePending ? '<span class="wm-tie">Desempate pendiente</span>' : ''}</td><td>${r.pj}</td><td>${r.g}</td><td>${r.e}</td><td>${r.p}</td><td>${r.dg > 0 ? '+' : ''}${r.dg}</td><td>${r.gf}:${r.gc}</td><td>${last5Html(r)}</td><td><strong>${r.pts}</strong></td></tr>`).join('')}</tbody></table></div></div>`;
+      return `<div><div class="wm-section-title">Grupo ${group}</div><div class="wm-table-wrap"><table class="wm-table"><thead><tr><th>#</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DIF</th><th>GF:GC</th><th>Racha</th><th>Pts</th></tr></thead><tbody>${rows.map((r, i) => `<tr class="${isOwnTeam(r.name) ? 'own' : ''}"><td class="wm-pos">${i + 1}</td><td class="wm-team">${esc(r.name)}${isOwnTeam(r.name) ? '<span class="wm-badge">GOLDEN</span>' : ''}${r.tiePending ? '<span class="wm-tie">Desempate pendiente</span>' : ''}</td><td>${r.pj}</td><td>${r.g}</td><td>${r.e}</td><td>${r.p}</td><td>${r.dg > 0 ? '+' : ''}${r.dg}</td><td>${r.gf}:${r.gc}</td><td>${last5Html(r)}</td><td><strong>${r.pts}</strong></td></tr>`).join('')}</tbody></table></div></div>`;
     }).join('');
   }
   function renderMatches() {
@@ -545,7 +568,7 @@
     if (!rows.length) { target.innerHTML = '<div class="wm-empty">No hay partidos para este filtro.</div>'; return; }
     const grouped = {};
     rows.forEach(m => { const key = `${m.jornada}|${m.phase}`; (grouped[key] ||= []).push(m); });
-    const previewNote = fixtures.length ? '' : '<div class="wm-warning"><strong>Vista previa oficial:</strong> estos partidos vienen del fixture SofaScore pegado por la administradora. Usa Cargar fixture oficial para guardarlos y registrar resultados.</div>';
+    const previewNote = fixtures.length ? '' : '<div class="wm-warning"><strong>Vista previa oficial:</strong> estos partidos vienen del fixture SofaScore pegado por la administradora. Abre Administracion para guardarlos y registrar resultados.</div>';
     target.innerHTML = previewNote + Object.entries(grouped).map(([key, list]) => {
       const [jornada, phase] = key.split('|');
       return `<div class="wm-phase" style="margin:12px 0 7px">Jornada ${jornada} - ${phase === 'regular' ? 'Fase regular' : 'Definiciones'}</div>${list.map(matchCard).join('')}`;
