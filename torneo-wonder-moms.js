@@ -7,18 +7,77 @@
 
   const TOURNAMENT_NAME = "Wonder Mom's Cup Clausura 2026";
   const VENUE = 'Zapping Sport Center - Club Palestino';
-  const FINAL_DATE_LABEL = '22 o 25 de octubre, por confirmar';
+  const FINAL_DATE_LABEL = 'Definiciones por confirmar en SofaScore';
   const REGULAR_DATES = [
     '2026-08-27', '2026-09-03', '2026-09-10', '2026-09-24',
     '2026-10-01', '2026-10-08', '2026-10-15'
   ];
   const TEAM_SEED = {
-    A: ['Golden Dream', 'Las Juanas', 'Osas de Ossó', 'SNM Queens', 'Golden Power', 'Les Guerrieres', 'Pedro Pé', 'The British Queens'],
-    B: ['Pumahuinas', 'Team Dragón', 'Panteras', 'Ssoccers Moms', 'Mamajuana', 'Mamurris', 'New Reds', 'Queenlastair']
+    A: ['Golden Dream', 'The British Queens', 'Las Juanas', 'Pedro Pé', 'Osas de Ossó', 'Les Guerrieres', 'SNM Queens', 'Golden Power'],
+    B: ['Panteras', 'Mamurris', 'Pumahuinas', 'Queenlastair', 'Team Dragón', 'New Reds', 'Ssoccer Moms', 'Mamajuana']
   };
+  const OFFICIAL_FIXTURES = [
+    { jornada: 1, date: '2026-08-27', time: '20:00', group: 'A', home: 'Golden Dream', away: 'The British Queens' },
+    { jornada: 1, date: '2026-08-27', time: '20:00', group: 'A', home: 'Las Juanas', away: 'Pedro Pé' },
+    { jornada: 1, date: '2026-08-27', time: '20:00', group: 'B', home: 'Panteras', away: 'Mamurris' },
+    { jornada: 1, date: '2026-08-27', time: '20:00', group: 'B', home: 'Pumahuinas', away: 'Queenlastair' },
+    { jornada: 1, date: '2026-08-27', time: '20:00', group: 'B', home: 'Team Dragón', away: 'New Reds' },
+    { jornada: 1, date: '2026-08-27', time: '21:00', group: 'A', home: 'Osas de Ossó', away: 'Les Guerrieres' },
+    { jornada: 1, date: '2026-08-27', time: '21:00', group: 'A', home: 'SNM Queens', away: 'Golden Power' },
+    { jornada: 1, date: '2026-08-27', time: '21:00', group: 'B', home: 'Ssoccer Moms', away: 'Mamajuana' },
+    { jornada: 2, date: '2026-09-03', time: '20:00', group: 'A', home: 'Las Juanas', away: 'Les Guerrieres' },
+    { jornada: 2, date: '2026-09-03', time: '20:00', group: 'A', home: 'SNM Queens', away: 'Osas de Ossó' },
+    { jornada: 2, date: '2026-09-03', time: '20:00', group: 'A', home: 'The British Queens', away: 'Golden Power' },
+    { jornada: 2, date: '2026-09-03', time: '20:00', group: 'B', home: 'Pumahuinas', away: 'Ssoccer Moms' },
+    { jornada: 2, date: '2026-09-03', time: '20:00', group: 'B', home: 'Team Dragón', away: 'Mamajuana' },
+    { jornada: 2, date: '2026-09-03', time: '21:00', group: 'A', home: 'Golden Dream', away: 'Pedro Pé' },
+    { jornada: 2, date: '2026-09-03', time: '21:00', group: 'B', home: 'Mamurris', away: 'Queenlastair' },
+    { jornada: 2, date: '2026-09-03', time: '21:00', group: 'B', home: 'Panteras', away: 'New Reds' },
+    { jornada: 3, date: '2026-09-10', time: '20:00', group: 'A', home: 'Golden Dream', away: 'Golden Power' },
+    { jornada: 3, date: '2026-09-10', time: '20:00', group: 'A', home: 'Pedro Pé', away: 'Les Guerrieres' },
+    { jornada: 3, date: '2026-09-10', time: '20:00', group: 'B', home: 'Mamurris', away: 'Ssoccer Moms' },
+    { jornada: 3, date: '2026-09-10', time: '20:00', group: 'B', home: 'New Reds', away: 'Mamajuana' },
+    { jornada: 3, date: '2026-09-10', time: '20:00', group: 'B', home: 'Panteras', away: 'Queenlastair' },
+    { jornada: 3, date: '2026-09-10', time: '21:00', group: 'A', home: 'Las Juanas', away: 'SNM Queens' },
+    { jornada: 3, date: '2026-09-10', time: '21:00', group: 'A', home: 'The British Queens', away: 'Osas de Ossó' },
+    { jornada: 3, date: '2026-09-10', time: '21:00', group: 'B', home: 'Pumahuinas', away: 'Team Dragón' },
+    { jornada: 4, date: '2026-09-24', time: '20:00', group: 'A', home: 'Golden Power', away: 'Osas de Ossó' },
+    { jornada: 4, date: '2026-09-24', time: '20:00', group: 'A', home: 'Las Juanas', away: 'The British Queens' },
+    { jornada: 4, date: '2026-09-24', time: '20:00', group: 'A', home: 'SNM Queens', away: 'Pedro Pé' },
+    { jornada: 4, date: '2026-09-24', time: '20:00', group: 'B', home: 'Pumahuinas', away: 'New Reds' },
+    { jornada: 4, date: '2026-09-24', time: '20:00', group: 'B', home: 'Team Dragón', away: 'Mamurris' },
+    { jornada: 4, date: '2026-09-24', time: '21:00', group: 'A', home: 'Les Guerrieres', away: 'Golden Dream' },
+    { jornada: 4, date: '2026-09-24', time: '21:00', group: 'B', home: 'Mamajuana', away: 'Panteras' },
+    { jornada: 4, date: '2026-09-24', time: '21:00', group: 'B', home: 'Queenlastair', away: 'Ssoccer Moms' },
+    { jornada: 5, date: '2026-10-01', time: '20:00', group: 'A', home: 'Les Guerrieres', away: 'SNM Queens' },
+    { jornada: 5, date: '2026-10-01', time: '20:00', group: 'A', home: 'Osas de Ossó', away: 'Golden Dream' },
+    { jornada: 5, date: '2026-10-01', time: '20:00', group: 'B', home: 'Mamajuana', away: 'Pumahuinas' },
+    { jornada: 5, date: '2026-10-01', time: '20:00', group: 'B', home: 'Ssoccer Moms', away: 'Panteras' },
+    { jornada: 5, date: '2026-10-01', time: '20:00', group: 'B', home: 'Team Dragón', away: 'Queenlastair' },
+    { jornada: 5, date: '2026-10-01', time: '21:00', group: 'A', home: 'Las Juanas', away: 'Golden Power' },
+    { jornada: 5, date: '2026-10-01', time: '21:00', group: 'A', home: 'The British Queens', away: 'Pedro Pé' },
+    { jornada: 5, date: '2026-10-01', time: '21:00', group: 'B', home: 'New Reds', away: 'Mamurris' },
+    { jornada: 6, date: '2026-10-08', time: '20:00', group: 'A', home: 'Golden Power', away: 'Pedro Pé' },
+    { jornada: 6, date: '2026-10-08', time: '20:00', group: 'A', home: 'Les Guerrieres', away: 'The British Queens' },
+    { jornada: 6, date: '2026-10-08', time: '20:00', group: 'A', home: 'Osas de Ossó', away: 'Las Juanas' },
+    { jornada: 6, date: '2026-10-08', time: '20:00', group: 'B', home: 'Mamajuana', away: 'Mamurris' },
+    { jornada: 6, date: '2026-10-08', time: '20:00', group: 'B', home: 'New Reds', away: 'Queenlastair' },
+    { jornada: 6, date: '2026-10-08', time: '21:00', group: 'A', home: 'Golden Dream', away: 'SNM Queens' },
+    { jornada: 6, date: '2026-10-08', time: '21:00', group: 'B', home: 'Panteras', away: 'Pumahuinas' },
+    { jornada: 6, date: '2026-10-08', time: '21:00', group: 'B', home: 'Ssoccer Moms', away: 'Team Dragón' },
+    { jornada: 7, date: '2026-10-15', time: '20:00', group: 'A', home: 'Golden Dream', away: 'Las Juanas' },
+    { jornada: 7, date: '2026-10-15', time: '20:00', group: 'A', home: 'The British Queens', away: 'SNM Queens' },
+    { jornada: 7, date: '2026-10-15', time: '20:00', group: 'B', home: 'Mamurris', away: 'Pumahuinas' },
+    { jornada: 7, date: '2026-10-15', time: '20:00', group: 'B', home: 'New Reds', away: 'Ssoccer Moms' },
+    { jornada: 7, date: '2026-10-15', time: '20:00', group: 'B', home: 'Panteras', away: 'Team Dragón' },
+    { jornada: 7, date: '2026-10-15', time: '21:00', group: 'A', home: 'Golden Power', away: 'Les Guerrieres' },
+    { jornada: 7, date: '2026-10-15', time: '21:00', group: 'A', home: 'Pedro Pé', away: 'Osas de Ossó' },
+    { jornada: 7, date: '2026-10-15', time: '22:00', group: 'B', home: 'Queenlastair', away: 'Mamajuana' }
+  ];
   const OWN_TEAMS = new Set(['Golden Dream', 'Golden Power']);
   const SEED_INDEX = Object.fromEntries(Object.entries(TEAM_SEED).flatMap(([group, names]) => names.map((name, index) => [name, group.charCodeAt(0) * 100 + index])));
   let db = null;
+  let dbSessionToken = null;
   let selectedTournamentId = null;
   let teams = [];
   let fixtures = [];
@@ -78,26 +137,6 @@
     return true;
   }
   function seedOrder(name) { return SEED_INDEX[name] ?? 9999; }
-  function roundRobin(groupTeams) {
-    const list = groupTeams.slice();
-    const rounds = [];
-    for (let round = 0; round < list.length - 1; round += 1) {
-      const games = [];
-      for (let i = 0; i < list.length / 2; i += 1) {
-        const first = list[i];
-        const second = list[list.length - 1 - i];
-        const home = round % 2 === 0 ? first : second;
-        const away = round % 2 === 0 ? second : first;
-        games.push({ home, away });
-      }
-      rounds.push(games);
-      list.splice(1, 0, list.pop());
-    }
-    return rounds;
-  }
-  function unresolvedTie(a, b, resultRows) {
-    return a.pts === b.pts && a.dg === b.dg && a.gf === b.gf && headToHead(a.id, b.id, resultRows) === 0;
-  }
   function unresolvedTie(a, b, resultRows) {
     return a.pts === b.pts && a.dg === b.dg && a.gf === b.gf && headToHead(a.id, b.id, resultRows) === 0;
   }
@@ -167,7 +206,7 @@
     const style = document.createElement('style');
     style.id = 'wmTournamentStyles';
     style.textContent = `
-      #tournamentHeader,#groupTabsBar,#tournamentStandingsWrap{display:none!important}#wmTournamentPanel{margin-top:10px}.wm-card{background:var(--surface,#fff);border:1px solid var(--line-2,#e5e7eb);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:var(--sh-1,0 2px 8px rgba(0,0,0,.06))}.wm-hero{background:linear-gradient(135deg,#32152f,#641c55 58%,#8c286d);color:#fff;border:0}.wm-kicker{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;opacity:.78;font-weight:800}.wm-title{font:800 20px var(--font-head,Arial);margin-top:3px}.wm-muted{font-size:12px;color:var(--muted,#6b7280)}.wm-hero .wm-muted{color:rgba(255,255,255,.78)}.wm-actions,.wm-filters{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}.wm-btn{border:1px solid var(--line,#ddd);background:#fff;color:var(--ink,#111);border-radius:9px;padding:8px 10px;font:700 12px var(--font-head,Arial);cursor:pointer}.wm-btn.primary{background:#a8e63d;border-color:#a8e63d;color:#17321e}.wm-btn.dark{background:#261c27;border-color:#261c27;color:#fff}.wm-select{border:1px solid var(--line,#ddd);border-radius:9px;background:#fff;color:var(--ink,#111);padding:8px 10px;font-size:12px;min-width:135px}.wm-warning{background:#fff9e8;border:1px solid #f2d38b;color:#765600;border-radius:10px;padding:10px;font-size:11px;line-height:1.45;margin-bottom:12px}.wm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wm-section-title{font:800 14px var(--font-head,Arial);margin-bottom:9px;color:var(--ink,#111)}.wm-table-wrap{overflow-x:auto}.wm-table{width:100%;border-collapse:collapse;min-width:620px;font-size:11px}.wm-table th{background:#32152f;color:#fff;padding:8px 5px;text-align:center}.wm-table th:nth-child(2),.wm-table td:nth-child(2){text-align:left}.wm-table td{padding:8px 5px;border-bottom:1px solid var(--line-2,#eee);text-align:center}.wm-table tr.own{background:#f2fbdf}.wm-table tr:nth-child(even){background:#fafafa}.wm-table tr.own:nth-child(even){background:#f2fbdf}.wm-pos{font-weight:900;color:#6b7280}.wm-team{font-weight:800;white-space:nowrap}.wm-team small{font-weight:500;color:#8a8a8a}.wm-tie{display:block;margin-top:2px;color:#9a6a00;font-size:9px;font-weight:700}.wm-form{display:inline-flex;gap:2px;justify-content:center;min-width:56px}.wm-form span{display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center;border-radius:5px;font-size:9px;font-weight:900;color:#111;background:#d1d5db}.wm-form .w{background:#52d273}.wm-form .d{background:#c8d0da}.wm-form .l{background:#ff6b57}.wm-badge{display:inline-flex;font-size:9px;background:#dff5a6;color:#31590f;border-radius:10px;padding:2px 5px;margin-left:4px}.wm-match{display:grid;grid-template-columns:74px 1fr 72px;gap:6px;align-items:center;border:1px solid var(--line-2,#e8e8e8);border-radius:10px;padding:9px 8px;margin-bottom:6px;background:#fff;cursor:pointer}.wm-match:hover{border-color:#a8e63d}.wm-match.own{border-left:4px solid #a8e63d}.wm-match-date{font-size:10px;color:#777;text-align:center}.wm-match-teams{font-size:12px;line-height:1.7}.wm-match-score{text-align:right;font:900 16px var(--font-head,Arial)}.wm-match-score.pending{font-size:11px;color:#999}.wm-phase{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#8c286d}.wm-cup{border-left:4px solid #e5b83b}.wm-cup.silver{border-left-color:#9aa5b1}.wm-empty{text-align:center;padding:18px;color:#888;font-size:12px}.wm-modal-bg{position:fixed;inset:0;background:rgba(18,10,20,.55);z-index:1200;display:flex;align-items:center;justify-content:center;padding:14px}.wm-modal{background:#fff;border-radius:14px;width:100%;max-width:390px;padding:18px;max-height:90vh;overflow:auto}.wm-form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wm-label{display:block;font-size:10px;font-weight:800;text-transform:uppercase;color:#777;margin:10px 0 4px}.wm-input{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:9px;font-size:14px}.wm-help{font-size:11px;color:#777;line-height:1.45;margin-top:8px}.wm-rules{border:1px solid var(--line-2,#e5e7eb);border-radius:10px;padding:10px;margin-top:10px;background:#fbfbfb;font-size:11px;color:var(--muted,#6b7280)}.wm-rules summary{font-weight:900;color:var(--ink,#111);cursor:pointer}@media(max-width:600px){.wm-grid{grid-template-columns:1fr}.wm-match{grid-template-columns:58px 1fr 58px}.wm-match-teams{font-size:11px}}
+      #tournamentHeader,#groupTabsBar,#tournamentStandingsWrap{display:none!important}#wmTournamentPanel{margin-top:10px}.wm-card{background:var(--surface,#fff);border:1px solid var(--line-2,#e5e7eb);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:var(--sh-1,0 2px 8px rgba(0,0,0,.06))}.wm-hero{background:linear-gradient(135deg,#32152f,#641c55 58%,#8c286d);color:#fff;border:0}.wm-kicker{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;opacity:.78;font-weight:800}.wm-title{font:800 20px var(--font-head,Arial);margin-top:3px}.wm-muted{font-size:12px;color:var(--muted,#6b7280)}.wm-hero .wm-muted{color:rgba(255,255,255,.78)}.wm-actions,.wm-filters{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px}.wm-btn{border:1px solid var(--line,#ddd);background:#fff;color:var(--ink,#111);border-radius:9px;padding:8px 10px;font:700 12px var(--font-head,Arial);cursor:pointer}.wm-btn.primary{background:#a8e63d;border-color:#a8e63d;color:#17321e}.wm-btn.dark{background:#261c27;border-color:#261c27;color:#fff}.wm-select{border:1px solid var(--line,#ddd);border-radius:9px;background:#fff;color:var(--ink,#111);padding:8px 10px;font-size:12px;min-width:135px}.wm-warning{background:#fff9e8;border:1px solid #f2d38b;color:#765600;border-radius:10px;padding:10px;font-size:11px;line-height:1.45;margin-bottom:12px}.wm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wm-section-title{font:800 14px var(--font-head,Arial);margin-bottom:9px;color:var(--ink,#111)}.wm-table-wrap{overflow-x:auto}.wm-table{width:100%;border-collapse:collapse;min-width:620px;font-size:11px}.wm-table th{background:#32152f;color:#fff;padding:8px 5px;text-align:center}.wm-table th:nth-child(2),.wm-table td:nth-child(2){text-align:left}.wm-table td{padding:8px 5px;border-bottom:1px solid var(--line-2,#eee);text-align:center}.wm-table tr.own{background:#f2fbdf}.wm-table tr:nth-child(even){background:#fafafa}.wm-table tr.own:nth-child(even){background:#f2fbdf}.wm-pos{font-weight:900;color:#6b7280}.wm-team{font-weight:800;white-space:nowrap}.wm-team small{font-weight:500;color:#8a8a8a}.wm-tie{display:block;margin-top:2px;color:#9a6a00;font-size:9px;font-weight:700}.wm-form{display:inline-flex;gap:2px;justify-content:center;min-width:56px}.wm-form span{display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center;border-radius:5px;font-size:9px;font-weight:900;color:#111;background:#d1d5db}.wm-form .w{background:#52d273}.wm-form .d{background:#c8d0da}.wm-form .l{background:#ff6b57}.wm-badge{display:inline-flex;font-size:9px;background:#dff5a6;color:#31590f;border-radius:10px;padding:2px 5px;margin-left:4px}.wm-match{display:grid;grid-template-columns:74px 1fr 72px;gap:6px;align-items:center;border:1px solid var(--line-2,#e8e8e8);border-radius:10px;padding:9px 8px;margin-bottom:6px;background:#fff;cursor:pointer}.wm-match:hover{border-color:#a8e63d}.wm-match.preview{cursor:default}.wm-match.preview:hover{border-color:var(--line-2,#e8e8e8)}.wm-match.own{border-left:4px solid #a8e63d}.wm-match-date{font-size:10px;color:#777;text-align:center}.wm-match-teams{font-size:12px;line-height:1.7}.wm-match-score{text-align:right;font:900 16px var(--font-head,Arial)}.wm-match-score.pending{font-size:11px;color:#999}.wm-phase{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#8c286d}.wm-cup{border-left:4px solid #e5b83b}.wm-cup.silver{border-left-color:#9aa5b1}.wm-empty{text-align:center;padding:18px;color:#888;font-size:12px}.wm-modal-bg{position:fixed;inset:0;background:rgba(18,10,20,.55);z-index:1200;display:flex;align-items:center;justify-content:center;padding:14px}.wm-modal{background:#fff;border-radius:14px;width:100%;max-width:390px;padding:18px;max-height:90vh;overflow:auto}.wm-form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.wm-label{display:block;font-size:10px;font-weight:800;text-transform:uppercase;color:#777;margin:10px 0 4px}.wm-input{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:9px;font-size:14px}.wm-help{font-size:11px;color:#777;line-height:1.45;margin-top:8px}.wm-rules{border:1px solid var(--line-2,#e5e7eb);border-radius:10px;padding:10px;margin-top:10px;background:#fbfbfb;font-size:11px;color:var(--muted,#6b7280)}.wm-rules summary{font-weight:900;color:var(--ink,#111);cursor:pointer}@media(max-width:600px){.wm-grid{grid-template-columns:1fr}.wm-match{grid-template-columns:58px 1fr 58px}.wm-match-teams{font-size:11px}}
     `;
     document.head.appendChild(style);
   }
@@ -184,13 +223,13 @@
         <div class="wm-title">Golden Dream y Golden Power</div>
         <div id="wmSummary" class="wm-muted">Configura el torneo para iniciar el registro partido a partido.</div>
         <div class="wm-actions">
-          <button class="wm-btn primary" id="wmSetup">Cargar torneo y equipos</button>
+          <button class="wm-btn primary" id="wmSetup">Cargar fixture oficial</button>
           <button class="wm-btn" id="wmFinals">Actualizar copas</button>
           <button class="wm-btn" id="wmRefresh">Actualizar</button>
           <label class="wm-muted" style="display:flex;align-items:center;gap:5px">Fecha final <input id="wmFinalDate" class="wm-input" style="width:145px;padding:7px" type="date"></label>
         </div>
       </div>
-      <div class="wm-warning"><strong>Importante:</strong> las bases confirman fechas, grupos y formato. La fecha 1 usa la programacion visible en las capturas; las demas jornadas quedan como fixture base editable hasta que Wondra confirme cruces y canchas. Para cargar o editar resultados, primero autoriza tu sesion en Tesorera.</div>
+      <div class="wm-warning"><strong>Importante:</strong> SofaScore confirma 7 jornadas de fase regular, con fecha, hora y cruces cargados en esta vista. La fecha de definiciones todavia no aparece en SofaScore; para cargar fixture o registrar resultados, primero autoriza tu sesion en Tesorera.</div>
       <div class="wm-card">
         <div class="wm-section-title">Clasificacion de fase regular</div>
         <div id="wmStandings" class="wm-grid"><div class="wm-empty">Todavia no hay datos cargados.</div></div>
@@ -213,22 +252,25 @@
     return panel;
   }
   async function connect() {
-    if (db) return db;
     if (typeof ensureSupabaseReady === 'function') await ensureSupabaseReady(7000);
     const factory = (typeof window !== 'undefined' && window.supabase?.createClient)
       ? window.supabase.createClient
       : (typeof createClient === 'function' ? createClient : null);
     const token = tournamentSessionToken();
+    if (db && dbSessionToken === (token || '')) return db;
     if (token && factory && typeof SUPA_CONFIG !== 'undefined') {
       db = factory(SUPA_CONFIG.url, SUPA_CONFIG.key, { global: { headers: { 'x-gm-treasury-session': token } } });
+      dbSessionToken = token;
       return db;
     }
     if (typeof supa !== 'undefined' && supa) {
       db = supa;
+      dbSessionToken = '';
       return db;
     }
     if (!factory || typeof SUPA_CONFIG === 'undefined') throw new Error('No se pudo cargar Supabase');
     db = factory(SUPA_CONFIG.url, SUPA_CONFIG.key);
+    dbSessionToken = '';
     return db;
   }
   async function getOrCreateTournament() {
@@ -257,33 +299,51 @@
     }
     return Object.values(byName);
   }
+  function officialFixtureRows(tournamentId, allTeams) {
+    const byName = Object.fromEntries((allTeams || []).map(team => [team.name, team]));
+    return OFFICIAL_FIXTURES.map(item => {
+      const home = byName[item.home];
+      const away = byName[item.away];
+      if (!home || !away) throw new Error('Falta equipo para fixture oficial: ' + item.home + ' vs ' + item.away);
+      return {
+        tournament_id: tournamentId,
+        jornada: item.jornada,
+        phase: 'regular',
+        competition: 'Fase regular Grupo ' + item.group,
+        scheduled_date: item.date,
+        scheduled_time: item.time,
+        date_label: fmtDate(item.date),
+        home_team_id: home.id,
+        away_team_id: away.id,
+        home_team_label: item.home,
+        away_team_label: item.away,
+        status: 'programado',
+        venue: VENUE,
+        notes: 'Fixture oficial SofaScore. Fecha de definiciones aun no publicada.'
+      };
+    });
+  }
+  function officialPreviewRows() {
+    return OFFICIAL_FIXTURES.map((item, index) => ({
+      id: 'official-preview-' + index,
+      jornada: item.jornada,
+      phase: 'regular',
+      competition: 'Fase regular Grupo ' + item.group,
+      scheduled_date: item.date,
+      scheduled_time: item.time,
+      date_label: fmtDate(item.date),
+      home_team_label: item.home,
+      away_team_label: item.away,
+      status: 'programado',
+      venue: VENUE,
+      preview: true
+    }));
+  }
   async function ensureRegularFixtures(tournamentId, allTeams) {
     const existing = await db.from('tournament_schedule').select('*').eq('tournament_id', tournamentId).eq('phase', 'regular').order('jornada');
     if (existing.error) throw existing.error;
     if (existing.data?.length) return existing.data;
-    const rows = [];
-    for (const group of ['A', 'B']) {
-      const byName = Object.fromEntries(allTeams.filter(t => (t.grupo || 'A') === group).map(t => [t.name, t]));
-      const groupTeams = TEAM_SEED[group].map(name => byName[name]).filter(Boolean);
-      roundRobin(groupTeams).forEach((games, roundIndex) => games.forEach((game, gameIndex) => {
-        rows.push({
-          tournament_id: tournamentId,
-          jornada: roundIndex + 1,
-          phase: 'regular',
-          competition: 'Fase regular Grupo ' + group,
-          scheduled_date: REGULAR_DATES[roundIndex],
-          scheduled_time: (group === 'A' ? gameIndex < 2 : gameIndex < 3) ? '20:00' : '21:00',
-          date_label: fmtDate(REGULAR_DATES[roundIndex]),
-          home_team_id: game.home.id,
-          away_team_id: game.away.id,
-          home_team_label: game.home.name,
-          away_team_label: game.away.name,
-          status: 'programado',
-          venue: VENUE,
-          notes: roundIndex === 0 ? 'Programacion inicial segun capturas entregadas; confirmar cancha.' : 'Fixture base editable. Confirmar con la programacion oficial de Wondra.'
-        });
-      }));
-    }
+    const rows = officialFixtureRows(tournamentId, allTeams);
     const inserted = await db.from('tournament_schedule').insert(rows).select('*');
     if (inserted.error) throw inserted.error;
     return inserted.data || [];
@@ -299,7 +359,7 @@
       await refreshSelect(tournament.id);
       await updateFinalFixtures(false);
       await loadCurrent();
-      notify('Torneo cargado con 16 equipos y 7 jornadas');
+      notify('Fixture oficial cargado: 16 equipos y 56 partidos');
     } catch (error) {
       console.error(error);
       alert('No se pudo cargar el torneo. Revisa primero la migracion tournament_schedule en Supabase.\n\n' + (error.message || error));
@@ -317,6 +377,12 @@
     try {
       await connect();
       selectedTournamentId = selectedTournamentId || document.getElementById('tournamentSelect')?.value;
+      if (!selectedTournamentId) {
+        const found = await db.from('tournaments').select('id').eq('name', TOURNAMENT_NAME).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        if (found.error) throw found.error;
+        selectedTournamentId = found.data?.id || null;
+      }
+      await refreshSelect(selectedTournamentId);
       if (!selectedTournamentId) { render(); return; }
       const t = await db.from('tournament_teams').select('*').eq('tournament_id', selectedTournamentId).order('name');
       const f = await db.from('tournament_schedule').select('*').eq('tournament_id', selectedTournamentId).order('jornada').order('created_at');
@@ -335,7 +401,7 @@
     }
   }
   async function updateFinalFixtures(showMessage = true) {
-    if (!canManageTournament()) return;
+    if (!canManageTournament() || !tournamentSessionToken()) return;
     if (!db || !selectedTournamentId || !teams.length) return;
     const regular = fixtures.filter(m => m.phase === 'regular');
     const standingsA = computeStandings('A', regular);
@@ -378,15 +444,22 @@
     const regularCount = fixtures.filter(m => m.phase === 'regular').length;
     const finalCount = fixtures.filter(m => m.phase === 'final').length;
     const summary = document.getElementById('wmSummary');
-    if (summary) summary.textContent = `${teams.length} equipos · ${regularCount} partidos de fase regular · ${finalCount} definiciones · ${completed} resultados registrados`;
+    if (summary) {
+      if (!fixtures.length) {
+        summary.textContent = `${Object.values(TEAM_SEED).flat().length} equipos previstos - ${OFFICIAL_FIXTURES.length} partidos oficiales listos para cargar - fecha final por confirmar`;
+      } else {
+        summary.textContent = `${teams.length} equipos - ${regularCount} partidos de fase regular - ${finalCount} definiciones - ${completed} resultados registrados`;
+      }
+    }
     const finalDate = fixtures.find(m => m.phase === 'final' && m.scheduled_date)?.scheduled_date;
     const finalDateInput = document.getElementById('wmFinalDate');
     if (finalDateInput && finalDate && !finalDateInput.value) finalDateInput.value = finalDate;
     const round = document.getElementById('wmRoundFilter');
     if (round) {
       const selected = round.value || 'all';
-      round.innerHTML = '<option value="all">Todas las jornadas</option>' + [...new Set(fixtures.map(m => m.jornada))].sort((a,b) => a-b).map(n => `<option value="${n}">Jornada ${n}</option>`).join('');
-      round.value = selected;
+      const roundRows = fixtures.length ? fixtures : officialPreviewRows();
+      round.innerHTML = '<option value="all">Todas las jornadas</option>' + [...new Set(roundRows.map(m => m.jornada))].sort((a,b) => a-b).map(n => `<option value="${n}">Jornada ${n}</option>`).join('');
+      round.value = [...round.options].some(option => option.value === selected) ? selected : 'all';
     }
     renderStandings();
     renderMatches();
@@ -399,7 +472,7 @@
     const target = document.getElementById('wmStandings');
     if (!target) return;
     target.innerHTML = ['A', 'B'].map(group => {
-      const rows = computeStandings(group, fixtures);
+      const rows = teams.length ? computeStandings(group, fixtures) : TEAM_SEED[group].map(name => ({ name, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, dg: 0, pts: 0, last: [], tiePending: false }));
       return `<div><div class="wm-section-title">Grupo ${group}</div><div class="wm-table-wrap"><table class="wm-table"><thead><tr><th>#</th><th>Equipo</th><th>P</th><th>W</th><th>D</th><th>L</th><th>DIFF</th><th>GLS</th><th>Last 5</th><th>PTS</th></tr></thead><tbody>${rows.map((r, i) => `<tr class="${isOwnTeam(r.name) ? 'own' : ''}"><td class="wm-pos">${i + 1}</td><td class="wm-team">${esc(r.name)}${isOwnTeam(r.name) ? '<span class="wm-badge">GOLDEN</span>' : ''}${r.tiePending ? '<span class="wm-tie">Desempate pendiente</span>' : ''}</td><td>${r.pj}</td><td>${r.g}</td><td>${r.e}</td><td>${r.p}</td><td>${r.dg > 0 ? '+' : ''}${r.dg}</td><td>${r.gf}:${r.gc}</td><td>${last5Html(r)}</td><td><strong>${r.pts}</strong></td></tr>`).join('')}</tbody></table></div></div>`;
     }).join('');
   }
@@ -407,24 +480,27 @@
     const target = document.getElementById('wmMatches');
     if (!target) return;
     const roundValue = document.getElementById('wmRoundFilter')?.value || 'all';
-    let rows = fixtures.filter(m => currentFilter === 'all' || m.phase === currentFilter).filter(m => roundValue === 'all' || String(m.jornada) === String(roundValue));
+    const sourceRows = fixtures.length ? fixtures : officialPreviewRows();
+    let rows = sourceRows.filter(m => currentFilter === 'all' || m.phase === currentFilter).filter(m => roundValue === 'all' || String(m.jornada) === String(roundValue));
     if (currentTeamFilter === 'own') rows = rows.filter(m => isOwnTeam(teamName(m.home_team_id, m.home_team_label)) || isOwnTeam(teamName(m.away_team_id, m.away_team_label)));
     if (!rows.length) { target.innerHTML = '<div class="wm-empty">No hay partidos para este filtro.</div>'; return; }
     const grouped = {};
     rows.forEach(m => { const key = `${m.jornada}|${m.phase}`; (grouped[key] ||= []).push(m); });
-    target.innerHTML = Object.entries(grouped).map(([key, list]) => {
+    const previewNote = fixtures.length ? '' : '<div class="wm-warning"><strong>Vista previa oficial:</strong> estos partidos vienen del fixture SofaScore pegado por la administradora. Usa Cargar fixture oficial para guardarlos y registrar resultados.</div>';
+    target.innerHTML = previewNote + Object.entries(grouped).map(([key, list]) => {
       const [jornada, phase] = key.split('|');
       return `<div class="wm-phase" style="margin:12px 0 7px">Jornada ${jornada} - ${phase === 'regular' ? 'Fase regular' : 'Definiciones'}</div>${list.map(matchCard).join('')}`;
     }).join('');
-    target.querySelectorAll('[data-wm-match]').forEach(el => el.addEventListener('click', () => openMatchModal(fixtures.find(m => m.id === el.dataset.wmMatch))));
+    target.querySelectorAll('[data-wm-match]').forEach(el => el.addEventListener('click', () => openMatchModal(fixtures.find(m => String(m.id) === String(el.dataset.wmMatch)))));
   }
   function matchCard(match) {
     const home = teamName(match.home_team_id, match.home_team_label);
     const away = teamName(match.away_team_id, match.away_team_label);
     const completed = isCompleted(match);
-    const score = completed ? `${match.home_goals} - ${match.away_goals}` : 'Pendiente';
+    const score = match.preview ? 'Programado' : (completed ? `${match.home_goals} - ${match.away_goals}` : 'Pendiente');
     const penalty = completed && match.home_goals === match.away_goals && match.home_penalties != null ? `<div class="wm-muted">Penales ${match.home_penalties} - ${match.away_penalties}</div>` : '';
-    return `<div class="wm-match ${isOwnTeam(home) || isOwnTeam(away) ? 'own' : ''} ${match.phase === 'final' ? (match.competition === 'Copa Oro' ? 'wm-cup' : 'wm-cup silver') : ''}" data-wm-match="${esc(match.id)}"><div class="wm-match-date">${esc(fmtDate(match.scheduled_date, match.date_label, match.scheduled_time))}<br>${match.competition === 'Copa Oro' ? 'ORO' : match.competition === 'Copa Plata' ? 'PLATA' : esc(match.competition || '')}</div><div class="wm-match-teams"><strong>${esc(home)}</strong><br>${esc(away)}</div><div class="wm-match-score ${completed ? '' : 'pending'}">${score}${penalty}</div></div>`;
+    const dataAttr = match.preview ? '' : ` data-wm-match="${esc(match.id)}"`;
+    return `<div class="wm-match ${match.preview ? 'preview' : ''} ${isOwnTeam(home) || isOwnTeam(away) ? 'own' : ''} ${match.phase === 'final' ? (match.competition === 'Copa Oro' ? 'wm-cup' : 'wm-cup silver') : ''}"${dataAttr}><div class="wm-match-date">${esc(fmtDate(match.scheduled_date, match.date_label, match.scheduled_time))}<br>${match.competition === 'Copa Oro' ? 'ORO' : match.competition === 'Copa Plata' ? 'PLATA' : esc(match.competition || '')}</div><div class="wm-match-teams"><strong>${esc(home)}</strong><br>${esc(away)}</div><div class="wm-match-score ${completed ? '' : 'pending'}">${score}${penalty}</div></div>`;
   }
   function openMatchModal(match) {
     if (!match) return;
