@@ -29,11 +29,11 @@ DTSTAMP:20260812T120000Z
 DTSTART;TZID=America/Santiago:20260827T200000
 DTEND;TZID=America/Santiago:20260827T213000
 SUMMARY:Golden Dream vs The British Queens
-DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 1\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nLogo del equipo: https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp\nJornada 1\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
 LOCATION:Lugar por confirmar
 URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream-calendario.html
-IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213492/image
-ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213492/image
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
+ATTACH;VALUE=URI:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
 BEGIN:VALARM
 TRIGGER:-P1D
 ACTION:DISPLAY
@@ -51,11 +51,11 @@ DTSTAMP:20260812T120000Z
 DTSTART;TZID=America/Santiago:20260903T210000
 DTEND;TZID=America/Santiago:20260903T223000
 SUMMARY:Golden Dream vs Pedro Pé
-DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 2\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nLogo del equipo: https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp\nJornada 2\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
 LOCATION:Lugar por confirmar
 URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream-calendario.html
-IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213492/image
-ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213492/image
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
+ATTACH;VALUE=URI:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
 BEGIN:VALARM
 TRIGGER:-P1D
 ACTION:DISPLAY
@@ -73,11 +73,11 @@ DTSTAMP:20260812T120000Z
 DTSTART;TZID=America/Santiago:20260910T200000
 DTEND;TZID=America/Santiago:20260910T213000
 SUMMARY:Golden Dream vs Golden Power
-DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 3\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nLogo del equipo: https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp\nJornada 3\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
 LOCATION:Lugar por confirmar
 URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream-calendario.html
-IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213492/image
-ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213492/image
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
+ATTACH;VALUE=URI:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
 BEGIN:VALARM
 TRIGGER:-P1D
 ACTION:DISPLAY
@@ -95,11 +95,11 @@ DTSTAMP:20260812T120000Z
 DTSTART;TZID=America/Santiago:20260924T210000
 DTEND;TZID=America/Santiago:20260924T223000
 SUMMARY:Golden Dream vs Les Guerrieres
-DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 4\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nLogo del equipo: https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp\nJornada 4\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
 LOCATION:Lugar por confirmar
 URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream-calendario.html
-IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213492/image
-ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213492/image
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
+ATTACH;VALUE=URI:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
 BEGIN:VALARM
 TRIGGER:-P1D
 ACTION:DISPLAY
@@ -117,11 +117,11 @@ DTSTAMP:20260812T120000Z
 DTSTART;TZID=America/Santiago:20261001T200000
 DTEND;TZID=America/Santiago:20261001T213000
 SUMMARY:Golden Dream vs Osas de Ossó
-DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 5\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nLogo del equipo: https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp\nJornada 5\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
 LOCATION:Lugar por confirmar
 URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream-calendario.html
-IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213492/image
-ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213492/image
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
+ATTACH;VALUE=URI:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
 BEGIN:VALARM
 TRIGGER:-P1D
 ACTION:DISPLAY
@@ -139,11 +139,11 @@ DTSTAMP:20260812T120000Z
 DTSTART;TZID=America/Santiago:20261008T210000
 DTEND;TZID=America/Santiago:20261008T223000
 SUMMARY:Golden Dream vs SNM Queens
-DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 6\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nLogo del equipo: https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp\nJornada 6\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
 LOCATION:Lugar por confirmar
 URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream-calendario.html
-IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213492/image
-ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213492/image
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
+ATTACH;VALUE=URI:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
 BEGIN:VALARM
 TRIGGER:-P1D
 ACTION:DISPLAY
@@ -161,11 +161,11 @@ DTSTAMP:20260812T120000Z
 DTSTART;TZID=America/Santiago:20261015T200000
 DTEND;TZID=America/Santiago:20261015T213000
 SUMMARY:Golden Dream vs Las Juanas
-DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 7\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nLogo del equipo: https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp\nJornada 7\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
 LOCATION:Lugar por confirmar
 URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream-calendario.html
-IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213492/image
-ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213492/image
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
+ATTACH;VALUE=URI:https://nmillana.github.io/GoldenMoms2/calendarios/golden-dream.webp
 BEGIN:VALARM
 TRIGGER:-P1D
 ACTION:DISPLAY
