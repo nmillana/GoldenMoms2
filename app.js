@@ -2448,12 +2448,14 @@ document.getElementById('btnExportRoster').addEventListener('click', exportRoste
 /* ═══════════════════════════════════════════════════════════
    NOTIFICACIONES — PENDIENTES DE CONFIRMAR ASISTENCIA
    ══════════════════════════════════════════════════════════ */
+const PENDING_ATTENDANCE_DAYS = 90;
+
 async function loadNotificationsAdmin() {
   if(!supa || !IS_CONNECTED) return;
   try {
     const now = new Date();
-    // Fetch upcoming events (next 14 days) that have attendance records
-    const future = new Date(now); future.setDate(future.getDate() + 14);
+    // Fetch upcoming events that have attendance records
+    const future = new Date(now); future.setDate(future.getDate() + PENDING_ATTENDANCE_DAYS);
     const { data:events } = await supa.from('events')
       .select('id, title, datetime, team, type')
       .gte('datetime', now.toISOString())
@@ -4395,7 +4397,7 @@ function showLogoutMenu() {
   }
 }
 
-async function getCurrentUserPendingAttendance(daysAhead = 14) {
+async function getCurrentUserPendingAttendance(daysAhead = PENDING_ATTENDANCE_DAYS) {
   if(!supa || !IS_CONNECTED || !currentUser?.player_id) return [];
   const now = new Date();
   const future = new Date(now);
@@ -4442,7 +4444,7 @@ async function renderPlayerDash() {
   const pid = currentUser.player_id;
 
   try {
-    const pendingAtt = await getCurrentUserPendingAttendance(14);
+    const pendingAtt = await getCurrentUserPendingAttendance(PENDING_ATTENDANCE_DAYS);
     if(pendingAtt.length) {
       items.push({
         icon:'&#x23F3;',
@@ -4521,7 +4523,7 @@ async function loadNotifications() {
     return;
   }
   try {
-    const pending = await getCurrentUserPendingAttendance(14);
+    const pending = await getCurrentUserPendingAttendance(PENDING_ATTENDANCE_DAYS);
     updateBell(pending);
   } catch(err){ console.warn('loadNotifications', err); }
 }
