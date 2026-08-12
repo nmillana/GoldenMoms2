@@ -1,0 +1,180 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Golden Moms//Wonder Moms Cup 2026//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Golden Power · Wonder Moms Cup 2026
+X-WR-TIMEZONE:America/Santiago
+BEGIN:VTIMEZONE
+TZID:America/Santiago
+X-LIC-LOCATION:America/Santiago
+BEGIN:STANDARD
+TZOFFSETFROM:-0300
+TZOFFSETTO:-0400
+TZNAME:-04
+DTSTART:20260405T000000
+RRULE:FREQ=YEARLY;BYMONTH=4;BYDAY=1SU
+END:STANDARD
+BEGIN:DAYLIGHT
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0300
+TZNAME:-03
+DTSTART:20260906T000000
+RRULE:FREQ=YEARLY;BYMONTH=9;BYDAY=1SU
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:golden-power-j1@golden-moms
+DTSTAMP:20260812T120000Z
+DTSTART;TZID=America/Santiago:20260827T210000
+DTEND;TZID=America/Santiago:20260827T223000
+SUMMARY:Golden Power vs SNM Queens
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 1\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+LOCATION:Lugar por confirmar
+URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-power.html
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213486/image
+ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213486/image
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs SNM Queens mañana
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT2H
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs SNM Queens en 2 horas
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:golden-power-j2@golden-moms
+DTSTAMP:20260812T120000Z
+DTSTART;TZID=America/Santiago:20260903T200000
+DTEND;TZID=America/Santiago:20260903T213000
+SUMMARY:Golden Power vs The British Queens
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 2\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+LOCATION:Lugar por confirmar
+URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-power.html
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213486/image
+ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213486/image
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs The British Queens mañana
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT2H
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs The British Queens en 2 horas
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:golden-power-j3@golden-moms
+DTSTAMP:20260812T120000Z
+DTSTART;TZID=America/Santiago:20260910T200000
+DTEND;TZID=America/Santiago:20260910T213000
+SUMMARY:Golden Power vs Golden Dream
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 3\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+LOCATION:Lugar por confirmar
+URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-power.html
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213486/image
+ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213486/image
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs Golden Dream mañana
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT2H
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs Golden Dream en 2 horas
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:golden-power-j4@golden-moms
+DTSTAMP:20260812T120000Z
+DTSTART;TZID=America/Santiago:20260924T200000
+DTEND;TZID=America/Santiago:20260924T213000
+SUMMARY:Golden Power vs Osas de Ossó
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 4\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+LOCATION:Lugar por confirmar
+URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-power.html
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213486/image
+ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213486/image
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs Osas de Ossó mañana
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT2H
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs Osas de Ossó en 2 horas
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:golden-power-j5@golden-moms
+DTSTAMP:20260812T120000Z
+DTSTART;TZID=America/Santiago:20261001T210000
+DTEND;TZID=America/Santiago:20261001T223000
+SUMMARY:Golden Power vs Las Juanas
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 5\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+LOCATION:Lugar por confirmar
+URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-power.html
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213486/image
+ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213486/image
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs Las Juanas mañana
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT2H
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs Las Juanas en 2 horas
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:golden-power-j6@golden-moms
+DTSTAMP:20260812T120000Z
+DTSTART;TZID=America/Santiago:20261008T200000
+DTEND;TZID=America/Santiago:20261008T213000
+SUMMARY:Golden Power vs Pedro Pé
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 6\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+LOCATION:Lugar por confirmar
+URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-power.html
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213486/image
+ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213486/image
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs Pedro Pé mañana
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT2H
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs Pedro Pé en 2 horas
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:golden-power-j7@golden-moms
+DTSTAMP:20260812T120000Z
+DTSTART;TZID=America/Santiago:20261015T210000
+DTEND;TZID=America/Santiago:20261015T223000
+SUMMARY:Golden Power vs Les Guerrieres
+DESCRIPTION:Wonder Moms Cup Clausura 2026\nJornada 7\nHorario de Chile\n\nDuración referencial: 90 minutos. Puedes editarla.
+LOCATION:Lugar por confirmar
+URL:https://nmillana.github.io/GoldenMoms2/calendarios/golden-power.html
+IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/webp:https://img.sofascore.com/api/v1/team/1213486/image
+ATTACH;VALUE=URI:https://img.sofascore.com/api/v1/team/1213486/image
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs Les Guerrieres mañana
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT2H
+ACTION:DISPLAY
+DESCRIPTION:Golden Power vs Les Guerrieres en 2 horas
+END:VALARM
+END:VEVENT
+END:VCALENDAR
