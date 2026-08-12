@@ -81,8 +81,8 @@
   let selectedTournamentId = null;
   let teams = [];
   let fixtures = [];
-  let currentFilter = 'all';
   let currentTeamFilter = 'all';
+  let currentRoundFilter = null;
 
   function esc(value) {
     return String(value == null ? '' : value)
@@ -228,7 +228,6 @@
       .wm-btn.primary:hover{background:var(--lime-dark,#3a7c11);border-color:var(--lime-dark,#3a7c11)}
       .wm-btn.dark{background:var(--navy,#1e3a5f);border-color:var(--navy,#1e3a5f);color:#fff}
       .wm-select{border:1px solid var(--line-2,#d8e0ea);border-radius:var(--r-sm,10px);background:var(--surface,#fff);color:var(--ink,#1a2332);padding:8px 10px;font-size:12px;min-width:135px}
-      .wm-warning{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:var(--r-sm,10px);padding:10px;font-size:11px;line-height:1.45;margin-bottom:12px}
       .wm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
       .wm-section-title{font:800 14px var(--font-head,Arial);margin-bottom:9px;color:var(--ink,#1a2332)}
       .wm-table-wrap{overflow-x:auto;border:1px solid var(--line-2,#d8e0ea);border-radius:var(--r-sm,10px)}
@@ -272,7 +271,26 @@
       .wm-help{font-size:11px;color:var(--muted,#718096);line-height:1.45;margin-top:8px}
       .wm-rules{border:1px solid var(--line-2,#d8e0ea);border-radius:var(--r-sm,10px);padding:10px;margin-top:10px;background:var(--surface-2,#f9fafb);font-size:11px;color:var(--muted,#718096)}
       .wm-rules summary{font-weight:900;color:var(--ink,#1a2332);cursor:pointer}
-      @media(max-width:600px){.wm-grid{grid-template-columns:1fr}.wm-match{grid-template-columns:58px 1fr 58px}.wm-match-teams{font-size:11px}.wm-table{min-width:0}.wm-table th:nth-child(4),.wm-table td:nth-child(4),.wm-table th:nth-child(5),.wm-table td:nth-child(5),.wm-table th:nth-child(6),.wm-table td:nth-child(6),.wm-table th:nth-child(7),.wm-table td:nth-child(7),.wm-table th:nth-child(8),.wm-table td:nth-child(8),.wm-table th:nth-child(9),.wm-table td:nth-child(9){display:none}.wm-table th,.wm-table td{padding:8px 4px}.wm-team{white-space:normal}}
+      .wm-round-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+      .wm-round-title{font:900 16px var(--font-head,Arial);color:var(--ink,#1a2332)}
+      .wm-round-sub{font-size:11px;color:var(--muted,#718096);margin-top:2px}
+      .wm-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;margin:2px -2px 8px;scrollbar-width:none}
+      .wm-tabs::-webkit-scrollbar{display:none}
+      .wm-round-tab{flex:0 0 auto;border:1px solid var(--line-2,#d8e0ea);background:var(--surface,#fff);color:var(--ink,#1a2332);border-radius:999px;padding:7px 11px;font:800 11px var(--font-head,Arial);cursor:pointer}
+      .wm-round-tab[aria-selected="true"]{background:var(--lime,#6db33f);border-color:var(--lime,#6db33f);color:#fff}
+      .wm-current{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(210px,.75fr);gap:12px;align-items:start}
+      .wm-day-panel,.wm-agenda{border:1px solid var(--line-2,#d8e0ea);border-radius:var(--r-sm,10px);background:var(--surface,#fff);padding:11px}
+      .wm-time-block+.wm-time-block{margin-top:12px}
+      .wm-time-label{display:flex;align-items:center;gap:7px;color:var(--lime-dark,#3a7c11);font-size:12px;font-weight:900;margin:0 0 6px}
+      .wm-time-label::before{content:'';width:7px;height:7px;border-radius:999px;background:currentColor}
+      .wm-agenda-title{font:900 14px var(--font-head,Arial);color:var(--ink,#1a2332)}
+      .wm-agenda-match{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--line,#e8edf4)}
+      .wm-agenda-match:first-of-type{margin-top:9px}
+      .wm-agenda-time{color:var(--lime-dark,#3a7c11);font-size:11px;font-weight:900;text-align:center}
+      .wm-agenda-teams{font-size:11px;line-height:1.45;min-width:0}
+      .wm-agenda-teams div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .wm-agenda-note{margin-top:10px;border-left:3px solid var(--lime,#6db33f);background:var(--surface-2,#f9fafb);color:var(--muted,#718096);font-size:11px;line-height:1.45;padding:9px 10px}
+      @media(max-width:600px){.wm-grid,.wm-current{grid-template-columns:1fr}.wm-match{grid-template-columns:52px 1fr 58px}.wm-match-teams{font-size:11px}.wm-table{min-width:0}.wm-table th:nth-child(4),.wm-table td:nth-child(4),.wm-table th:nth-child(5),.wm-table td:nth-child(5),.wm-table th:nth-child(6),.wm-table td:nth-child(6),.wm-table th:nth-child(7),.wm-table td:nth-child(7),.wm-table th:nth-child(8),.wm-table td:nth-child(8),.wm-table th:nth-child(9),.wm-table td:nth-child(9){display:none}.wm-table th,.wm-table td{padding:8px 4px}.wm-team{white-space:normal}}
     `;
     document.head.appendChild(style);
   }
@@ -297,6 +315,25 @@
         <div class="wm-title">Golden Dream y Golden Power</div>
         <div id="wmSummary" class="wm-muted">Fixture oficial de fase regular.</div>
       </div>
+      <div class="wm-card">
+        <div class="wm-section-title">Tabla fase regular</div>
+        <div id="wmStandings" class="wm-grid"><div class="wm-empty">Todavia no hay datos cargados.</div></div>
+        <details class="wm-rules"><summary>Reglas y leyenda</summary><div style="margin-top:8px;line-height:1.7">PJ: jugados - G: ganados - E: empatados - P: perdidos - DIF: diferencia - GF:GC: goles - Pts: puntos.</div><div style="line-height:1.7">Orden: puntos, diferencia de goles, goles a favor, resultado entre involucrados y sorteo. Si el sorteo aun no existe, la app marca <strong>Desempate pendiente</strong>.</div></details>
+      </div>
+      <div class="wm-card">
+        <div class="wm-round-head">
+          <div>
+            <div class="wm-section-title" style="margin-bottom:0">Calendario y resultados</div>
+            <div id="wmRoundMeta" class="wm-round-sub">Selecciona una jornada.</div>
+          </div>
+          <select id="wmTeamFilter" class="wm-select"><option value="all">Todos los equipos</option><option value="own">Golden Dream y Power</option></select>
+        </div>
+        <div id="wmRoundTabs" class="wm-tabs" role="tablist" aria-label="Jornadas del fixture"></div>
+        <div class="wm-current">
+          <section id="wmMatches" class="wm-day-panel" aria-live="polite"></section>
+          <aside id="wmAgenda" class="wm-agenda" aria-live="polite"></aside>
+        </div>
+      </div>
       <details class="wm-card wm-admin" id="wmAdminPanel">
         <summary>Administracion</summary>
         <div class="wm-admin-body">
@@ -307,27 +344,12 @@
             <label class="wm-muted" style="display:flex;align-items:center;gap:5px">Final <input id="wmFinalDate" class="wm-input" style="width:145px;padding:7px" type="date"></label>
           </div>
         </div>
-      </details>
-      <div class="wm-warning"><strong>Fixture oficial:</strong> 7 jornadas confirmadas. Definiciones finales por confirmar en SofaScore.</div>
-      <div class="wm-card">
-        <div class="wm-section-title">Tabla fase regular</div>
-        <div id="wmStandings" class="wm-grid"><div class="wm-empty">Todavia no hay datos cargados.</div></div>
-        <details class="wm-rules"><summary>Reglas y leyenda</summary><div style="margin-top:8px;line-height:1.7">PJ: jugados - G: ganados - E: empatados - P: perdidos - DIF: diferencia - GF:GC: goles - Pts: puntos.</div><div style="line-height:1.7">Orden: puntos, diferencia de goles, goles a favor, resultado entre involucrados y sorteo. Si el sorteo aun no existe, la app marca <strong>Desempate pendiente</strong>.</div></details>
-      </div>
-      <div class="wm-card">
-        <div class="wm-section-title">Calendario y resultados</div>
-        <div class="wm-filters">
-          <select id="wmPhaseFilter" class="wm-select"><option value="all">Todas las fases</option><option value="regular">Fase regular</option><option value="final">Definiciones</option></select>
-          <select id="wmTeamFilter" class="wm-select"><option value="all">Todos los equipos</option><option value="own">Golden Dream y Power</option></select>
-          <select id="wmRoundFilter" class="wm-select"><option value="all">Todas las jornadas</option></select>
-        </div>
-        <div id="wmMatches" style="margin-top:12px"></div>
-      </div>`;
+      </details>`;
     host.insertBefore(panel, host.firstChild);
     document.getElementById('wmSetup').addEventListener('click', setupTournament);
     document.getElementById('wmFinals').addEventListener('click', updateFinalFixtures);
     document.getElementById('wmRefresh').addEventListener('click', loadCurrent);
-    ['wmPhaseFilter','wmTeamFilter','wmRoundFilter'].forEach(id => document.getElementById(id).addEventListener('change', () => { currentFilter = document.getElementById('wmPhaseFilter').value; currentTeamFilter = document.getElementById('wmTeamFilter').value; render(); }));
+    document.getElementById('wmTeamFilter').addEventListener('change', () => { currentTeamFilter = document.getElementById('wmTeamFilter').value; render(); });
     return panel;
   }
   async function connect() {
@@ -521,28 +543,20 @@
     if (!panel) return;
     const completed = fixtures.filter(isCompleted).length;
     const regularCount = fixtures.filter(m => m.phase === 'regular').length;
-    const finalCount = fixtures.filter(m => m.phase === 'final').length;
     hideLegacyTournamentUi();
     const adminPanel = document.getElementById('wmAdminPanel');
     if (adminPanel) adminPanel.hidden = !canManageTournament();
     const summary = document.getElementById('wmSummary');
     if (summary) {
       if (!fixtures.length) {
-        summary.textContent = `${Object.values(TEAM_SEED).flat().length} equipos previstos - ${OFFICIAL_FIXTURES.length} partidos oficiales listos para cargar - fecha final por confirmar`;
+        summary.textContent = `${OFFICIAL_FIXTURES.length} partidos oficiales listos para cargar`;
       } else {
-        summary.textContent = `${teams.length} equipos - ${regularCount} partidos de fase regular - ${finalCount} definiciones - ${completed} resultados registrados`;
+        summary.textContent = `Fase regular cargada - ${completed} resultados registrados`;
       }
     }
     const finalDate = fixtures.find(m => m.phase === 'final' && m.scheduled_date)?.scheduled_date;
     const finalDateInput = document.getElementById('wmFinalDate');
     if (finalDateInput && finalDate && !finalDateInput.value) finalDateInput.value = finalDate;
-    const round = document.getElementById('wmRoundFilter');
-    if (round) {
-      const selected = round.value || 'all';
-      const roundRows = fixtures.length ? fixtures : officialPreviewRows();
-      round.innerHTML = '<option value="all">Todas las jornadas</option>' + [...new Set(roundRows.map(m => m.jornada))].sort((a,b) => a-b).map(n => `<option value="${n}">Jornada ${n}</option>`).join('');
-      round.value = [...round.options].some(option => option.value === selected) ? selected : 'all';
-    }
     renderStandings();
     renderMatches();
   }
@@ -558,31 +572,94 @@
       return `<div><div class="wm-section-title">Grupo ${group}</div><div class="wm-table-wrap"><table class="wm-table"><thead><tr><th>#</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DIF</th><th>GF:GC</th><th>Racha</th><th>Pts</th></tr></thead><tbody>${rows.map((r, i) => `<tr class="${isOwnTeam(r.name) ? 'own' : ''}"><td class="wm-pos">${i + 1}</td><td class="wm-team">${esc(r.name)}${isOwnTeam(r.name) ? '<span class="wm-badge">GOLDEN</span>' : ''}${r.tiePending ? '<span class="wm-tie">Desempate pendiente</span>' : ''}</td><td>${r.pj}</td><td>${r.g}</td><td>${r.e}</td><td>${r.p}</td><td>${r.dg > 0 ? '+' : ''}${r.dg}</td><td>${r.gf}:${r.gc}</td><td>${last5Html(r)}</td><td><strong>${r.pts}</strong></td></tr>`).join('')}</tbody></table></div></div>`;
     }).join('');
   }
+  function matchGroupLabel(match) {
+    const matchText = String(match.competition || '');
+    const groupMatch = matchText.match(/Grupo\s+([A-Z])/i);
+    if (groupMatch) return 'Grupo ' + groupMatch[1].toUpperCase();
+    if (match.competition === 'Copa Oro') return 'Oro';
+    if (match.competition === 'Copa Plata') return 'Plata';
+    return match.phase === 'final' ? 'Definicion' : '';
+  }
+  function matchTeams(match) {
+    return {
+      home: teamName(match.home_team_id, match.home_team_label),
+      away: teamName(match.away_team_id, match.away_team_label)
+    };
+  }
+  function isOwnMatchRow(match) {
+    const names = matchTeams(match);
+    return isOwnTeam(names.home) || isOwnTeam(names.away);
+  }
+  function roundTabLabel(jornada, rows) {
+    const hasFinal = rows.some(match => match.phase === 'final');
+    return hasFinal ? 'Def.' : 'J' + jornada;
+  }
+  function defaultRound(rows) {
+    if (!rows.length) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const upcoming = rows
+      .filter(match => match.scheduled_date && String(match.scheduled_date) >= today)
+      .sort((a, b) => String(a.scheduled_date).localeCompare(String(b.scheduled_date)) || Number(a.jornada) - Number(b.jornada))[0];
+    return upcoming ? upcoming.jornada : rows[rows.length - 1].jornada;
+  }
+  function renderRoundTabs(rows) {
+    const target = document.getElementById('wmRoundTabs');
+    if (!target) return;
+    const grouped = [...new Map(rows.map(match => [String(match.jornada), { jornada: match.jornada, rows: rows.filter(item => String(item.jornada) === String(match.jornada)) }])).values()]
+      .sort((a, b) => Number(a.jornada) - Number(b.jornada));
+    if (!grouped.length) { target.innerHTML = ''; currentRoundFilter = null; return; }
+    if (!grouped.some(group => String(group.jornada) === String(currentRoundFilter))) currentRoundFilter = defaultRound(rows);
+    target.innerHTML = grouped.map(group => `<button class="wm-round-tab" type="button" role="tab" aria-selected="${String(group.jornada) === String(currentRoundFilter) ? 'true' : 'false'}" data-wm-round="${esc(group.jornada)}">${esc(roundTabLabel(group.jornada, group.rows))}</button>`).join('');
+    target.querySelectorAll('[data-wm-round]').forEach(button => button.addEventListener('click', () => {
+      currentRoundFilter = button.dataset.wmRound;
+      renderMatches();
+    }));
+  }
+  function renderAgenda(roundRows) {
+    const target = document.getElementById('wmAgenda');
+    if (!target) return;
+    const ownRows = roundRows.filter(isOwnMatchRow).sort(matchSort);
+    target.innerHTML = '<div class="wm-agenda-title">Nuestra agenda</div><div class="wm-muted" style="margin-top:3px">Golden Dream y Golden Power en esta jornada.</div>' +
+      (ownRows.length ? ownRows.map(match => {
+        const names = matchTeams(match);
+        return `<div class="wm-agenda-match"><div class="wm-agenda-time">${esc(fmtTime(match.scheduled_time) || '')}</div><div class="wm-agenda-teams"><div><strong>${esc(names.home)}</strong></div><div>${esc(names.away)}</div></div></div>`;
+      }).join('') : '<div class="wm-empty">Sin partido de Golden Dream o Golden Power.</div>') +
+      '<div class="wm-agenda-note"><strong>Despues del partido:</strong> la administradora registra el resultado y queda como antecedente para mirar rendimiento de los otros equipos.</div>';
+  }
+  function matchSort(a, b) {
+    return String(fmtTime(a.scheduled_time)).localeCompare(String(fmtTime(b.scheduled_time))) || String(matchGroupLabel(a)).localeCompare(String(matchGroupLabel(b))) || String(teamName(a.home_team_id, a.home_team_label)).localeCompare(String(teamName(b.home_team_id, b.home_team_label)));
+  }
   function renderMatches() {
     const target = document.getElementById('wmMatches');
     if (!target) return;
-    const roundValue = document.getElementById('wmRoundFilter')?.value || 'all';
     const sourceRows = fixtures.length ? fixtures : officialPreviewRows();
-    let rows = sourceRows.filter(m => currentFilter === 'all' || m.phase === currentFilter).filter(m => roundValue === 'all' || String(m.jornada) === String(roundValue));
-    if (currentTeamFilter === 'own') rows = rows.filter(m => isOwnTeam(teamName(m.home_team_id, m.home_team_label)) || isOwnTeam(teamName(m.away_team_id, m.away_team_label)));
-    if (!rows.length) { target.innerHTML = '<div class="wm-empty">No hay partidos para este filtro.</div>'; return; }
-    const grouped = {};
-    rows.forEach(m => { const key = `${m.jornada}|${m.phase}`; (grouped[key] ||= []).push(m); });
-    const previewNote = fixtures.length ? '' : '<div class="wm-warning"><strong>Vista previa oficial:</strong> estos partidos vienen del fixture SofaScore pegado por la administradora. Abre Administracion para guardarlos y registrar resultados.</div>';
-    target.innerHTML = previewNote + Object.entries(grouped).map(([key, list]) => {
-      const [jornada, phase] = key.split('|');
-      return `<div class="wm-phase" style="margin:12px 0 7px">Jornada ${jornada} - ${phase === 'regular' ? 'Fase regular' : 'Definiciones'}</div>${list.map(matchCard).join('')}`;
-    }).join('');
+    const rowsForTabs = sourceRows.sort((a, b) => Number(a.jornada) - Number(b.jornada));
+    renderRoundTabs(rowsForTabs);
+    const selectedRound = currentRoundFilter;
+    const roundRows = rowsForTabs.filter(match => String(match.jornada) === String(selectedRound)).sort(matchSort);
+    let visibleRows = roundRows;
+    if (currentTeamFilter === 'own') visibleRows = visibleRows.filter(isOwnMatchRow);
+    const meta = document.getElementById('wmRoundMeta');
+    if (meta) {
+      const first = roundRows[0];
+      const roundName = first?.phase === 'final' ? 'Definiciones' : `Jornada ${selectedRound || ''}`;
+      meta.textContent = first ? `${roundName} - ${fmtDate(first.scheduled_date, first.date_label)} - ${roundRows.length} partidos` : 'Selecciona una jornada.';
+    }
+    renderAgenda(roundRows);
+    if (!visibleRows.length) { target.innerHTML = '<div class="wm-empty">No hay partidos para esta vista.</div>'; return; }
+    const byTime = {};
+    visibleRows.forEach(match => { const key = fmtTime(match.scheduled_time) || 'Hora por confirmar'; (byTime[key] ||= []).push(match); });
+    target.innerHTML = Object.entries(byTime).map(([time, list]) => `<div class="wm-time-block"><div class="wm-time-label">${esc(time)}</div>${list.map(matchCard).join('')}</div>`).join('');
     target.querySelectorAll('[data-wm-match]').forEach(el => el.addEventListener('click', () => openMatchModal(fixtures.find(m => String(m.id) === String(el.dataset.wmMatch)))));
   }
   function matchCard(match) {
-    const home = teamName(match.home_team_id, match.home_team_label);
-    const away = teamName(match.away_team_id, match.away_team_label);
+    const names = matchTeams(match);
     const completed = isCompleted(match);
     const score = match.preview ? 'Programado' : (completed ? `${match.home_goals} - ${match.away_goals}` : 'Pendiente');
     const penalty = completed && match.home_goals === match.away_goals && match.home_penalties != null ? `<div class="wm-muted">Penales ${match.home_penalties} - ${match.away_penalties}</div>` : '';
     const dataAttr = match.preview ? '' : ` data-wm-match="${esc(match.id)}"`;
-    return `<div class="wm-match ${match.preview ? 'preview' : ''} ${isOwnTeam(home) || isOwnTeam(away) ? 'own' : ''} ${match.phase === 'final' ? (match.competition === 'Copa Oro' ? 'wm-cup' : 'wm-cup silver') : ''}"${dataAttr}><div class="wm-match-date">${esc(fmtDate(match.scheduled_date, match.date_label, match.scheduled_time))}<br>${match.competition === 'Copa Oro' ? 'ORO' : match.competition === 'Copa Plata' ? 'PLATA' : esc(match.competition || '')}</div><div class="wm-match-teams"><strong>${esc(home)}</strong><br>${esc(away)}</div><div class="wm-match-score ${completed ? '' : 'pending'}">${score}${penalty}</div></div>`;
+    const group = matchGroupLabel(match);
+    return `<div class="wm-match ${match.preview ? 'preview' : ''} ${isOwnMatchRow(match) ? 'own' : ''} ${match.phase === 'final' ? (match.competition === 'Copa Oro' ? 'wm-cup' : 'wm-cup silver') : ''}"${dataAttr}><div class="wm-match-date">${esc(fmtTime(match.scheduled_time) || '')}<br>${esc(group)}</div><div class="wm-match-teams"><strong>${esc(names.home)}</strong><br>${esc(names.away)}</div><div class="wm-match-score ${completed ? '' : 'pending'}">${score}${penalty}</div></div>`;
   }
   function openMatchModal(match) {
     if (!match) return;
