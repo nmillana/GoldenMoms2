@@ -9,7 +9,7 @@
   const VENUE = 'Zapping Sport Center - Club Palestino';
   const FINAL_DATE_LABEL = 'Definiciones por confirmar en SofaScore';
   const REGULAR_DATES = [
-    '2026-09-03', '2026-09-10', '2026-09-17', '2026-10-01',
+    '2026-09-03', '2026-09-10', '2026-09-24', '2026-10-01',
     '2026-10-08', '2026-10-15', '2026-10-22'
   ];
   const TEAM_SEED = {
@@ -33,14 +33,14 @@
     { jornada: 2, date: '2026-09-10', time: '21:00', group: 'A', home: 'Golden Dream', away: 'Pedro Pé' },
     { jornada: 2, date: '2026-09-10', time: '21:00', group: 'B', home: 'Mamurris', away: 'Queenlastair' },
     { jornada: 2, date: '2026-09-10', time: '21:00', group: 'B', home: 'Panteras', away: 'New Reds' },
-    { jornada: 3, date: '2026-09-17', time: '20:00', group: 'A', home: 'Golden Dream', away: 'Golden Power' },
-    { jornada: 3, date: '2026-09-17', time: '20:00', group: 'A', home: 'Pedro Pé', away: 'Les Guerrieres' },
-    { jornada: 3, date: '2026-09-17', time: '20:00', group: 'B', home: 'Mamurris', away: 'Ssoccer Moms' },
-    { jornada: 3, date: '2026-09-17', time: '20:00', group: 'B', home: 'New Reds', away: 'Mamajuana' },
-    { jornada: 3, date: '2026-09-17', time: '20:00', group: 'B', home: 'Panteras', away: 'Queenlastair' },
-    { jornada: 3, date: '2026-09-17', time: '21:00', group: 'A', home: 'Las Juanas', away: 'SNM Queens' },
-    { jornada: 3, date: '2026-09-17', time: '21:00', group: 'A', home: 'The British Queens', away: 'Osas de Ossó' },
-    { jornada: 3, date: '2026-09-17', time: '21:00', group: 'B', home: 'Pumahuinas', away: 'Team Dragón' },
+    { jornada: 3, date: '2026-09-24', time: '20:00', group: 'A', home: 'Golden Dream', away: 'Golden Power' },
+    { jornada: 3, date: '2026-09-24', time: '20:00', group: 'A', home: 'Pedro Pé', away: 'Les Guerrieres' },
+    { jornada: 3, date: '2026-09-24', time: '20:00', group: 'B', home: 'Mamurris', away: 'Ssoccer Moms' },
+    { jornada: 3, date: '2026-09-24', time: '20:00', group: 'B', home: 'New Reds', away: 'Mamajuana' },
+    { jornada: 3, date: '2026-09-24', time: '20:00', group: 'B', home: 'Panteras', away: 'Queenlastair' },
+    { jornada: 3, date: '2026-09-24', time: '21:00', group: 'A', home: 'Las Juanas', away: 'SNM Queens' },
+    { jornada: 3, date: '2026-09-24', time: '21:00', group: 'A', home: 'The British Queens', away: 'Osas de Ossó' },
+    { jornada: 3, date: '2026-09-24', time: '21:00', group: 'B', home: 'Pumahuinas', away: 'Team Dragón' },
     { jornada: 4, date: '2026-10-01', time: '20:00', group: 'A', home: 'Golden Power', away: 'Osas de Ossó' },
     { jornada: 4, date: '2026-10-01', time: '20:00', group: 'A', home: 'Las Juanas', away: 'The British Queens' },
     { jornada: 4, date: '2026-10-01', time: '20:00', group: 'A', home: 'SNM Queens', away: 'Pedro Pé' },
