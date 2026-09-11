@@ -646,7 +646,15 @@
       }).join('') : '<div class="wm-empty">Sin partido de Golden Dream o Golden Power.</div>') +
       '<div class="wm-agenda-note"><strong>Despues del partido:</strong> la administradora registra el resultado y queda como antecedente para mirar rendimiento de los otros equipos.</div>';
   }
+  function finalSortValue(match) {
+    if (match.phase !== 'final') return null;
+    const cupOrder = match.competition === 'Copa Oro' ? 0 : match.competition === 'Copa Plata' ? 1 : 2;
+    return cupOrder * 100 + (Number(match.home_rank) || 99);
+  }
   function matchSort(a, b) {
+    const aFinal = finalSortValue(a);
+    const bFinal = finalSortValue(b);
+    if (aFinal !== null || bFinal !== null) return (aFinal ?? 999) - (bFinal ?? 999);
     return String(fmtTime(a.scheduled_time)).localeCompare(String(fmtTime(b.scheduled_time))) || String(matchGroupLabel(a)).localeCompare(String(matchGroupLabel(b))) || String(teamName(a.home_team_id, a.home_team_label)).localeCompare(String(teamName(b.home_team_id, b.home_team_label)));
   }
   function renderMatches() {
