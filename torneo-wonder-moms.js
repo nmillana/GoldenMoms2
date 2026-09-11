@@ -7,7 +7,7 @@
 
   const TOURNAMENT_NAME = "Wonder Mom's Cup Clausura 2026";
   const VENUE = 'Zapping Sport Center - Club Palestino';
-  const FINAL_DATE_LABEL = 'Definiciones por confirmar en SofaScore';
+  const FINAL_DATE_LABEL = 'Definiciones proyectadas - fecha por confirmar';
   const REGULAR_DATES = [
     '2026-09-03', '2026-09-10', '2026-09-24', '2026-10-01',
     '2026-10-08', '2026-10-15', '2026-10-22'
@@ -344,7 +344,7 @@
         <div class="wm-admin-body">
           <div class="wm-actions" style="margin-top:0">
             <button class="wm-btn primary" id="wmSetup">Recargar fixture</button>
-            <button class="wm-btn" id="wmFinals">Recalcular copas</button>
+            <button class="wm-btn" id="wmFinals">Recalcular proyeccion</button>
             <button class="wm-btn" id="wmRefresh">Actualizar datos</button>
             <label class="wm-muted" style="display:flex;align-items:center;gap:5px">Final <input id="wmFinalDate" class="wm-input" style="width:145px;padding:7px" type="date"></label>
           </div>
@@ -518,24 +518,39 @@
       { competition: 'Copa Plata', rank: 5 }, { competition: 'Copa Plata', rank: 6 },
       { competition: 'Copa Plata', rank: 7 }, { competition: 'Copa Plata', rank: 8 }
     ];
-    const current = fixtures.filter(m => m.phase === 'final');
+    let current = fixtures.filter(m => m.phase === 'final');
+    const currentByKey = {};
+    const duplicateFinalIds = [];
+    current.forEach(match => {
+      const key = `${match.competition || ''}|${Number(match.home_rank) || ''}|${Number(match.away_rank) || ''}`;
+      const previous = currentByKey[key];
+      if (!previous) {
+        currentByKey[key] = match;
+        return;
+      }
+      const keepCurrent = isCompleted(match) && !isCompleted(previous);
+      duplicateFinalIds.push(keepCurrent ? previous.id : match.id);
+      if (keepCurrent) currentByKey[key] = match;
+    });
+    if (duplicateFinalIds.length) {
+      await db.from('tournament_schedule').delete().in('id', duplicateFinalIds);
+      current = Object.values(currentByKey).filter(match => !duplicateFinalIds.includes(match.id));
+    }
     for (const pair of pairs) {
       const a = standingsA[pair.rank - 1]; const b = standingsB[pair.rank - 1];
-      const aReady = a && !a.tiePending;
-      const bReady = b && !b.tiePending;
       const existing = current.find(m => Number(m.home_rank) === pair.rank && m.competition === pair.competition);
       const selectedFinalDate = document.getElementById('wmFinalDate')?.value || '';
-      const pendingNote = (!aReady || !bReady) ? 'Desempate pendiente: confirmar posicion antes de fijar cruce.' : null;
+      const projectionNote = 'Proyeccion automatica segun tabla actual. Confirmar fecha y cruces definitivos cuando la organizacion publique la fase final.';
       const payload = {
         tournament_id: selectedTournamentId, jornada: 8, phase: 'final', competition: pair.competition,
         scheduled_date: selectedFinalDate || existing?.scheduled_date || null,
         scheduled_time: existing?.scheduled_time || null,
-        date_label: selectedFinalDate ? fmtDate(selectedFinalDate) : (existing?.date_label || FINAL_DATE_LABEL),
-        home_rank: pair.rank, away_rank: pair.rank, home_team_id: aReady ? a.id : null, away_team_id: bReady ? b.id : null,
-        home_team_label: aReady ? a.name : `${pair.rank} Grupo A`, away_team_label: bReady ? b.name : `${pair.rank} Grupo B`,
+        date_label: selectedFinalDate ? fmtDate(selectedFinalDate) : FINAL_DATE_LABEL,
+        home_rank: pair.rank, away_rank: pair.rank, home_team_id: a?.id || null, away_team_id: b?.id || null,
+        home_team_label: a?.name || `${pair.rank} Grupo A`, away_team_label: b?.name || `${pair.rank} Grupo B`,
         status: existing?.status || 'programado', home_goals: existing?.home_goals ?? null, away_goals: existing?.away_goals ?? null,
         home_penalties: existing?.home_penalties ?? null, away_penalties: existing?.away_penalties ?? null,
-        winner_team_id: existing?.winner_team_id || null, is_wo: existing?.is_wo || false, venue: existing?.venue || VENUE, notes: pendingNote || existing?.notes || null
+        winner_team_id: existing?.winner_team_id || null, is_wo: existing?.is_wo || false, venue: existing?.venue || VENUE, notes: projectionNote
       };
       if (existing) await db.from('tournament_schedule').update(payload).eq('id', existing.id);
       else await db.from('tournament_schedule').insert([payload]);
@@ -581,8 +596,8 @@
     const matchText = String(match.competition || '');
     const groupMatch = matchText.match(/Grupo\s+([A-Z])/i);
     if (groupMatch) return 'Grupo ' + groupMatch[1].toUpperCase();
-    if (match.competition === 'Copa Oro') return 'Oro';
-    if (match.competition === 'Copa Plata') return 'Plata';
+    if (match.competition === 'Copa Oro') return Number(match.home_rank) === 1 ? 'Oro - Final' : 'Oro';
+    if (match.competition === 'Copa Plata') return Number(match.home_rank) === 5 ? 'Plata - Final' : 'Plata';
     return match.phase === 'final' ? 'Definicion' : '';
   }
   function matchTeams(match) {
@@ -647,7 +662,7 @@
     const meta = document.getElementById('wmRoundMeta');
     if (meta) {
       const first = roundRows[0];
-      const roundName = first?.phase === 'final' ? 'Definiciones' : `Jornada ${selectedRound || ''}`;
+      const roundName = first?.phase === 'final' ? 'Definiciones proyectadas' : `Jornada ${selectedRound || ''}`;
       meta.textContent = first ? `${roundName} - ${fmtDate(first.scheduled_date, first.date_label)} - ${roundRows.length} partidos` : 'Selecciona una jornada.';
     }
     renderAgenda(roundRows);
