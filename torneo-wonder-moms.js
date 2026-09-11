@@ -100,6 +100,11 @@
       : 'Fecha por confirmar');
     return timeText ? `${base} ${timeText}` : base;
   }
+  function fmtShortDate(date, label) {
+    if (label && !date) return label;
+    if (!date) return 'Fecha por confirmar';
+    return new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: 'short' }).format(new Date(date + 'T12:00:00'));
+  }
   function teamName(id, fallback) {
     return teams.find(t => String(t.id) === String(id))?.name || fallback || 'Por definir';
   }
@@ -290,7 +295,7 @@
       .wm-agenda-teams{font-size:11px;line-height:1.45;min-width:0}
       .wm-agenda-teams div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .wm-agenda-note{margin-top:10px;border-left:3px solid var(--lime,#6db33f);background:var(--surface-2,#f9fafb);color:var(--muted,#718096);font-size:11px;line-height:1.45;padding:9px 10px}
-      @media(max-width:600px){.wm-grid,.wm-current{grid-template-columns:1fr}.wm-match{grid-template-columns:52px 1fr 58px}.wm-match-teams{font-size:11px}.wm-table{min-width:0}.wm-table th:nth-child(4),.wm-table td:nth-child(4),.wm-table th:nth-child(5),.wm-table td:nth-child(5),.wm-table th:nth-child(6),.wm-table td:nth-child(6),.wm-table th:nth-child(7),.wm-table td:nth-child(7),.wm-table th:nth-child(8),.wm-table td:nth-child(8),.wm-table th:nth-child(9),.wm-table td:nth-child(9){display:none}.wm-table th,.wm-table td{padding:8px 4px}.wm-team{white-space:normal}}
+      @media(max-width:600px){.wm-grid,.wm-current{grid-template-columns:1fr}.wm-match{grid-template-columns:70px 1fr 58px}.wm-match-date{font-size:9px;line-height:1.25}.wm-match-teams{font-size:11px}.wm-table{min-width:0}.wm-table th:nth-child(4),.wm-table td:nth-child(4),.wm-table th:nth-child(5),.wm-table td:nth-child(5),.wm-table th:nth-child(6),.wm-table td:nth-child(6),.wm-table th:nth-child(8),.wm-table td:nth-child(8),.wm-table th:nth-child(9),.wm-table td:nth-child(9){display:none}.wm-table th,.wm-table td{padding:8px 4px}.wm-team{white-space:normal}}
     `;
     document.head.appendChild(style);
   }
@@ -659,7 +664,8 @@
     const penalty = completed && match.home_goals === match.away_goals && match.home_penalties != null ? `<div class="wm-muted">Penales ${match.home_penalties} - ${match.away_penalties}</div>` : '';
     const dataAttr = match.preview ? '' : ` data-wm-match="${esc(match.id)}"`;
     const group = matchGroupLabel(match);
-    return `<div class="wm-match ${match.preview ? 'preview' : ''} ${isOwnMatchRow(match) ? 'own' : ''} ${match.phase === 'final' ? (match.competition === 'Copa Oro' ? 'wm-cup' : 'wm-cup silver') : ''}"${dataAttr}><div class="wm-match-date">${esc(fmtTime(match.scheduled_time) || '')}<br>${esc(group)}</div><div class="wm-match-teams"><strong>${esc(names.home)}</strong><br>${esc(names.away)}</div><div class="wm-match-score ${completed ? '' : 'pending'}">${score}${penalty}</div></div>`;
+    const dateLine = `${fmtShortDate(match.scheduled_date, match.date_label)}${fmtTime(match.scheduled_time) ? ' · ' + fmtTime(match.scheduled_time) : ''}`;
+    return `<div class="wm-match ${match.preview ? 'preview' : ''} ${isOwnMatchRow(match) ? 'own' : ''} ${match.phase === 'final' ? (match.competition === 'Copa Oro' ? 'wm-cup' : 'wm-cup silver') : ''}"${dataAttr}><div class="wm-match-date">${esc(dateLine)}<br>${esc(group)}</div><div class="wm-match-teams"><strong>${esc(names.home)}</strong><br>${esc(names.away)}</div><div class="wm-match-score ${completed ? '' : 'pending'}">${score}${penalty}</div></div>`;
   }
   function openMatchModal(match) {
     if (!match) return;
