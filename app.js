@@ -586,12 +586,14 @@ document.getElementById('btnCancelPlayer').addEventListener('click', closePlayer
 document.getElementById('btnDeletePlayer').addEventListener('click', async () => {
   if(!editingPlayerId) return;
   const name = p_apodo.value||p_nombre.value||'esta jugadora';
-  if(!confirm(`¿Eliminar a ${name}? No se puede deshacer.`)) return;
+  if(!confirm(`¿Retirar a ${name} del plantel activo? Se conserva su historial y deja de aparecer en cobros/citaciones automáticas.`)) return;
   if(!supa||!IS_CONNECTED){ alert('Sin conexión.'); return; }
   try{
-    const { error, count } = await supa.from('players').delete({count:'exact'}).eq('id',editingPlayerId);
+    const { error, count } = await supa.from('players').update({estado:'reposo'},{count:'exact'}).eq('id',editingPlayerId);
     if(error) throw error;
-    if(count===0) console.warn('delete player: ninguna fila');
+    if(count===0) console.warn('retire player: ninguna fila');
+    const userUpdate = await supa.from('player_users').update({active:false}).eq('player_id',editingPlayerId);
+    if(userUpdate.error) console.warn('disable player credentials', userUpdate.error);
   } catch(err){ alert('Error: '+(err.message||err)); return; }
   allPlayers=[]; cachedBirthdays=[];
   closePlayerModal(); renderRoster(); renderKPIs();
@@ -3831,11 +3833,12 @@ function clearSession() {
 async function findPlayerUser(username) {
   if(!supa || !IS_CONNECTED) throw new Error('Sin conexion');
   const { data, error } = await supa.from('player_users')
-    .select('*, players(id,apodo,nombre,numero_camiseta,foto,rol,email)')
+    .select('*, players(id,apodo,nombre,numero_camiseta,foto,rol,email,estado)')
     .eq('username', username)
     .eq('active', true)
     .maybeSingle();
   if(error) throw error;
+  if(data?.players && String(data.players.estado || '').toLowerCase() !== 'activo') return null;
   return data || null;
 }
 async function verifyPlayerUserPassword(playerUser, password) {
