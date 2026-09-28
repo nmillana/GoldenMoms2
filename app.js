@@ -1137,9 +1137,9 @@ async function renderRoster(filterTeam='all'){
   try{
     const { data:players, error } = await supa.from('players').select('*').order('apodo',{ascending:true});
     if(error) throw error;
-    let filtered=players||[];
+    let filtered=(players||[]).filter(p=>String(p.estado||'activo').toLowerCase()==='activo');
     if(filterTeam!=='all') filtered=filtered.filter(p=>Array.isArray(p.equipos)&&p.equipos.includes(filterTeam));
-    if(!filtered.length){ rosterGrid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><span class="empty-state-icon">👥</span>No hay jugadoras</div>'; return; }
+    if(!filtered.length){ rosterGrid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><span class="empty-state-icon">👥</span>No hay jugadoras activas</div>'; return; }
     for(const p of filtered){
       const c=document.createElement('div'); c.className='player-card';
       c.addEventListener('click',()=>openPlayerModal(p));
