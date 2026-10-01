@@ -4376,7 +4376,16 @@ function updateUserUI() {
   }
   if(pill) pill.style.display = 'flex';
   const name = currentUser.apodo || currentUser.nombre || currentUser.username;
-  if(pillAv) pillAv.textContent = name[0].toUpperCase();
+  if(pillAv) {
+    pillAv.style.backgroundImage = '';
+    pillAv.classList.remove('has-photo');
+    pillAv.textContent = name[0].toUpperCase();
+    if(currentUser.foto) {
+      pillAv.style.backgroundImage = 'url("' + String(currentUser.foto).replace(/"/g, '%22') + '")';
+      pillAv.classList.add('has-photo');
+      pillAv.textContent = '';
+    }
+  }
   if(pillName) pillName.textContent = name;
   const mSel = document.getElementById('mobileNavSelect');
   if(mSel) mSel.value = document.querySelector('.nav .tab.active')?.dataset.view || 'dash';

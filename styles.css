@@ -1203,6 +1203,13 @@ body.auth-loading > .toast {
   width:24px; height:24px; border-radius:50%; background:var(--lime);
   display:flex; align-items:center; justify-content:center;
   font-size:11px; font-weight:800; color:#fff;
+  flex-shrink:0; overflow:hidden;
+  background-position:center; background-size:cover; background-repeat:no-repeat;
+}
+.user-pill-av.has-photo {
+  background-color:var(--surface);
+  border:1px solid var(--lime-soft);
+  color:transparent;
 }
 .user-pill:hover { background:var(--line); }
 
